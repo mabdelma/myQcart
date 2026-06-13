@@ -1,23 +1,25 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: Array<'kitchen' | 'waiter' | 'admin'>;
+  allowedRoles: string[];
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { state } = useAuth();
 
   if (state.loading) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner />;
   }
 
-  if (!state.user || !allowedRoles.includes(state.user.role as any)) {
-    // Redirect to appropriate sign in page based on roles
-    const redirectPath = allowedRoles.includes('admin') ? '/admin/signin' : '/staff/signin';
-    return <Navigate to={redirectPath} replace />;
+  if (!state.user) {
+    return <Navigate to="/staff/signin" replace />;
+  }
+
+  if (!allowedRoles.includes(state.user.role)) {
+    return <Navigate to={state.user.role === 'admin' ? '/admin' : '/staff'} replace />;
   }
 
   return <>{children}</>;

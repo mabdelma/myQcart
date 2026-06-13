@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Package, Clock, DollarSign, CreditCard, Wallet } from 'lucide-react';
 import { getDB } from '../../lib/db';
 import type { Order, MenuItem } from '../../lib/db/schema';

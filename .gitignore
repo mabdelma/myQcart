@@ -11,6 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.local
+.env.prod
+.env.prod.local
+
+# Local SQLite dev DB (production uses Postgres)
+*.db
+*.db-shm
+*.db-wal
+server/data/
 
 # Editor directories and files
 .vscode/*

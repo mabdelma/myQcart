@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { getDB } from '../lib/db';
-import type { Order } from '../lib/db/schema';
+import React, { createContext, useContext, useReducer, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext';
+import { orderApi, tableApi } from '../lib/api';
+import { useSSE } from '../hooks/useSSE';
 
 interface Notification {
   id: string;
@@ -34,7 +35,7 @@ function notificationsReducer(state: NotificationsState, action: NotificationsAc
         notifications: [action.payload, ...state.notifications],
         unreadCount: state.unreadCount + 1
       };
-    
+
     case 'MARK_AS_READ':
       return {
         ...state,
@@ -43,48 +44,66 @@ function notificationsReducer(state: NotificationsState, action: NotificationsAc
         ),
         unreadCount: Math.max(0, state.unreadCount - 1)
       };
-    
+
     case 'MARK_ALL_AS_READ':
       return {
         ...state,
         notifications: state.notifications.map(notif => ({ ...notif, read: true })),
         unreadCount: 0
       };
-    
+
     case 'CLEAR_ALL':
-      return {
-        notifications: [],
-        unreadCount: 0
-      };
-    
+      return { notifications: [], unreadCount: 0 };
+
     default:
       return state;
   }
 }
 
-export function NotificationsProvider({ 
+function areOrdersEqual(a: { id: string; status: string; tableId: string }[], b: { id: string; status: string; tableId: string }[]) {
+  if (a.length !== b.length) return false;
+  return a.every((oa, i) => oa.id === b[i].id && oa.status === b[i].status);
+}
+
+export function NotificationsProvider({
   children,
   role
-}: { 
+}: {
   children: React.ReactNode;
   role: 'admin' | 'kitchen' | 'waiter';
 }) {
+  const { state: { tenant } } = useAuth();
+  const slug = tenant?.slug;
   const [state, dispatch] = useReducer(notificationsReducer, {
     notifications: [],
     unreadCount: 0
   });
 
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      const db = await getDB();
-      const orders = await db.getAll('orders');
-      const tables = await db.getAll('tables');
-      
-      // Process orders based on role
-      orders.forEach(order => {
-        const table = tables.find(t => t.id === order.tableId);
-        const tableNumber = table?.number || '?';
-        
+  const knownOrders = useRef<{ id: string; status: string; tableId: string }[]>([]);
+
+  const checkForUpdates = useCallback(async () => {
+    if (!slug) return;
+
+    try {
+      const [orders, tables] = await Promise.all([
+        orderApi.list(slug),
+        tableApi.list(slug),
+      ]);
+
+      const current = orders.map((o) => ({ id: o.id, status: o.status, tableId: o.tableId }));
+      const prev = knownOrders.current;
+
+      if (areOrdersEqual(current, prev)) return;
+      knownOrders.current = current;
+
+      const tableMap = new Map(tables.map((t) => [t.id, t.number]));
+
+      orders.forEach((order) => {
+        const prevOrder = prev.find((p) => p.id === order.id);
+        if (prevOrder?.status === order.status) return;
+
+        const tableNumber = tableMap.get(order.tableId) || '?';
+
         switch (role) {
           case 'kitchen':
             if (order.status === 'pending') {
@@ -95,29 +114,28 @@ export function NotificationsProvider({
                   message: `New order from Table ${tableNumber}`,
                   type: 'info',
                   createdAt: new Date(),
-                  read: false
-                }
+                  read: false,
+                },
               });
             }
             break;
-          
+
           case 'waiter':
             if (order.status === 'ready') {
               dispatch({
                 type: 'ADD_NOTIFICATION',
                 payload: {
                   id: crypto.randomUUID(),
-                  message: `Order for Table ${tableNumber} is ready for delivery`,
+                  message: `Order for Table ${tableNumber} is ready`,
                   type: 'success',
                   createdAt: new Date(),
-                  read: false
-                }
+                  read: false,
+                },
               });
             }
             break;
-          
+
           case 'admin':
-            // Admin gets all notifications
             if (order.status === 'pending') {
               dispatch({
                 type: 'ADD_NOTIFICATION',
@@ -126,8 +144,8 @@ export function NotificationsProvider({
                   message: `New order from Table ${tableNumber}`,
                   type: 'info',
                   createdAt: new Date(),
-                  read: false
-                }
+                  read: false,
+                },
               });
             } else if (order.status === 'ready') {
               dispatch({
@@ -137,20 +155,28 @@ export function NotificationsProvider({
                   message: `Order for Table ${tableNumber} is ready`,
                   type: 'success',
                   createdAt: new Date(),
-                  read: false
-                }
+                  read: false,
+                },
               });
             }
             break;
         }
       });
-    };
+    } catch {
+      // Silently ignore polling errors
+    }
+  }, [slug, role]);
 
-    // Check for updates every 30 seconds
+  React.useEffect(() => {
     checkForUpdates();
     const interval = setInterval(checkForUpdates, 30000);
     return () => clearInterval(interval);
-  }, [role]);
+  }, [checkForUpdates]);
+
+  useSSE(slug, {
+    onOrderCreated: checkForUpdates,
+    onOrderStatusChanged: checkForUpdates,
+  });
 
   return (
     <NotificationsContext.Provider value={{ state, dispatch }}>

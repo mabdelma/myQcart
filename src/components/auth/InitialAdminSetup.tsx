@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Shield } from 'lucide-react';
 import { createInitialAdmin } from '../../lib/utils/adminCheck';
 import { useAuth } from '../../contexts/AuthContext';

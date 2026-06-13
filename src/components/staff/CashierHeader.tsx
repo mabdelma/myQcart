@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User, ClipboardList, DollarSign, LogOut, Store, Settings, Clock } from 'lucide-react';
 import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface CashierHeaderProps {
   activeView: 'pos' | 'payments' | 'history';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useParams } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router';
 import { ShoppingCart, ClipboardList, ChefHat } from 'lucide-react';
 import { CartPanel } from '../restaurant/CartPanel';
 import { useCart } from '../../contexts/CartContext';

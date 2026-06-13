@@ -3,7 +3,7 @@ import { ShoppingBag, Minus, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { getDB } from '../../lib/db';
 import { generateOrderId } from '../../lib/utils/orderUtils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 export function Cart() {
   const { state, dispatch } = useCart();

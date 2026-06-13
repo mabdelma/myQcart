@@ -1,7 +1,7 @@
 // Database schema and types for IndexedDB
 export interface User {
   id: string;
-  role: 'customer' | 'waiter' | 'kitchen' | 'admin' | 'cashier';
+  role: 'customer' | 'waiter' | 'kitchen' | 'admin' | 'cashier' | 'manager' | 'super_admin';
   name: string;
   email: string;
   profileImage?: string;
@@ -15,7 +15,7 @@ export interface Table {
   id: string;
   number: number;
   capacity: number;
-  status: 'available' | 'occupied' | 'reserved';
+  status: 'available' | 'occupied' | 'reserved' | 'closed';
   qrCode: string;
 }
 
@@ -49,7 +49,7 @@ export interface Order {
   waiterStaffId?: string;
   kitchenStaffId?: string;
   cashierId?: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
   items: OrderItem[];
   total: number;
   createdAt: Date;
@@ -75,7 +75,7 @@ export interface Payment {
   id: string;
   orderId: string;
   amount: number;
-  method: 'card' | 'wallet' | 'crypto';
+  method: 'card' | 'wallet' | 'crypto' | 'cash';
   status: 'unpaid' | 'paid' | 'failed';
   splits?: {
     userId: string;

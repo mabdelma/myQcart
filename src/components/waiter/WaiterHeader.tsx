@@ -3,7 +3,7 @@ import { User, LayoutGrid, ClipboardList, LogOut, Settings, Store } from 'lucide
 import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface WaiterHeaderProps {
   activeView: 'tables' | 'orders' | 'pos';

@@ -1,0 +1,302 @@
+import { useState, useEffect, createContext, useContext, useReducer } from 'react';
+import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { menuApi, tableApi, orderApi, paymentApi } from '../../lib/api';
+import type { MenuItem, MenuCategory, TableData } from '../../lib/api/types';
+import { StripePaymentForm } from './StripePaymentForm';
+
+const stripeKey = import.meta.env.VITE_STRIPE_KEY || '';
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
+
+interface CartItem { item: MenuItem; quantity: number; notes?: string }
+interface CartState { items: CartItem[]; total: number }
+type CartAction =
+  | { type: 'ADD'; payload: { item: MenuItem; quantity?: number } }
+  | { type: 'REMOVE'; payload: string }
+  | { type: 'UPDATE_QTY'; payload: { id: string; quantity: number } }
+  | { type: 'CLEAR' };
+
+function cartReducer(state: CartState, action: CartAction): CartState {
+  switch (action.type) {
+    case 'ADD': {
+      const qty = action.payload.quantity ?? 1;
+      const existing = state.items.find((c) => c.item.id === action.payload.item.id);
+      if (existing) {
+        const updated = state.items.map((c) =>
+          c.item.id === action.payload.item.id ? { ...c, quantity: c.quantity + qty } : c
+        );
+        return { items: updated, total: updated.reduce((s, c) => s + c.item.price * c.quantity, 0) };
+      }
+      const updated = [...state.items, { item: action.payload.item, quantity: qty }];
+      return { items: updated, total: updated.reduce((s, c) => s + c.item.price * c.quantity, 0) };
+    }
+    case 'REMOVE': {
+      const updated = state.items.filter((c) => c.item.id !== action.payload);
+      return { items: updated, total: updated.reduce((s, c) => s + c.item.price * c.quantity, 0) };
+    }
+    case 'UPDATE_QTY': {
+      const updated = state.items.map((c) =>
+        c.item.id === action.payload.id ? { ...c, quantity: action.payload.quantity } : c
+      );
+      return { items: updated, total: updated.reduce((s, c) => s + c.item.price * c.quantity, 0) };
+    }
+    case 'CLEAR': return { items: [], total: 0 };
+    default: return state;
+  }
+}
+
+const CartCtx = createContext<{ state: CartState; dispatch: React.Dispatch<CartAction> } | null>(null);
+function useCart() { const c = useContext(CartCtx); if (!c) throw new Error('useCart'); return c; }
+
+export function CustomerMenuPage() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const [table, setTable] = useState<TableData | null>(null);
+  const [slug, setSlug] = useState<string>('');
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [selectedCat, setSelectedCat] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'menu' | 'cart' | 'orders' | 'checkout'>('menu');
+  const [cartState, dispatch] = useReducer(cartReducer, { items: [], total: 0 });
+  const [placing, setPlacing] = useState(false);
+  const [orderResult, setOrderResult] = useState<{ id: string; total: number } | null>(null);
+  const [tableOrders, setTableOrders] = useState<any[]>([]);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) { setError('No QR token'); setLoading(false); return; }
+    tableApi.resolve(token)
+      .then((data) => {
+        setTable(data);
+        setSlug(data.tenantSlug);
+        return menuApi.getFullMenu(data.tenantSlug);
+      })
+      .then((menu) => {
+        setCategories(menu.categories.filter((c) => c.type === 'main'));
+        setItems(menu.items);
+        if (menu.categories.length > 0) setSelectedCat(menu.categories[0].id);
+      })
+      .catch((err) => setError(err.message || 'Failed to load'))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  useEffect(() => {
+    if (!slug || !table?.id) return;
+    orderApi.getForTable(slug, table.id).then(setTableOrders).catch(() => {});
+  }, [slug, table?.id, orderResult]);
+
+  async function placeOrder() {
+    if (!slug || !table) return;
+    setPlacing(true);
+    try {
+      const res = await orderApi.create(slug, {
+        tableId: table.id,
+        items: cartState.items.map((c) => ({
+          menuItemId: c.item.id,
+          name: c.item.name,
+          quantity: c.quantity,
+          unitPrice: c.item.price,
+        })),
+      });
+      setOrderResult(res);
+      dispatch({ type: 'CLEAR' });
+      setTab('orders');
+    } catch (err) {
+      setError((err as any).message || 'Failed to place order');
+    } finally {
+      setPlacing(false);
+    }
+  }
+
+  async function handlePayCash(orderId: string, total: number) {
+    if (!slug) return;
+    try {
+      await paymentApi.recordCash(slug, { orderId, amount: total });
+      setPayingOrderId(null);
+    } catch (err) {
+      setError((err as any).message || 'Payment failed');
+    }
+  }
+
+  const stripeOptions: StripeElementsOptions = {};
+
+  const content = (
+    <CartCtx.Provider value={{ state: cartState, dispatch }}>
+      <div className="min-h-screen bg-gray-50 max-w-lg mx-auto">
+        <div className="bg-white shadow-sm p-4 sticky top-0 z-10">
+          <h1 className="text-xl font-bold">Table {table?.number}</h1>
+          <div className="flex space-x-4 mt-2">
+            {(['menu', 'cart', 'orders', 'checkout'] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`text-sm font-medium pb-1 border-b-2 ${tab === t ? 'border-[#8B4513] text-[#8B4513]' : 'border-transparent text-gray-500'}`}>
+                {t === 'menu' ? 'Menu' : t === 'cart' ? `Cart (${cartState.items.length})` : t === 'orders' ? 'Orders' : 'Checkout'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4">
+          {tab === 'menu' && (
+            <>
+              <div className="flex space-x-2 overflow-x-auto pb-4">
+                {categories.map((c) => (
+                  <button key={c.id} onClick={() => setSelectedCat(c.id)}
+                    className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${
+                      selectedCat === c.id ? 'bg-[#8B4513] text-white' : 'bg-white text-gray-700 border border-gray-200'
+                    }`}>
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                {filteredItems.filter((i) => i.available).map((item) => (
+                  <div key={item.id} className="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center">
+                    <div className="flex-1 mr-4">
+                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                      {item.description && <p className="text-sm text-gray-500">{item.description}</p>}
+                      <p className="text-[#8B4513] font-bold mt-1">${item.price.toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => { dispatch({ type: 'ADD', payload: { item } }); setAddingId(item.id); setTimeout(() => setAddingId(null), 1000); }}
+                      className="px-3 py-1.5 bg-[#8B4513] text-white rounded-full text-sm hover:bg-[#5C4033] flex-shrink-0">
+                      {addingId === item.id ? '✓' : '+ Add'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {tab === 'cart' && (
+            <div className="space-y-4">
+              {cartState.items.length === 0 && <p className="text-center text-gray-500 py-8">Cart is empty</p>}
+              {cartState.items.map((c) => (
+                <div key={c.item.id} className="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{c.item.name}</h3>
+                    <p className="text-sm text-gray-500">${c.item.price.toFixed(2)} each</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button onClick={() => dispatch({ type: 'UPDATE_QTY', payload: { id: c.item.id, quantity: Math.max(1, c.quantity - 1) } })}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50">-</button>
+                    <span className="font-medium w-6 text-center">{c.quantity}</span>
+                    <button onClick={() => dispatch({ type: 'UPDATE_QTY', payload: { id: c.item.id, quantity: c.quantity + 1 } })}
+                      className="w-8 h-8 rounded-full bg-[#8B4513] text-white flex items-center justify-center hover:bg-[#5C4033]">+</button>
+                    <button onClick={() => dispatch({ type: 'REMOVE', payload: c.item.id })}
+                      className="text-red-500 text-sm ml-2">Remove</button>
+                  </div>
+                </div>
+              ))}
+              {cartState.items.length > 0 && (
+                <div className="bg-white rounded-lg shadow-sm p-4">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>${cartState.total.toFixed(2)}</span>
+                  </div>
+                  <button onClick={() => setTab('checkout')}
+                    className="w-full mt-4 py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033]">
+                    Proceed to Checkout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'checkout' && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <h3 className="font-semibold mb-3">Order Summary</h3>
+                {cartState.items.map((c) => (
+                  <div key={c.item.id} className="flex justify-between text-sm py-1">
+                    <span>{c.item.name} x{c.quantity}</span>
+                    <span>${(c.item.price * c.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="border-t mt-3 pt-3 flex justify-between font-bold text-lg">
+                  <span>Total</span>
+                  <span>${cartState.total.toFixed(2)}</span>
+                </div>
+              </div>
+              <button onClick={placeOrder} disabled={placing || cartState.items.length === 0}
+                className="w-full py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033] disabled:opacity-50">
+                {placing ? 'Placing Order...' : 'Place Order'}
+              </button>
+              <p className="text-xs text-gray-500 text-center">Pay with cash at the counter when your order is ready</p>
+            </div>
+          )}
+
+          {tab === 'orders' && (
+            <div className="space-y-4">
+              {orderResult && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-green-800">Order Placed!</h3>
+                  <p className="text-sm text-green-700">Your order has been sent to the kitchen.</p>
+                </div>
+              )}
+              {tableOrders.length === 0 && <p className="text-center text-gray-500 py-8">No orders yet</p>}
+              {tableOrders.map((order: any) => (
+                <div key={order.id} className="bg-white rounded-lg shadow-sm p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'ready' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>{order.status}</span>
+                    <span className="text-sm font-semibold">${order.total.toFixed(2)}</span>
+                  </div>
+                  {order.status === 'ready' && order.paymentStatus !== 'paid' && (
+                    <div className="space-y-2 mt-2">
+                      {payingOrderId === order.id ? (
+                        stripePromise ? (
+                          <Elements stripe={stripePromise} options={stripeOptions}>
+                            <StripePaymentForm
+                              slug={slug}
+                              orderId={order.id}
+                              amount={order.total}
+                              onSuccess={() => setPayingOrderId(null)}
+                              onCancel={() => setPayingOrderId(null)}
+                            />
+                          </Elements>
+                        ) : (
+                          <p className="text-sm text-red-600">Stripe not configured</p>
+                        )
+                      ) : (
+                        <div className="flex gap-2">
+                          <button onClick={() => handlePayCash(order.id, order.total)}
+                            className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                            Pay with Cash
+                          </button>
+                          {stripePromise && (
+                            <button onClick={() => setPayingOrderId(order.id)}
+                              className="flex-1 py-2 bg-[#8B4513] text-white rounded-lg text-sm hover:bg-[#5C4033]">
+                              Pay with Card
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {tab !== 'cart' && cartState.items.length > 0 && (
+          <button onClick={() => setTab('cart')}
+            className="fixed bottom-6 right-6 bg-[#8B4513] text-white rounded-full px-6 py-3 shadow-lg flex items-center space-x-2 hover:bg-[#5C4033] z-20">
+            <span>Cart ({cartState.items.length})</span>
+            <span className="font-bold">${cartState.total.toFixed(2)}</span>
+          </button>
+        )}
+      </div>
+    </CartCtx.Provider>
+  );
+
+  return content;
+}

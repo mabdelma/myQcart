@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
@@ -12,15 +12,11 @@ export function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await login(email, password);
-      // Redirect based on user role
-      const role = state.user?.role;
-      if (role === 'admin') navigate('/admin');
-      else if (role === 'kitchen') navigate('/kitchen');
-      else if (role === 'waiter') navigate('/waiter');
-    } catch (error) {
-      console.error('Login failed:', error);
+    const user = await login(email, password);
+    if (user) {
+      if (user.role === 'admin' || user.role === 'manager' || user.role === 'super_admin') navigate('/admin');
+      else if (user.role === 'kitchen') navigate('/kitchen');
+      else if (user.role === 'waiter' || user.role === 'cashier') navigate('/staff');
     }
   };
 

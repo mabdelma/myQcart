@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { CreditCard, Wallet, DollarSign, ChevronRight } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { generateOrderId } from '../../lib/utils/orderUtils';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { getDB } from '../../lib/db';
 import type { Payment } from '../../lib/db/schema';
 

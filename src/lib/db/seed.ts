@@ -1,5 +1,5 @@
 import type { IDBPDatabase } from 'idb';
-import type { SmartWaiterDB } from './index';
+import type { QCartDB } from './index';
 import type { User, MenuItem, Table, MenuCategory } from './schema';
 
 export async function seedInitialData(db: IDBPDatabase<QCartDB>): Promise<void> {

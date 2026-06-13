@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Minus, Plus, Trash2, MessageCircle } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface CartPanelProps {
   isOpen: boolean;

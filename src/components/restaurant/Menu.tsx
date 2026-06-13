@@ -5,7 +5,7 @@ import type { MenuItem, MenuCategory } from '../../lib/db/schema';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useCart } from '../../contexts/CartContext';
 import { ErrorMessage } from '../ui/ErrorMessage';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 
 export function Menu() {
   const navigate = useNavigate();

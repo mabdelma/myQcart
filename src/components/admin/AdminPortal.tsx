@@ -1,15 +1,16 @@
 import React from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { StaffPerformance } from './staff/StaffPerformance';
-import { OrderManagement } from './OrderManagement';
-import { MenuManagement } from './MenuManagement';
-import { TableManagement } from './TableManagement';
 import { Analytics } from './Analytics';
 import { AdminProfile } from './AdminProfile';
 import { UserManagement } from './UserManagement';
 import { NotificationsProvider } from '../../contexts/NotificationsContext';
+import { MenuManagement } from '../../features/admin/MenuManagement';
+import { TableManagement } from '../../features/admin/TableManagement';
+import { OrderManagement } from '../../features/admin/OrderManagement';
+import { SettingsPage } from '../../features/admin/SettingsPage';
 
 const routes = [
   { path: 'analytics', element: <Analytics /> },
@@ -18,7 +19,8 @@ const routes = [
   { path: 'menu', element: <MenuManagement /> },
   { path: 'tables', element: <TableManagement /> },
   { path: 'profile', element: <AdminProfile /> },
-  { path: 'users', element: <UserManagement /> }
+  { path: 'users', element: <UserManagement /> },
+  { path: 'settings', element: <SettingsPage /> }
 ];
 
 export function AdminPortal() {

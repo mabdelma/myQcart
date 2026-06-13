@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { getDB } from '../../lib/db';

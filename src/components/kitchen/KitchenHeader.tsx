@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChefHat, LogOut, Settings, User, ClipboardList, Clock } from 'lucide-react';
 import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface KitchenHeaderProps {
   onProfileClick: () => void;

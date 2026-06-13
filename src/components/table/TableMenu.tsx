@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { getDB } from '../../lib/db';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import { CartProvider } from '../../contexts/CartContext';
 import { TableHeader } from './TableHeader';
 import type { Table } from '../../lib/db/schema';

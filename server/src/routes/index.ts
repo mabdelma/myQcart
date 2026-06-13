@@ -1,0 +1,10 @@
+export { default as authRoutes } from './auth.js';
+export { default as tenantRoutes } from './tenants.js';
+export { default as menuRoutes } from './menu.js';
+export { default as tableRoutes } from './tables.js';
+export { default as orderRoutes } from './orders.js';
+export { default as paymentRoutes, webhookRoutes } from './payments.js';
+export { default as userRoutes } from './users.js';
+export { default as adminRoutes } from './admin.js';
+export { default as eventRoutes } from './events.js';
+export { default as uploadRoutes } from './uploads.js';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
@@ -87,6 +87,9 @@ export function AdminSignIn() {
           >
             {state.loading ? <LoadingSpinner /> : 'Sign in'}
           </button>
+        </div>
+        <div className="mt-4 text-center">
+          <a href="/onboarding" className="text-sm text-purple-600 hover:text-purple-500">Create a new restaurant</a>
         </div>
       </form>
     </AuthLayout>

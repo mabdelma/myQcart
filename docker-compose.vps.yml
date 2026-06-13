@@ -1,0 +1,76 @@
+# ─── QCart VPS overlay — shared-Caddy, multi-app VPS ─────────────────────────
+# QCart shares one Linux VPS with qarrito and escoutly. qarrito's stack owns the
+# single Caddy reverse proxy (ports 80/443, automatic Let's Encrypt). Every other
+# app — including QCart — joins the shared external `edge` Docker network and is
+# reached by Caddy through its container name. No app but Caddy publishes :80/:443.
+#
+# Layered on top of the base docker-compose.yml:
+#   docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.vps.yml up -d --build
+#
+# Prereqs on the VPS (one-time):
+#   docker network create edge        # if qarrito/escoutly haven't already
+#   cp .env.prod.example .env.prod     # then fill in real secrets
+#
+# DNS: one A record  →  qcart.gmtmall.com → VPS public IP
+# Then add the QCart block to qarrito's Caddyfile (see DEPLOYMENT.md) and reload:
+#   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+# ─────────────────────────────────────────────────────────────────────────────
+name: qcart-prod
+
+services:
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-qcart}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}"
+      POSTGRES_DB: "${POSTGRES_DB:-qcart}"
+    # !reset replaces the base port list instead of merging — without it the
+    # base file's "5434:5432" leaks through and exposes Postgres to the internet.
+    ports: !reset []
+    networks: [default]
+
+  migrate:
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
+    networks: [default]
+
+  api:
+    restart: always
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
+      JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET in .env.prod}"
+      PORT: 3001
+      CORS_ORIGIN: "https://${DOMAIN:-qcart.gmtmall.com}"
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
+      STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
+      NODE_ENV: production
+    ports: !reset []
+    volumes:
+      # Uploaded menu images/logos live on the API container's filesystem
+      # (/app/uploads). Persist them across redeploys.
+      - qcart_uploads:/app/uploads
+    networks: [default]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      args:
+        # Baked into the JS bundle at build time — must be the LIVE publishable key.
+        VITE_STRIPE_KEY: "${VITE_STRIPE_KEY:-}"
+        VITE_API_URL: ""
+    # Caddy proxies this by container name over the `edge` network.
+    container_name: qcart-frontend
+    restart: always
+    ports: !reset []
+    networks: [default, edge]
+
+volumes:
+  qcart_uploads:
+
+networks:
+  # Shared cross-stack network; Caddy (in qarrito's stack) joins it and proxies
+  # qcart.gmtmall.com → qcart-frontend:80. Created once on the host:
+  #   docker network create edge
+  edge:
+    external: true

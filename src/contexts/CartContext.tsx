@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import type { MenuItem } from '../lib/db/schema';
+import type { MenuItem } from '../lib/api/types';
 
 interface CartItem {
   menuItem: MenuItem;

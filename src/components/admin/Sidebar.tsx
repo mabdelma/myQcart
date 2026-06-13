@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck } from 'lucide-react';
+import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -13,6 +13,7 @@ const tabs = [
   { id: 'users', name: 'Users', icon: Users },
   { id: 'menu', name: 'Menu', icon: ChefHat },
   { id: 'tables', name: 'Tables', icon: Table },
+  { id: 'settings', name: 'Settings', icon: Settings },
 ] as const;
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {

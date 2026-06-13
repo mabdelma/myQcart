@@ -1,0 +1,20 @@
+# Reference copy of the QCart block for the SHARED Caddy reverse proxy.
+# The live Caddyfile lives in the qarrito repo (infrastructure/caddy/Caddyfile),
+# which is the stack that runs Caddy on this VPS. Paste this block in there and
+# reload Caddy:
+#   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+#
+# DNS required first:  qcart.gmtmall.com → VPS public IP
+# Caddy reaches qcart-frontend by container name over the shared `edge` network.
+
+qcart.gmtmall.com {
+	encode gzip zstd
+	reverse_proxy qcart-frontend:80
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

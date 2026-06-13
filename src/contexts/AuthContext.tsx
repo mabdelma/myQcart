@@ -1,16 +1,17 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { getDB } from '../lib/db';
-import type { User } from '../lib/db/schema';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { authApi } from '../lib/api';
+import type { User, Tenant } from '../lib/api/types';
 
 interface AuthState {
   user: User | null;
+  tenant: Tenant | null;
   loading: boolean;
   error: string | null;
 }
 
 type AuthAction =
-  | { type: 'LOGIN_SUCCESS'; payload: User }
-  | { type: 'LOGIN_ERROR'; payload: string }
+  | { type: 'AUTH_SUCCESS'; payload: { user: User; tenant: Tenant | null } }
+  | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'LOGOUT' }
   | { type: 'SET_LOADING'; payload: boolean };
 
@@ -22,89 +23,57 @@ const AuthContext = createContext<{
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
-    case 'LOGIN_SUCCESS':
-      return {
-        ...state,
-        user: action.payload,
-        error: null,
-        loading: false
-      };
-    case 'LOGIN_ERROR':
-      return {
-        ...state,
-        user: null,
-        error: action.payload,
-        loading: false
-      };
+    case 'AUTH_SUCCESS':
+      return { ...state, user: action.payload.user, tenant: action.payload.tenant, error: null, loading: false };
+    case 'AUTH_ERROR':
+      return { ...state, user: null, tenant: null, error: action.payload, loading: false };
     case 'LOGOUT':
-      return {
-        ...state,
-        user: null,
-        error: null,
-        loading: false
-      };
+      return { ...state, user: null, tenant: null, error: null, loading: false };
     case 'SET_LOADING':
-      return {
-        ...state,
-        loading: action.payload
-      };
+      return { ...state, loading: action.payload };
     default:
       return state;
   }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(authReducer, {
-    user: null,
-    loading: true,
-    error: null
-  });
+  const [state, dispatch] = useReducer(authReducer, { user: null, tenant: null, loading: true, error: null });
 
   useEffect(() => {
-    // Check for stored auth on mount
-    const storedUser = localStorage.getItem('user');
-    try {
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        if (user && user.id) {
-          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-        } else {
-          localStorage.removeItem('user');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to parse stored user:', error);
-      localStorage.removeItem('user');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      return;
     }
-    dispatch({ type: 'SET_LOADING', payload: false });
+    authApi.me()
+      .then((data) => {
+        dispatch({ type: 'AUTH_SUCCESS', payload: { user: data.user, tenant: data.tenant } });
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        dispatch({ type: 'SET_LOADING', payload: false });
+      });
   }, []);
 
-  const login = async (email: string, password: string): Promise<User | null> => {
+  const login = useCallback(async (email: string, password: string): Promise<User | null> => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const db = await getDB();
-      const users = await db.getAll('users');
-      const user = users.find(u => u.email === email);
-
-      if (!user) {
-        throw new Error('Invalid credentials');
-      }
-
-      // In a real app, we would verify the password hash here
-      // For demo purposes, we'll just simulate successful login
-      localStorage.setItem('user', JSON.stringify(user));
-      dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-      return user;
-    } catch (error) {
-      dispatch({ type: 'LOGIN_ERROR', payload: (error as Error).message });
+      const res = await authApi.login(email, password);
+      localStorage.setItem('token', res.token);
+      const me = await authApi.me();
+      dispatch({ type: 'AUTH_SUCCESS', payload: { user: me.user, tenant: me.tenant } });
+      return me.user;
+    } catch (err) {
+      const msg = (err as { message?: string }).message || 'Login failed';
+      dispatch({ type: 'AUTH_ERROR', payload: msg });
       return null;
     }
-  };
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('user');
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
     dispatch({ type: 'LOGOUT' });
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ state, login, logout }}>
@@ -115,8 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }

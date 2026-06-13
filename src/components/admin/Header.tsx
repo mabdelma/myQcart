@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { NotificationsBell } from '../ui/NotificationsBell';
 
 interface HeaderProps {
