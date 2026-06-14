@@ -51,7 +51,7 @@ services:
       - qcart_uploads:/app/uploads
     networks: [default]
 
-  frontend:
+  qcart-frontend:
     build:
       context: .
       dockerfile: frontend.Dockerfile
@@ -59,7 +59,9 @@ services:
         # Baked into the JS bundle at build time — must be the LIVE publishable key.
         VITE_STRIPE_KEY: "${VITE_STRIPE_KEY:-}"
         VITE_API_URL: ""
-    # Caddy proxies this by container name over the `edge` network.
+    # Caddy proxies this by name over `edge`. The service name doubles as the
+    # edge DNS alias, so it MUST be unique across all stacks on the VPS — a
+    # generic "frontend" alias collides with qarrito's upstream and 502s it.
     container_name: qcart-frontend
     restart: always
     ports: !reset []

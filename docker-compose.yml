@@ -44,7 +44,10 @@ services:
     ports:
       - "3001:3001"
 
-  frontend:
+  # Service name is intentionally unique (NOT "frontend"): on the shared `edge`
+  # network in production this name becomes a DNS alias, and a generic name like
+  # "frontend" collides with other stacks' upstreams (it took down qarrito once).
+  qcart-frontend:
     build:
       context: .
       dockerfile: frontend.Dockerfile

@@ -94,6 +94,9 @@ and set the resulting signing secret as `STRIPE_WEBHOOK_SECRET` in `.env.prod`.
 - **Migrations + seed** run automatically via the `migrate` service on every
   `up`. Seeding is idempotent-by-intent; review `server/src/db/seed.ts` before
   re-running against data you care about.
-- **Container name `qcart-frontend`** must stay unique across all apps on `edge`
-  — Caddy resolves it by that name.
+- **Unique names on `edge`.** Both the Compose *service name* and `container_name`
+  of the edge-facing container must be unique across every stack on the VPS. The
+  service name becomes a DNS alias on `edge`; a generic name like `frontend`
+  collides with qarrito's own `frontend` upstream and 502s it. That's why the
+  service is named `qcart-frontend`, not `frontend`.
 ```
