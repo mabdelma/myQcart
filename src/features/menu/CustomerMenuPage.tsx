@@ -5,8 +5,18 @@ import { menuApi, tableApi, orderApi, paymentApi } from '../../lib/api';
 import type { MenuItem, MenuCategory, TableData } from '../../lib/api/types';
 import { StripePaymentForm } from './StripePaymentForm';
 
-const stripeKey = import.meta.env.VITE_STRIPE_KEY || '';
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
+// Lazy, memoized Stripe loader. App.tsx imports this module eagerly, so calling
+// loadStripe() at module scope would fire Stripe.js init on every page (incl. the
+// homepage). Defer it until the payment UI actually needs it.
+import type { Stripe } from '@stripe/stripe-js';
+let stripePromise: Promise<Stripe | null> | null | undefined;
+function getStripe(): Promise<Stripe | null> | null {
+  if (stripePromise === undefined) {
+    const key = import.meta.env.VITE_STRIPE_KEY || '';
+    stripePromise = key ? loadStripe(key) : null;
+  }
+  return stripePromise;
+}
 
 interface CartItem { item: MenuItem; quantity: number; notes?: string }
 interface CartState { items: CartItem[]; total: number }
@@ -252,8 +262,8 @@ export function CustomerMenuPage() {
                   {order.status === 'ready' && order.paymentStatus !== 'paid' && (
                     <div className="space-y-2 mt-2">
                       {payingOrderId === order.id ? (
-                        stripePromise ? (
-                          <Elements stripe={stripePromise} options={stripeOptions}>
+                        getStripe() ? (
+                          <Elements stripe={getStripe()!} options={stripeOptions}>
                             <StripePaymentForm
                               slug={slug}
                               orderId={order.id}
@@ -271,7 +281,7 @@ export function CustomerMenuPage() {
                             className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
                             Pay with Cash
                           </button>
-                          {stripePromise && (
+                          {getStripe() && (
                             <button onClick={() => setPayingOrderId(order.id)}
                               className="flex-1 py-2 bg-[#8B4513] text-white rounded-lg text-sm hover:bg-[#5C4033]">
                               Pay with Card

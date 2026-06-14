@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { StaffSignIn } from './components/auth/StaffSignIn';
 import { StaffSignUp } from './components/auth/StaffSignUp';
@@ -12,6 +13,7 @@ import { OnboardingWizard } from './features/onboarding/OnboardingWizard';
 
 function App() {
   return (
+    <ErrorBoundary>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -34,6 +36,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
