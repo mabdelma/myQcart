@@ -122,4 +122,38 @@ menu.delete('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin'), r
   return c.json({ success: true });
 });
 
+// Batch reorder items
+menu.put('/:slug/menu/reorder', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json();
+  const orderMap: { id: string; sortOrder: number }[] = body.items || [];
+
+  await db.transaction(async (tx) => {
+    for (const item of orderMap) {
+      await tx.update(schema.menuItems)
+        .set({ sortOrder: item.sortOrder })
+        .where(and(eq(schema.menuItems.id, item.id), eq(schema.menuItems.tenantId, tenantId)));
+    }
+  });
+
+  return c.json({ success: true });
+});
+
+// Batch reorder categories
+menu.put('/:slug/menu/categories/reorder', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json();
+  const orderMap: { id: string; sortOrder: number }[] = body.categories || [];
+
+  await db.transaction(async (tx) => {
+    for (const cat of orderMap) {
+      await tx.update(schema.menuCategories)
+        .set({ sortOrder: cat.sortOrder })
+        .where(and(eq(schema.menuCategories.id, cat.id), eq(schema.menuCategories.tenantId, tenantId)));
+    }
+  });
+
+  return c.json({ success: true });
+});
+
 export default menu;

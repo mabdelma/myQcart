@@ -5,7 +5,36 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
 
+// Idempotent: a platform super_admin (no tenant) that can manage all tenants.
+// Runs on every deploy independent of the demo-data guard below.
+async function seedSuperAdmin() {
+  const [existing] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.role, 'super_admin'))
+    .limit(1);
+  if (existing) {
+    console.log('Super admin already exists, skipping.');
+    return;
+  }
+
+  const email = process.env.SUPER_ADMIN_EMAIL || 'superadmin@qcart.local';
+  const password = process.env.SUPER_ADMIN_PASSWORD || 'change-me-now';
+  const passwordHash = await bcrypt.hash(password, 12);
+  await db.insert(schema.users).values({
+    id: uuid(),
+    tenantId: null,
+    name: 'Super Admin',
+    email,
+    passwordHash,
+    role: 'super_admin',
+  });
+  console.log(`Created super admin: ${email}`);
+}
+
 async function seed() {
+  await seedSuperAdmin();
+
   const [existing] = await db.select().from(schema.tenants).limit(1);
   if (existing) {
     console.log('Database already seeded, skipping.');

@@ -18,7 +18,7 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
 
   const handleLogout = () => {
     logout();
-    navigate('/staff/signin');
+    navigate('/signin');
   };
 
   return (

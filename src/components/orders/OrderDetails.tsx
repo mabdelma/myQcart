@@ -34,6 +34,7 @@ export function OrderDetails({ order, onClose }: OrderDetailsProps) {
             </div>
             <button
               onClick={onClose}
+              aria-label="Close dialog"
               className="text-gray-400 hover:text-gray-500"
             >
               <X className="w-6 h-6" />

@@ -1,3 +1,3 @@
 export { api } from './client';
-export { authApi, tenantApi, menuApi, tableApi, orderApi, paymentApi, userApi, uploadApi } from './endpoints';
+export { authApi, adminApi, tenantApi, menuApi, tableApi, orderApi, paymentApi, userApi, uploadApi, analyticsApi } from './endpoints';
 export type * from './types';

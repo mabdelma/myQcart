@@ -23,7 +23,8 @@ export const tenants = pgTable('tenants', {
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
-  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  // Nullable: a platform-level super_admin belongs to no single tenant.
+  tenantId: text('tenant_id').references(() => tenants.id),
   role: text('role', { enum: ['super_admin', 'admin', 'manager', 'waiter', 'kitchen', 'cashier'] }).notNull().default('waiter'),
   name: text('name').notNull(),
   email: text('email').notNull(),
@@ -120,6 +121,18 @@ export const payments = pgTable('payments', {
   stripePaymentIntentId: text('stripe_payment_intent_id'),
   stripePaymentLinkId: text('stripe_payment_link_id'),
   receiptUrl: text('receipt_url'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
+export const demoRequests = pgTable('demo_requests', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  restaurant: text('restaurant').notNull(),
+  phone: text('phone'),
+  size: text('size'),
+  message: text('message'),
+  status: text('status', { enum: ['pending', 'contacted', 'converted', 'closed'] }).notNull().default('pending'),
   createdAt: text('created_at').notNull().default(sql`now()`),
 });
 

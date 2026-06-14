@@ -168,7 +168,7 @@ export function OrderEditDialog({ order, onClose, onUpdate }: OrderEditDialogPro
         <div className="p-6 border-b">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-900">Edit Order</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+            <button onClick={onClose} aria-label="Close dialog" className="text-gray-400 hover:text-gray-500">
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -229,6 +229,7 @@ export function OrderEditDialog({ order, onClose, onUpdate }: OrderEditDialogPro
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
+                            aria-label="Decrease quantity"
                             className="p-1 rounded-full hover:bg-gray-100"
                           >
                             <Minus className="w-4 h-4" />
@@ -236,6 +237,7 @@ export function OrderEditDialog({ order, onClose, onUpdate }: OrderEditDialogPro
                           <span className="w-8 text-center">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
+                            aria-label="Increase quantity"
                             className="p-1 rounded-full hover:bg-gray-100"
                           >
                             <Plus className="w-4 h-4" />
@@ -248,6 +250,7 @@ export function OrderEditDialog({ order, onClose, onUpdate }: OrderEditDialogPro
                               setEditingNotes(item.id);
                               setNoteText(item.notes || '');
                             }}
+                            aria-label="Add note"
                             className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                             title={item.notes || 'Add notes'}
                           >
@@ -255,6 +258,7 @@ export function OrderEditDialog({ order, onClose, onUpdate }: OrderEditDialogPro
                           </button>
                           <button
                             onClick={() => removeItem(item.id)}
+                            aria-label="Remove item"
                             className="p-1 text-red-600 hover:bg-red-50 rounded"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -302,6 +306,7 @@ export function OrderEditDialog({ order, onClose, onUpdate }: OrderEditDialogPro
                 <h3 className="text-lg font-medium text-gray-900">Add Items</h3>
                 <button
                   onClick={() => setShowAddItems(false)}
+                  aria-label="Close dialog"
                   className="text-gray-400 hover:text-gray-500"
                 >
                   <X className="w-6 h-6" />

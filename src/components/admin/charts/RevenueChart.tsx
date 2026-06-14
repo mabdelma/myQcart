@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getDB } from '../../../lib/db';
 import type { Order } from '../../../lib/db/schema';
+import { Skeleton } from '../../ui/Skeleton';
 
 export function RevenueChart() {
   const [data, setData] = useState<{ date: string; revenue: number }[]>([]);
@@ -36,7 +37,7 @@ export function RevenueChart() {
     }
   }
 
-  if (loading) return <div className="h-64 flex items-center justify-center">Loading...</div>;
+  if (loading) return <div className="h-64 p-4 space-y-3"><Skeleton className="h-8 w-full" /><Skeleton className="h-32 w-full" /><Skeleton className="h-8 w-2/3" /></div>;
   
   if (data.length === 0) {
     return (

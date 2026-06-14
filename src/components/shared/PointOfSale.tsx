@@ -202,15 +202,19 @@ export function PointOfSale({ role }: PointOfSaleProps) {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button onClick={() => updateQuantity(item.menuItem.id, -1)}
+                      aria-label="Decrease quantity"
                       className="p-1 rounded-full hover:bg-gray-200"><Minus className="w-4 h-4" /></button>
                     <span className="w-8 text-center">{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.menuItem.id, 1)}
+                      aria-label="Increase quantity"
                       className="p-1 rounded-full hover:bg-gray-200"><Plus className="w-4 h-4" /></button>
                     <div className="flex items-center space-x-2">
                       <button onClick={() => { setEditingNotes(item.menuItem.id); setNoteText(item.notes || ''); }}
+                        aria-label="Add note"
                         className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                         title={item.notes || 'Add notes'}><MessageCircle className="w-4 h-4" /></button>
                       <button onClick={() => removeFromCart(item.menuItem.id)}
+                        aria-label="Remove item"
                         className="p-1 text-red-600 hover:bg-red-50 rounded-full"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>

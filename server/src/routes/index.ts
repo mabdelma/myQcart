@@ -8,3 +8,5 @@ export { default as userRoutes } from './users.js';
 export { default as adminRoutes } from './admin.js';
 export { default as eventRoutes } from './events.js';
 export { default as uploadRoutes } from './uploads.js';
+export { default as demoRoutes } from './demo.js';
+export { default as analyticsRoutes } from './analytics.js';

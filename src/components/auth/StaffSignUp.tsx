@@ -38,7 +38,7 @@ export function StaffSignUp() {
       });
 
       // Redirect to sign in
-      navigate('/staff/signin');
+      navigate('/signin');
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -149,7 +149,7 @@ export function StaffSignUp() {
         <div className="text-sm text-center">
           <button
             type="button"
-            onClick={() => navigate('/staff/signin')}
+            onClick={() => navigate('/signin')}
             className="font-medium text-indigo-600 hover:text-indigo-500"
           >
             Already have an account? Sign in

@@ -64,6 +64,7 @@ export function MenuItemDetail() {
         <div className="relative">
           <button
             onClick={() => navigate(`/table/${tableId}/menu`)}
+            aria-label="Close"
             className="absolute right-4 top-4 p-2 rounded-full bg-white shadow-md hover:bg-gray-100 z-10"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -109,6 +110,7 @@ export function MenuItemDetail() {
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  aria-label="Decrease quantity"
                   className="p-2 rounded-full border-2 border-[#8B4513] text-[#8B4513] hover:bg-[#F5DEB3]"
                 >
                   <Minus className="w-4 h-4" />
@@ -116,6 +118,7 @@ export function MenuItemDetail() {
                 <span className="text-xl font-bold text-gray-900 w-8 text-center">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
+                  aria-label="Increase quantity"
                   className="p-2 rounded-full border-2 border-[#8B4513] text-[#8B4513] hover:bg-[#F5DEB3]"
                 >
                   <Plus className="w-4 h-4" />

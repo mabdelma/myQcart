@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
-import { UtensilsCrossed, ArrowRight } from 'lucide-react';
+import { useParams } from 'react-router';
+import { UtensilsCrossed, ArrowLeft } from 'lucide-react';
 import { tenantApi, menuApi } from '../../lib/api';
 import type { Tenant, MenuCategory, MenuItem } from '../../lib/api/types';
+import { MenuSkeleton } from '../../components/ui/Skeleton';
 
 export function RestaurantLanding() {
-  const path = window.location.pathname.replace(/^\//, '');
-  const slug = path.split('/')[0] || '';
+  const { slug } = useParams<{ slug: string }>();
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (!slug) { setLoading(false); return; }
+    if (!slug) { setLoading(false); setNotFound(true); return; }
     tenantApi.get(slug)
       .then(async (t) => {
         setTenant(t);
@@ -23,21 +25,21 @@ export function RestaurantLanding() {
           setItems(m.items);
         } catch { /* menu optional on landing */ }
       })
-      .catch(() => setTenant(null))
+      .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>;
+  if (loading) return <div className="min-h-screen bg-gray-50"><MenuSkeleton /></div>;
 
-  if (!slug || !tenant) {
+  if (!slug || notFound) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
-          <UtensilsCrossed className="w-16 h-16 text-[#8B4513] mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">QCart</h1>
-          <p className="text-gray-600 mb-6">Digital ordering & payment platform for restaurants.</p>
-          <a href="/admin/analytics" className="inline-flex items-center px-6 py-3 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033]">
-            Admin Login <ArrowRight className="w-4 h-4 ml-2" />
+          <UtensilsCrossed className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-gray-400 mb-2">Page not found</h1>
+          <p className="text-gray-500 mb-6">This restaurant hasn't been set up yet or the link is incorrect.</p>
+          <a href="/" className="inline-flex items-center px-6 py-3 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033]">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to QCart
           </a>
         </div>
       </div>

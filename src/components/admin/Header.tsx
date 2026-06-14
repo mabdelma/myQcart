@@ -15,7 +15,7 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
 
   const handleLogout = () => {
     logout();
-    navigate('/staff/signin');
+    navigate('/signin');
   };
 
   return (
@@ -50,6 +50,8 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center space-x-2 focus:outline-none"
+              aria-expanded={showProfileMenu}
+              aria-haspopup="true"
             >
               <span className="text-sm font-medium text-gray-700">{state.user?.name || username}</span>
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#F5DEB3]">
@@ -60,7 +62,7 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User className="w-5 h-5 text-[#5C4033]" />
+                  <User className="w-5 h-5 text-[#5C4033]" aria-hidden />
                 )}
               </div>
             </button>
@@ -75,14 +77,14 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
                     }}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    <Settings className="w-4 h-4 mr-2" />
+                    <Settings className="w-4 h-4 mr-2" aria-hidden />
                     Profile Settings
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
-                    <LogOut className="w-4 h-4 mr-2" />
+                    <LogOut className="w-4 h-4 mr-2" aria-hidden />
                     Sign Out
                   </button>
                 </div>

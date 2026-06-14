@@ -108,8 +108,9 @@ export function StaffProfile() {
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="staff-name" className="block text-sm font-medium text-gray-700">Name</label>
                 <input
+                  id="staff-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -118,8 +119,9 @@ export function StaffProfile() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Bio</label>
+                <label htmlFor="staff-bio" className="block text-sm font-medium text-gray-700">Bio</label>
                 <textarea
+                  id="staff-bio"
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   rows={3}
@@ -128,8 +130,9 @@ export function StaffProfile() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <label htmlFor="staff-phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
                 <input
+                  id="staff-phone"
                   type="tel"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}

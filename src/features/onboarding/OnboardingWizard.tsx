@@ -47,30 +47,30 @@ export function OnboardingWizard() {
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-gray-900">Restaurant Details</h2>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
-              <input type="text" value={tenantInfo.name}
+              <label htmlFor="restaurant-name" className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
+              <input id="restaurant-name" type="text" value={tenantInfo.name}
                 onChange={(e) => setTenantInfo({ ...tenantInfo, name: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="My Restaurant" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL identifier)</label>
-              <input type="text" value={tenantInfo.slug}
+              <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">Slug (URL identifier)</label>
+              <input id="slug" type="text" value={tenantInfo.slug}
                 onChange={(e) => setTenantInfo({ ...tenantInfo, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="my-restaurant" />
               <p className="text-xs text-gray-500 mt-1">Your URL will be: /r/{tenantInfo.slug || 'my-restaurant'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>
-              <input type="email" value={tenantInfo.email}
+              <label htmlFor="admin-email" className="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>
+              <input id="admin-email" type="email" value={tenantInfo.email}
                 onChange={(e) => setTenantInfo({ ...tenantInfo, email: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="admin@example.com" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
-              <input type="tel" value={tenantInfo.phone}
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+              <input id="phone" type="tel" value={tenantInfo.phone}
                 onChange={(e) => setTenantInfo({ ...tenantInfo, phone: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="+1 234 567 8900" />
@@ -86,15 +86,15 @@ export function OnboardingWizard() {
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-gray-900">Admin Account</h2>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Admin Name</label>
-              <input type="text" value={adminInfo.name}
+              <label htmlFor="admin-name" className="block text-sm font-medium text-gray-700 mb-1">Admin Name</label>
+              <input id="admin-name" type="text" value={adminInfo.name}
                 onChange={(e) => setAdminInfo({ ...adminInfo, name: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="John Doe" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input type="password" value={adminInfo.password}
+              <label htmlFor="admin-password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input id="admin-password" type="password" value={adminInfo.password}
                 onChange={(e) => setAdminInfo({ ...adminInfo, password: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="Min 6 characters" />
@@ -120,11 +120,11 @@ export function OnboardingWizard() {
             <h2 className="text-lg font-medium text-gray-900">Setup Complete!</h2>
             <p className="text-gray-600">Your restaurant <strong>{tenantInfo.name}</strong> is ready.</p>
             <div className="bg-gray-50 rounded-md p-4 text-left text-sm">
-              <p><strong>Admin URL:</strong> /admin/signin</p>
+              <p><strong>Admin URL:</strong> /signin</p>
               <p><strong>Email:</strong> {result.adminEmail}</p>
               <p><strong>Customer Menu:</strong> /r/{result.tenantSlug}</p>
             </div>
-            <button onClick={() => navigate('/admin/signin')}
+            <button onClick={() => navigate('/signin')}
               className="w-full bg-[#8B4513] text-white py-2 rounded-md hover:bg-[#5C4033]">
               Go to Admin Login
             </button>

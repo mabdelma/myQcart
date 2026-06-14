@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getDB } from '../../../lib/db';
 import type { Order } from '../../../lib/db/schema';
 import { Clock } from 'lucide-react';
+import { Skeleton } from '../../ui/Skeleton';
 
 export function OrdersTimeline() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -35,7 +36,7 @@ export function OrdersTimeline() {
     }
   }
 
-  if (loading) return <div className="h-64 flex items-center justify-center">Loading...</div>;
+  if (loading) return <div className="h-64 p-4 space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-8 w-full" />)}</div>;
 
   if (orders.length === 0) {
     return (

@@ -1,0 +1,44 @@
+import { Link } from 'react-router';
+import { UtensilsCrossed } from 'lucide-react';
+
+export function Footer() {
+  return (
+    <footer className="bg-gray-900 text-gray-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-2">
+            <div className="flex items-center space-x-2 mb-4">
+              <UtensilsCrossed className="h-6 w-6 text-[#8B4513]" />
+              <span className="text-lg font-bold text-white">QCart</span>
+            </div>
+            <p className="text-sm text-gray-400 max-w-md">
+              Digital ordering and payment platform for modern restaurants.
+              Let your customers browse menus, order, and pay from their phones.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Product</h3>
+            <ul className="space-y-2">
+              <li><Link to="/features" className="text-sm hover:text-white transition-colors">Features</Link></li>
+              <li><Link to="/pricing" className="text-sm hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link to="/demo" className="text-sm hover:text-white transition-colors">Request Demo</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Company</h3>
+            <ul className="space-y-2">
+              <li><Link to="/contact" className="text-sm hover:text-white transition-colors">Contact</Link></li>
+              <li><span className="text-sm text-gray-500">About</span></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} QCart. All rights reserved.</p>
+          <div className="flex space-x-4 mt-4 md:mt-0">
+            <Link to="/signin" className="text-sm text-gray-400 hover:text-white transition-colors">Login</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

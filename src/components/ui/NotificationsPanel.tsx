@@ -52,7 +52,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                 <p>No notifications</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y" aria-live="polite" role="region" aria-label="Notifications">
                 {state.notifications.map((notification) => (
                   <div
                     key={notification.id}

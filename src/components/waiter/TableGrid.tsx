@@ -3,6 +3,7 @@ import { Users, Coffee, Clock, AlertTriangle } from 'lucide-react';
 import { tableApi, orderApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { TableData, Order } from '../../lib/api/types';
+import { Skeleton } from '../ui/Skeleton';
 
 type TableWithOrders = TableData & {
   activeOrder?: Order;
@@ -51,8 +52,8 @@ export function TableGrid() {
     return () => clearInterval(interval);
   }, [loadTables]);
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading...</div>;
-  if (loading) return <div className="p-4 text-gray-500">Loading tables...</div>;
+  if (!slug) return <div className="p-4"><Skeleton className="h-32 w-full" /></div>;
+  if (loading) return <div className="p-4 grid grid-cols-2 gap-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>;
 
   return (
     <div className="space-y-6">
@@ -63,7 +64,7 @@ export function TableGrid() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {tables.map((table) => (
-          <div key={table.id}
+          <article key={table.id}
             className={`bg-white rounded-lg shadow-sm border-l-4 p-4 ${
               table.status === 'occupied' ? 'border-orange-500' :
               table.status === 'available' ? 'border-green-500' :
@@ -100,7 +101,7 @@ export function TableGrid() {
                 </p>
               </div>
             )}
-          </div>
+          </article>
         ))}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { homePathForRole } from '../../lib/roleRoutes';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -15,11 +16,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!state.user) {
-    return <Navigate to="/staff/signin" replace />;
+    return <Navigate to="/signin" replace />;
   }
 
   if (!allowedRoles.includes(state.user.role)) {
-    return <Navigate to={state.user.role === 'admin' ? '/admin' : '/staff'} replace />;
+    return <Navigate to={homePathForRole(state.user.role)} replace />;
   }
 
   return <>{children}</>;

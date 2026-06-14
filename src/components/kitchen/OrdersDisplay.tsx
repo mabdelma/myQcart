@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Clock, AlertTriangle, ChefHat } from 'lucide-react';
 import { orderApi, tableApi, menuApi } from '../../lib/api';
 import type { Order, TableData, MenuItem, MenuCategory } from '../../lib/api/types';
-import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { OrderListSkeleton } from '../ui/Skeleton';
 import { OrderDetails } from './OrderDetails';
 import { ErrorMessage } from '../ui/ErrorMessage';
 
@@ -93,8 +93,8 @@ export function OrdersDisplay() {
     return Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
   }
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading...</div>;
-  if (loading) return <LoadingSpinner />;
+  if (!slug) return <OrderListSkeleton />;
+  if (loading) return <OrderListSkeleton />;
   if (error) return <ErrorMessage message={error} />;
 
   return (

@@ -4,6 +4,10 @@ import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from './lib/logger.js';
+import { initSentry, captureError } from './lib/sentry.js';
+import { generalLimiter, authLimiter, publicLimiter } from './middleware/rateLimiter.js';
+
+initSentry();
 import {
   authRoutes,
   tenantRoutes,
@@ -16,6 +20,8 @@ import {
   adminRoutes,
   eventRoutes,
   uploadRoutes,
+  demoRoutes,
+  analyticsRoutes,
 } from './routes/index.js';
 
 const app = new Hono();
@@ -25,10 +31,16 @@ app.use('*', cors({
   credentials: true,
 }));
 
+// Rate limiting
+app.use('/api/auth/*', authLimiter);
+app.use('/api/tenants/*', generalLimiter);
+app.use('/api/r/*', publicLimiter);
+app.use('/api/admin/*', generalLimiter);
+app.use('/api/demo', publicLimiter);
+app.use('/api/health', publicLimiter);
+
 // Health check
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
-
-
 
 // Routes
 app.route('/api/auth', authRoutes);
@@ -41,6 +53,8 @@ app.route('/api', webhookRoutes);
 app.route('/api/r', userRoutes);
 app.route('/api/r', eventRoutes);
 app.route('/api/r', uploadRoutes);
+app.route('/api/r', analyticsRoutes);
+app.route('/api/demo', demoRoutes);
 
 // Serve uploaded files
 app.use('/uploads/*', serveStatic({ root: './' }));
@@ -53,6 +67,7 @@ app.onError((err, c) => {
     return c.json({ error: err.message }, err.status);
   }
   logger.error({ err: err.message, stack: err.stack }, 'Unhandled error');
+  captureError(err, { path: c.req.path, method: c.req.method });
   return c.json({ error: 'Internal server error' }, 500);
 });
 

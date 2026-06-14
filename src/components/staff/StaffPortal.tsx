@@ -16,7 +16,7 @@ export function StaffPortal() {
   }
 
   if (!state.user || !['kitchen', 'waiter', 'cashier'].includes(state.user.role)) {
-    return <Navigate to="/staff/signin" state={{ from: location }} replace />;
+    return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
   return (
@@ -34,7 +34,7 @@ export function StaffPortal() {
           case 'waiter':
             return <WaiterPortal />;
           default:
-            return <Navigate to="/staff/signin" replace />;
+            return <Navigate to="/signin" replace />;
         }
       })()}
     </NotificationsProvider>

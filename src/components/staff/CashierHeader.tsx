@@ -17,7 +17,7 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
 
   const handleLogout = () => {
     logout();
-    navigate('/staff/signin');
+    navigate('/signin');
   };
 
   return (

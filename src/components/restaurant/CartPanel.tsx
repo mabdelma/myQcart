@@ -52,6 +52,7 @@ export function CartPanel({ isOpen, onClose, tableId }: CartPanelProps) {
             <h2 className="text-xl font-semibold text-gray-900">Your Order</h2>
             <button 
               onClick={onClose}
+              aria-label="Close panel"
               className="p-2 hover:bg-gray-100 rounded-full"
             >
               <X className="w-5 h-5 text-gray-500" />
@@ -84,6 +85,7 @@ export function CartPanel({ isOpen, onClose, tableId }: CartPanelProps) {
                               dispatch({ type: 'REMOVE_ITEM', payload: item.menuItem.id });
                             }
                           }}
+                          aria-label="Decrease quantity"
                           className="p-1 hover:bg-[#F5DEB3] rounded text-[#8B4513] transition-colors"
                         >
                           <Minus className="w-4 h-4" />
@@ -96,6 +98,7 @@ export function CartPanel({ isOpen, onClose, tableId }: CartPanelProps) {
                             type: 'UPDATE_QUANTITY',
                             payload: { id: item.menuItem.id, quantity: item.quantity + 1 }
                           })}
+                          aria-label="Increase quantity"
                           className="p-1 hover:bg-[#F5DEB3] rounded text-[#8B4513] transition-colors"
                         >
                           <Plus className="w-4 h-4" />
@@ -107,6 +110,7 @@ export function CartPanel({ isOpen, onClose, tableId }: CartPanelProps) {
                             setEditingComment(item.menuItem.id);
                             setCommentText(item.comment || '');
                           }}
+                          aria-label="Add note"
                           className="p-1 text-[#8B4513] hover:bg-[#F5DEB3] rounded transition-colors"
                           title={item.comment || 'Add comment'}
                         >
@@ -114,6 +118,7 @@ export function CartPanel({ isOpen, onClose, tableId }: CartPanelProps) {
                         </button>
                         <button
                           onClick={() => dispatch({ type: 'REMOVE_ITEM', payload: item.menuItem.id })}
+                          aria-label="Remove item"
                           className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />

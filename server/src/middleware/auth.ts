@@ -10,7 +10,8 @@ export async function authMiddleware(c: Context, next: Next) {
   try {
     const payload = await verifyToken(token);
     c.set('userId', payload.userId);
-    c.set('tenantId', payload.tenantId);
+    // super_admin has no tenant; leave tenantId unset for them.
+    if (payload.tenantId) c.set('tenantId', payload.tenantId);
     c.set('role', payload.role);
     await next();
   } catch {
@@ -34,7 +35,7 @@ export async function optionalAuth(c: Context, next: Next) {
     try {
       const payload = await verifyToken(token);
       c.set('userId', payload.userId);
-      c.set('tenantId', payload.tenantId);
+      if (payload.tenantId) c.set('tenantId', payload.tenantId);
       c.set('role', payload.role);
     } catch {
       // Ignore invalid tokens for optional auth

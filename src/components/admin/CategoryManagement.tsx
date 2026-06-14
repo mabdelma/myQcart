@@ -82,8 +82,9 @@ export function CategoryManagement() {
               saveCategory(editingCategory);
             }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="category-name" className="block text-sm font-medium text-gray-700">Name</label>
                 <input
+                  id="category-name"
                   type="text"
                   value={editingCategory.name}
                   onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
@@ -91,8 +92,9 @@ export function CategoryManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Type</label>
+                <label htmlFor="category-type" className="block text-sm font-medium text-gray-700">Type</label>
                 <select
+                  id="category-type"
                   value={editingCategory.type}
                   onChange={(e) => {
                     const type = e.target.value as 'main' | 'sub';
@@ -110,8 +112,9 @@ export function CategoryManagement() {
               </div>
               {editingCategory.type === 'sub' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Parent Category</label>
+                  <label htmlFor="category-parent" className="block text-sm font-medium text-gray-700">Parent Category</label>
                   <select
+                    id="category-parent"
                     value={editingCategory.parentId}
                     onChange={(e) => setEditingCategory({ ...editingCategory, parentId: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -171,24 +174,28 @@ export function CategoryManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => moveCategory(category.id, 'up')}
+                        aria-label="Move up"
                         className="text-gray-600 hover:text-gray-900 mr-2"
                       >
                         <MoveUp className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => moveCategory(category.id, 'down')}
+                        aria-label="Move down"
                         className="text-gray-600 hover:text-gray-900 mr-4"
                       >
                         <MoveDown className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => setEditingCategory(category)}
+                        aria-label="Edit category"
                         className="text-indigo-600 hover:text-indigo-900 mr-4"
                       >
                         <Edit2 className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => deleteCategory(category.id)}
+                        aria-label="Delete category"
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -234,24 +241,28 @@ export function CategoryManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => moveCategory(category.id, 'up')}
+                        aria-label="Move up"
                         className="text-gray-600 hover:text-gray-900 mr-2"
                       >
                         <MoveUp className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => moveCategory(category.id, 'down')}
+                        aria-label="Move down"
                         className="text-gray-600 hover:text-gray-900 mr-4"
                       >
                         <MoveDown className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => setEditingCategory(category)}
+                        aria-label="Edit category"
                         className="text-indigo-600 hover:text-indigo-900 mr-4"
                       >
                         <Edit2 className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => deleteCategory(category.id)}
+                        aria-label="Delete category"
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="h-5 w-5" />

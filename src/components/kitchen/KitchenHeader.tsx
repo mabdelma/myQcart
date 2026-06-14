@@ -22,7 +22,7 @@ export function KitchenHeader({ onProfileClick, onViewChange, activeView }: Kitc
 
   const handleLogout = () => {
     logout();
-    navigate('/staff/signin');
+    navigate('/signin');
   };
 
   return (

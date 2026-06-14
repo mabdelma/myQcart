@@ -36,7 +36,7 @@ export function OrderList({
         const table = tables[order.tableId];
         
         return (
-          <div
+          <article
             onClick={() => onViewDetails(order)}
             key={order.id}
             className={`bg-white rounded-lg shadow-sm border-l-4 ${
@@ -130,6 +130,7 @@ export function OrderList({
                     </button>
                     <button
                       onClick={() => onCancelOrder(order.id)}
+                      aria-label="Cancel order"
                       className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md"
                     >
                       <Ban className="w-4 h-4" />
@@ -156,7 +157,7 @@ export function OrderList({
                 )}
               </div>
             </div>
-          </div>
+          </article>
         );
       })}
     </div>

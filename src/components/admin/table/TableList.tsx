@@ -33,7 +33,7 @@ export function TableList({
         const isDelayed = occupationTime > 90; // Flag if table occupied > 90 mins
         
         return (
-          <div
+          <article
             key={table.id}
             className={`bg-white rounded-lg shadow-sm border-l-4 ${
               table.status === 'occupied'
@@ -127,7 +127,7 @@ export function TableList({
                 </button>
               </div>
             </div>
-          </div>
+          </article>
         );
       })}
     </div>

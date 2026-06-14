@@ -18,7 +18,7 @@ export interface Tenant {
 
 export interface User {
   id: string;
-  tenantId: string;
+  tenantId: string | null;
   name: string;
   email: string;
   phone?: string;
@@ -121,6 +121,52 @@ export interface PaymentLink {
   expiresAt?: string;
 }
 
+export interface AnalyticsSummary {
+  todaysSales: number;
+  totalSales: number;
+  averagePreparationTime: number;
+  activeTables: number;
+  totalTables: number;
+  delayedOrders: number;
+  pendingOrders: number;
+  popularItems: { name: string; quantity: number }[];
+}
+
+export interface RevenueDataPoint {
+  date: string;
+  revenue: number;
+}
+
+export interface FinancialAnalytics {
+  dailyRevenue: number;
+  weeklyRevenue: number;
+  monthlyRevenue: number;
+  paymentMethods: Record<string, number>;
+}
+
 export interface ApiError {
   error: string;
+}
+
+// ── Super-admin / platform ──────────────────────────────────────────────────
+export interface PlatformAnalytics {
+  tenants: number;
+  activeTenants: number;
+  users: number;
+  orders: number;
+  revenue: number;
+}
+
+export interface TenantSummary {
+  id: string;
+  name: string;
+  slug: string;
+  email: string;
+  isActive: boolean;
+  currency: string;
+  createdAt: string;
+}
+
+export interface TenantWithStats extends Tenant {
+  stats: { users: number; orders: number; revenue: number };
 }

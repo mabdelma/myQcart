@@ -104,6 +104,7 @@ export function Cart() {
                         dispatch({ type: 'REMOVE_ITEM', payload: item.menuItem.id });
                       }
                     }}
+                    aria-label="Decrease quantity"
                     className="p-1 rounded-md hover:bg-gray-100"
                   >
                     <Minus className="w-4 h-4" />
@@ -114,12 +115,14 @@ export function Cart() {
                       type: 'UPDATE_QUANTITY',
                       payload: { id: item.menuItem.id, quantity: item.quantity + 1 }
                     })}
+                    aria-label="Increase quantity"
                     className="p-1 rounded-md hover:bg-gray-100"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => dispatch({ type: 'REMOVE_ITEM', payload: item.menuItem.id })}
+                    aria-label="Remove item"
                     className="p-1 text-red-600 hover:bg-red-50 rounded-md ml-4"
                   >
                     <Trash2 className="w-4 h-4" />

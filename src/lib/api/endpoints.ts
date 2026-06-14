@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLink } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLink, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats } from './types';
 
 // Auth
 export const authApi = {
@@ -8,6 +8,15 @@ export const authApi = {
   register: (data: { tenantSlug: string; name: string; email: string; password: string; role?: string }) =>
     api.post<{ token: string; user: User }>('/auth/register', data, { skipAuth: true }),
   me: () => api.get<{ user: User; tenant: Tenant | null }>('/auth/me'),
+};
+
+// Super-admin / platform (all require a super_admin token)
+export const adminApi = {
+  platformAnalytics: () => api.get<PlatformAnalytics>('/admin/analytics'),
+  listTenants: () => api.get<TenantSummary[]>('/admin/tenants'),
+  getTenant: (tenantId: string) => api.get<TenantWithStats>(`/admin/tenants/${tenantId}`),
+  setTenantStatus: (tenantId: string, isActive: boolean) =>
+    api.put<{ success: boolean }>(`/admin/tenants/${tenantId}/status`, { isActive }),
 };
 
 // Tenants
@@ -35,6 +44,10 @@ export const menuApi = {
     api.put<{ success: boolean }>(`/r/${slug}/menu/items/${itemId}`, data),
   deleteItem: (slug: string, itemId: string) =>
     api.delete<{ success: boolean }>(`/r/${slug}/menu/items/${itemId}`),
+  reorderItems: (slug: string, items: { id: string; sortOrder: number }[]) =>
+    api.put<{ success: boolean }>(`/r/${slug}/menu/reorder`, { items }),
+  reorderCategories: (slug: string, categories: { id: string; sortOrder: number }[]) =>
+    api.put<{ success: boolean }>(`/r/${slug}/menu/categories/reorder`, { categories }),
 };
 
 // Tables
@@ -93,6 +106,16 @@ export const paymentApi = {
     api.get<Payment[]>(`/r/${slug}/payments`),
   getPaymentLink: (token: string) =>
     api.get<PaymentLink>(`/payment-links/${token}`, { skipAuth: true }),
+};
+
+// Analytics
+export const analyticsApi = {
+  summary: (slug: string) =>
+    api.get<AnalyticsSummary>(`/r/${slug}/analytics/summary`),
+  revenue: (slug: string) =>
+    api.get<{ daily: RevenueDataPoint[] }>(`/r/${slug}/analytics/revenue`),
+  financial: (slug: string) =>
+    api.get<FinancialAnalytics>(`/r/${slug}/analytics/financial`),
 };
 
 export const uploadApi = {

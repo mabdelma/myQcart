@@ -35,7 +35,7 @@ export function OrderDetails({ order, onClose }: OrderDetailsProps) {
                   <Clock className="w-4 h-4 mr-1" />{orderAge} minutes ago
                 </div>
               </div>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+              <button onClick={onClose} aria-label="Close dialog" className="text-gray-400 hover:text-gray-500">
                 <X className="w-6 h-6" />
               </button>
             </div>

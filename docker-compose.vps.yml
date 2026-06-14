@@ -32,6 +32,9 @@ services:
   migrate:
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
+      # Seed creates the platform super_admin (idempotent) with these on first run.
+      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:-}"
+      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:-}"
     networks: [default]
 
   api:

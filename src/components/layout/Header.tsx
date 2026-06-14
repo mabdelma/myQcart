@@ -17,7 +17,7 @@ export function Header({ role = 'customer', onMenuClick }: HeaderProps) {
               className="p-2 rounded-md hover:bg-gray-100"
               aria-label="Menu"
             >
-              <Menu className="h-6 w-6 text-gray-600" />
+              <Menu className="h-6 w-6 text-gray-600" aria-hidden />
             </button>
             <h1 className="ml-4 text-xl font-semibold text-gray-900">
               Smart Waiter
@@ -33,7 +33,7 @@ export function Header({ role = 'customer', onMenuClick }: HeaderProps) {
               className="p-2 rounded-md hover:bg-gray-100"
               aria-label="User menu"
             >
-              <User className="h-6 w-6 text-gray-600" />
+              <User className="h-6 w-6 text-gray-600" aria-hidden />
             </button>
           </div>
         </div>

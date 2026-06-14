@@ -143,8 +143,9 @@ export function MenuManagement() {
               saveMenuItem(editingItem);
             }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="menu-name" className="block text-sm font-medium text-gray-700">Name</label>
                 <input
+                  id="menu-name"
                   type="text"
                   placeholder="Enter item name"
                   value={editingItem.name}
@@ -153,8 +154,9 @@ export function MenuManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <label htmlFor="menu-description" className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
+                  id="menu-description"
                   placeholder="Enter item description"
                   value={editingItem.description}
                   onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
@@ -163,8 +165,9 @@ export function MenuManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Price</label>
+                  <label htmlFor="menu-price" className="block text-sm font-medium text-gray-700">Price</label>
                   <input
+                    id="menu-price"
                     type="number"
                     step="0.01"
                     value={editingItem.price.toString()}
@@ -178,8 +181,9 @@ export function MenuManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Main Category</label>
+                  <label htmlFor="menu-main-category" className="block text-sm font-medium text-gray-700">Main Category</label>
                   <select
+                    id="menu-main-category"
                     value={editingItem.mainCategoryId}
                     onChange={(e) => {
                       const mainCategoryId = e.target.value;
@@ -202,8 +206,9 @@ export function MenuManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Sub Category</label>
+                  <label htmlFor="menu-sub-category" className="block text-sm font-medium text-gray-700">Sub Category</label>
                   <select
+                    id="menu-sub-category"
                     value={editingItem.subCategoryId}
                     onChange={(e) => setEditingItem({ ...editingItem, subCategoryId: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -217,7 +222,7 @@ export function MenuManagement() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Image</label>
+                <label htmlFor="menu-image" className="block text-sm font-medium text-gray-700">Image</label>
                 <div className="mt-1 flex items-center space-x-4">
                   <div className="relative h-20 w-20 bg-gray-100 rounded-md overflow-hidden">
                     {editingItem.image ? (
@@ -235,6 +240,7 @@ export function MenuManagement() {
                   <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <span>Upload Image</span>
                     <input
+                      id="menu-image"
                       type="file"
                       className="sr-only"
                       accept="image/*"
@@ -265,12 +271,13 @@ export function MenuManagement() {
               </div>
               <div className="flex items-center">
                 <input
+                  id="menu-available"
                   type="checkbox"
                   checked={editingItem.available}
                   onChange={(e) => setEditingItem({ ...editingItem, available: e.target.checked })}
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-900">Available</label>
+                <label htmlFor="menu-available" className="ml-2 block text-sm text-gray-900">Available</label>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
@@ -319,7 +326,7 @@ export function MenuManagement() {
             return (subCatA?.order || 0) - (subCatB?.order || 0);
           })
           .map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow p-6">
+          <article key={item.id} className="bg-white rounded-lg shadow p-6">
             <div className="relative aspect-video mb-4 bg-gray-100 rounded-md overflow-hidden">
               {item.image ? (
                 <img
@@ -354,19 +361,21 @@ export function MenuManagement() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setEditingItem(item)}
+                  aria-label="Edit item"
                   className="p-2 text-gray-600 hover:text-indigo-600"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => deleteMenuItem(item.id)}
+                  aria-label="Delete item"
                   className="p-2 text-gray-600 hover:text-red-600"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>

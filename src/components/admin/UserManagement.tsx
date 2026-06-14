@@ -94,8 +94,9 @@ export function UserManagement() {
             </h3>
             <form onSubmit={saveUser} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="user-name" className="block text-sm font-medium text-gray-700">Name</label>
                 <input
+                  id="user-name"
                   type="text" required
                   value={editingUser.name || ''}
                   onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
@@ -103,8 +104,9 @@ export function UserManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email</label>
                 <input
+                  id="user-email"
                   type="email" required
                   value={editingUser.email || ''}
                   onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
@@ -113,8 +115,9 @@ export function UserManagement() {
               </div>
               {!editingUser.id && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Password</label>
                   <input
+                    id="user-password"
                     type="password" required
                     value={editingUser.password || ''}
                     onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
@@ -123,8 +126,9 @@ export function UserManagement() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <label htmlFor="user-role" className="block text-sm font-medium text-gray-700">Role</label>
                 <select
+                  id="user-role"
                   value={editingUser.role || 'waiter'}
                   onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]"
@@ -165,7 +169,7 @@ export function UserManagement() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.id}>
+              <article key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
                   {user.id.slice(0, 8)}
                 </td>
@@ -204,7 +208,7 @@ export function UserManagement() {
                     <Trash2 className="h-5 w-5" />
                   </button>
                 </td>
-              </tr>
+              </article>
             ))}
           </tbody>
         </table>

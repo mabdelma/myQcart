@@ -1,8 +1,61 @@
-import { useState, useEffect } from 'react';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, rectSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { menuApi, uploadApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { MenuItem, MenuCategory } from '../../lib/api/types';
+
+function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (item: MenuItem) => void; onDelete: (id: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 'auto' as const,
+  };
+
+  return (
+    <article ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6">
+      <div className="flex items-start justify-between mb-2">
+        <button {...attributes} {...listeners} aria-label="Drag to reorder" className="p-1 -ml-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600">
+          <GripVertical className="w-5 h-5" aria-hidden />
+        </button>
+      </div>
+      <div className="aspect-video mb-4 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+        ) : (
+          <ImageIcon className="w-12 h-12 text-gray-400" aria-hidden />
+        )}
+      </div>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
+        <span className="text-lg font-medium">${item.price.toFixed(2)}</span>
+      </div>
+      {item.description && (
+        <p className="text-gray-600 text-sm mb-4">{item.description}</p>
+      )}
+      <div className="flex justify-between items-center">
+        <span className={`px-2 py-1 rounded-full text-sm ${
+          item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {item.available ? 'Available' : 'Unavailable'}
+        </span>
+        <div className="flex space-x-2">
+          <button onClick={() => onEdit(item)} aria-label="Edit item" className="p-2 text-gray-600 hover:text-indigo-600">
+            <Edit className="w-5 h-5" aria-hidden />
+          </button>
+          <button onClick={() => onDelete(item.id)} aria-label="Delete item" className="p-2 text-gray-600 hover:text-red-600">
+            <Trash2 className="w-5 h-5" aria-hidden />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export function MenuManagement() {
   const { state: { tenant } } = useAuth();
@@ -13,14 +66,19 @@ export function MenuManagement() {
   const [editing, setEditing] = useState<Partial<MenuItem> | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
     menuApi.getFullMenu(slug)
       .then((data) => {
-        setCategories(data.categories.filter((c) => c.type === 'main'));
+        const mainCats = data.categories.filter((c) => c.type === 'main').sort((a, b) => a.sortOrder - b.sortOrder);
+        setCategories(mainCats);
         setItems(data.items);
-        if (data.categories.length > 0) setSelectedCategory(data.categories[0].id);
+        if (mainCats.length > 0 && !selectedCategory) setSelectedCategory(mainCats[0].id);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -53,12 +111,37 @@ export function MenuManagement() {
     }
   }
 
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !slug) return;
+
+    const oldIndex = filteredItems.findIndex((i) => i.id === active.id);
+    const newIndex = filteredItems.findIndex((i) => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = [...filteredItems];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    const updated = reordered.map((item, idx) => ({ ...item, sortOrder: idx }));
+    setItems((prev) => {
+      const other = prev.filter((i) => i.categoryId !== selectedCategory && (selectedCategory ? true : false));
+      return [...other, ...updated].sort((a, b) => a.sortOrder - b.sortOrder);
+    });
+
+    try {
+      await menuApi.reorderItems(slug, updated.map(({ id, sortOrder }) => ({ id, sortOrder })));
+    } catch (err) {
+      console.error('Failed to reorder items:', err);
+    }
+  }, [items, selectedCategory, slug]);
+
   if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
   if (loading) return <div className="p-4 text-gray-500">Loading menu...</div>;
 
   const filteredItems = selectedCategory
-    ? items.filter((i) => i.categoryId === selectedCategory)
-    : items;
+    ? items.filter((i) => i.categoryId === selectedCategory).sort((a, b) => a.sortOrder - b.sortOrder)
+    : items.sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <div className="space-y-6">
@@ -68,18 +151,19 @@ export function MenuManagement() {
           onClick={() => setEditing({ name: '', price: 0, categoryId: selectedCategory, available: true })}
           className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]"
         >
-          <PlusCircle className="w-5 h-5 mr-2" /> Add Item
+          <PlusCircle className="w-5 h-5 mr-2" aria-hidden /> Add Item
         </button>
       </div>
 
       {editing && (
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg" role="dialog" aria-label={editing.id ? 'Edit menu item' : 'New menu item'}>
             <h3 className="text-xl font-semibold mb-4">{editing.id ? 'Edit Item' : 'New Item'}</h3>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="menu-name" className="block text-sm font-medium text-gray-700">Name</label>
                 <input
+                  id="menu-name"
                   type="text" required
                   value={editing.name || ''}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
@@ -87,20 +171,21 @@ export function MenuManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <label htmlFor="menu-desc" className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
+                  id="menu-desc"
                   value={editing.description || ''}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                <label htmlFor="menu-image-upload" className="block text-sm font-medium text-gray-700 mb-1">Image</label>
                 <div className="flex items-center gap-3">
                   {editing.imageUrl && (
                     <img src={editing.imageUrl} alt="" className="w-16 h-16 rounded object-cover border" />
                   )}
-                  <button type="button" onClick={async () => {
+                  <button type="button" id="menu-image-upload" onClick={async () => {
                     const input = document.createElement('input');
                     input.type = 'file';
                     input.accept = 'image/jpeg,image/png,image/webp';
@@ -115,14 +200,15 @@ export function MenuManagement() {
                     input.click();
                   }}
                     className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">
-                    <Upload className="w-4 h-4 mr-2" /> Upload
+                    <Upload className="w-4 h-4 mr-2" aria-hidden /> Upload
                   </button>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Price</label>
+                  <label htmlFor="menu-price" className="block text-sm font-medium text-gray-700">Price</label>
                   <input
+                    id="menu-price"
                     type="number" step="0.01" min="0" required
                     value={editing.price || 0}
                     onChange={(e) => setEditing({ ...editing, price: parseFloat(e.target.value) || 0 })}
@@ -130,8 +216,9 @@ export function MenuManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
+                  <label htmlFor="menu-category" className="block text-sm font-medium text-gray-700">Category</label>
                   <select
+                    id="menu-category"
                     value={editing.categoryId || ''}
                     onChange={(e) => setEditing({ ...editing, categoryId: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]"
@@ -144,12 +231,12 @@ export function MenuManagement() {
               </div>
               <div className="flex items-center">
                 <input
-                  type="checkbox" id="avail"
+                  type="checkbox" id="menu-avail"
                   checked={editing.available ?? true}
                   onChange={(e) => setEditing({ ...editing, available: e.target.checked })}
                   className="h-4 w-4 text-[#8B4513] border-gray-300 rounded"
                 />
-                <label htmlFor="avail" className="ml-2 text-sm text-gray-900">Available</label>
+                <label htmlFor="menu-avail" className="ml-2 text-sm text-gray-900">Available</label>
               </div>
               <div className="flex justify-end space-x-3">
                 <button type="button" onClick={() => setEditing(null)}
@@ -192,41 +279,15 @@ export function MenuManagement() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow p-6">
-            <div className="aspect-video mb-4 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-              ) : (
-                <ImageIcon className="w-12 h-12 text-gray-400" />
-              )}
-            </div>
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-              <span className="text-lg font-medium">${item.price.toFixed(2)}</span>
-            </div>
-            {item.description && (
-              <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-            )}
-            <div className="flex justify-between items-center">
-              <span className={`px-2 py-1 rounded-full text-sm ${
-                item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-                {item.available ? 'Available' : 'Unavailable'}
-              </span>
-              <div className="flex space-x-2">
-                <button onClick={() => setEditing(item)} className="p-2 text-gray-600 hover:text-indigo-600">
-                  <Edit className="w-5 h-5" />
-                </button>
-                <button onClick={() => handleDelete(item.id)} className="p-2 text-gray-600 hover:text-red-600">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.map((item) => (
+              <SortableItem key={item.id} item={item} onEdit={setEditing} onDelete={handleDelete} />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {filteredItems.length === 0 && (
         <p className="text-center text-gray-500 py-12">No menu items found. Click "Add Item" to create one.</p>

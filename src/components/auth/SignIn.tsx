@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { homePathForRole } from '../../lib/roleRoutes';
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -14,9 +15,8 @@ export function SignIn() {
     e.preventDefault();
     const user = await login(email, password);
     if (user) {
-      if (user.role === 'admin' || user.role === 'manager' || user.role === 'super_admin') navigate('/admin');
-      else if (user.role === 'kitchen') navigate('/kitchen');
-      else if (user.role === 'waiter' || user.role === 'cashier') navigate('/staff');
+      // One login for everyone — route to the right home by role.
+      navigate(homePathForRole(user.role), { replace: true });
     }
   };
 

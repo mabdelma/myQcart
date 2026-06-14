@@ -8,7 +8,7 @@ const JWT_EXPIRES_IN = 60 * 60 * 24; // 24 hours
 export interface JwtPayload {
   sub: string;
   userId: string;
-  tenantId: string;
+  tenantId: string | null; // null for platform-level super_admin
   role: string;
   exp: number;
 }

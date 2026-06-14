@@ -175,6 +175,7 @@ export function NotificationsProvider({
 
   useSSE(slug, {
     onOrderCreated: checkForUpdates,
+    onOrderUpdated: checkForUpdates,
     onOrderStatusChanged: checkForUpdates,
   });
 

@@ -203,8 +203,9 @@ export function TableManagement() {
               saveTable(editingTable);
             }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Table Number</label>
+                <label htmlFor="table-number" className="block text-sm font-medium text-gray-700">Table Number</label>
                 <input
+                  id="table-number"
                   type="number"
                   value={editingTable.number || ''}
                   onChange={(e) => setEditingTable({ 
@@ -216,8 +217,9 @@ export function TableManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Capacity</label>
+                <label htmlFor="table-capacity" className="block text-sm font-medium text-gray-700">Capacity</label>
                 <input
+                  id="table-capacity"
                   type="number"
                   value={editingTable.capacity || ''}
                   onChange={(e) => setEditingTable({ 
@@ -229,8 +231,9 @@ export function TableManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <label htmlFor="table-status" className="block text-sm font-medium text-gray-700">Status</label>
                 <select
+                  id="table-status"
                   value={editingTable.status}
                   onChange={(e) => setEditingTable({ ...editingTable, status: e.target.value as Table['status'] })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
