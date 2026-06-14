@@ -9,5 +9,8 @@ declare module 'hono' {
     tenantId: string;
     userId: string;
     role: string;
+    // The authenticated user's OWN tenant (from their token), kept separate from
+    // `tenantId` which resolveTenant overwrites with the URL slug's tenant.
+    userTenantId: string;
   }
 }

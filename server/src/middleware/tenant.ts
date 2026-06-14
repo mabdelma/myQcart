@@ -21,6 +21,16 @@ export async function resolveTenant(c: Context, next: Next) {
     throw new HTTPException(403, { message: 'Restaurant is inactive' });
   }
 
+  // Tenant isolation: if the request is authenticated (userTenantId is set by
+  // authMiddleware), a non-super_admin may only act on their OWN tenant. This
+  // blocks cross-tenant access (e.g. admin of A calling /api/r/<B>/...). Public
+  // routes (QR menu/ordering) have no userTenantId set, so they're unaffected.
+  const userTenantId = c.get('userTenantId');
+  const role = c.get('role');
+  if (userTenantId && role !== 'super_admin' && userTenantId !== tenant.id) {
+    throw new HTTPException(403, { message: 'Forbidden: cross-tenant access' });
+  }
+
   c.set('tenant', tenant);
   c.set('tenantId', tenant.id);
   await next();
