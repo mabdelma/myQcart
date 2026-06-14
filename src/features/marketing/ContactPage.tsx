@@ -4,9 +4,27 @@ import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
 
 const contactInfo = [
-  { icon: Mail, label: 'Email', value: 'hello@qcart.app' },
-  { icon: Phone, label: 'Phone', value: '+1 (555) 123-4567' },
-  { icon: MapPin, label: 'Location', value: 'San Francisco, CA' },
+  {
+    icon: Mail,
+    label: 'Email',
+    items: [{ text: 'infor@qcart.com', href: 'mailto:infor@qcart.com' }],
+  },
+  {
+    icon: Phone,
+    label: 'Phone',
+    items: [
+      { text: '+971 56 827 9154', href: 'tel:+971568279154' },
+      { text: '+34 637 592 801', href: 'tel:+34637592801' },
+    ],
+  },
+  {
+    icon: MapPin,
+    label: 'Location',
+    items: [
+      { text: 'Abu Dhabi, UAE' },
+      { text: 'Valladolid, Spain' },
+    ],
+  },
 ];
 
 export function ContactPage() {
@@ -39,7 +57,15 @@ export function ContactPage() {
                   <item.icon className="h-6 w-6 text-[#8B4513]" />
                 </div>
                 <h3 className="font-medium text-gray-900 mb-1">{item.label}</h3>
-                <p className="text-sm text-gray-600">{item.value}</p>
+                <div className="space-y-1">
+                  {item.items.map((c) => (
+                    <p key={c.text} className="text-sm text-gray-600">
+                      {'href' in c && c.href
+                        ? <a href={c.href} className="hover:text-[#8B4513] transition-colors">{c.text}</a>
+                        : c.text}
+                    </p>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
