@@ -41,6 +41,7 @@ vi.mock('../db/index.js', () => {
     update: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
+    execute: vi.fn().mockResolvedValue([]),
     $inferSelect: {},
     __setQueryData: (data: unknown) => { queryQueue = [data]; },
     __setQueryQueue: (queue: unknown[]) => { queryQueue = [...queue]; },

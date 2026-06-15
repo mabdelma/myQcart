@@ -3,6 +3,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { HTTPException } from 'hono/http-exception';
+import { sql } from 'drizzle-orm';
+import { db } from './db/index.js';
 import { logger } from './lib/logger.js';
 import { initSentry, captureError } from './lib/sentry.js';
 import { generalLimiter, authLimiter, publicLimiter } from './middleware/rateLimiter.js';
@@ -26,6 +28,16 @@ import {
 
 const app = new Hono();
 
+// Baseline security headers (defense-in-depth; Caddy also sets HSTS at the edge).
+app.use('*', async (c, next) => {
+  await next();
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  c.header('X-Permitted-Cross-Domain-Policies', 'none');
+  c.header('Cross-Origin-Resource-Policy', 'same-site');
+});
+
 app.use('*', cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
@@ -39,8 +51,16 @@ app.use('/api/admin/*', generalLimiter);
 app.use('/api/demo', publicLimiter);
 app.use('/api/health', publicLimiter);
 
-// Health check
-app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+// Health check — verifies the PostgreSQL connection, not just process liveness.
+app.get('/api/health', async (c) => {
+  try {
+    await db.execute(sql`select 1`);
+    return c.json({ status: 'ok', db: 'up', timestamp: new Date().toISOString() });
+  } catch (err) {
+    logger.error({ err: (err as Error).message }, 'Health check DB ping failed');
+    return c.json({ status: 'degraded', db: 'down', timestamp: new Date().toISOString() }, 503);
+  }
+});
 
 // Routes
 app.route('/api/auth', authRoutes);
