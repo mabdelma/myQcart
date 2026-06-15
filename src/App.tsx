@@ -16,6 +16,13 @@ import { PricingPage } from './features/marketing/PricingPage';
 import { FeaturesPage } from './features/marketing/FeaturesPage';
 import { ContactPage } from './features/marketing/ContactPage';
 import { DemoPage } from './features/marketing/DemoPage';
+import { TableFlowLayout } from './features/restaurant/TableFlowLayout';
+import { TableMenuPage } from './features/restaurant/TableMenuPage';
+import { CartPage } from './features/cart/CartPage';
+import { OrdersPage } from './features/orders/OrdersPage';
+import { CheckoutPage } from './features/checkout/CheckoutPage';
+import { BillPage } from './features/checkout/BillPage';
+import { PaymentLinkPage } from './features/payment-links/PaymentLinkPage';
 
 function App() {
   return (
@@ -55,8 +62,33 @@ function App() {
           <Route path="/features" element={<RouteErrorBoundary name="features"><FeaturesPage /></RouteErrorBoundary>} />
           <Route path="/contact" element={<RouteErrorBoundary name="contact"><ContactPage /></RouteErrorBoundary>} />
           <Route path="/demo" element={<RouteErrorBoundary name="demo"><DemoPage /></RouteErrorBoundary>} />
+
+          {/* Table QR / Customer ordering flow — structured restaurant routes */}
+          <Route path="/r/:slug/table/:tableId" element={
+            <RouteErrorBoundary name="table-flow">
+            <TableFlowLayout />
+            </RouteErrorBoundary>
+          }>
+            <Route index element={<Navigate to="menu" replace />} />
+            <Route path="menu" element={<TableMenuPage />} />
+            <Route path="cart" element={<CartPage />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="checkout" element={<CheckoutPage />} />
+            <Route path="bill" element={<BillPage />} />
+          </Route>
+
+          {/* Legacy QR token-based route (single-page tabbed flow) */}
           <Route path="/table/:tableId/*" element={<RouteErrorBoundary name="customer-menu"><CustomerMenuPage /></RouteErrorBoundary>} />
+
+          {/* Public restaurant landing page */}
+          <Route path="/r/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
           <Route path="/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
+
+          {/* Payment link (customer-facing, no auth required) */}
+          <Route path="/pay/:token" element={
+            <RouteErrorBoundary name="payment-link"><PaymentLinkPage /></RouteErrorBoundary>
+          } />
+
           <Route path="*" element={<RestaurantLanding />} />
         </Routes>
       </BrowserRouter>

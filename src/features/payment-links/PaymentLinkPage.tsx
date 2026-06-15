@@ -1,0 +1,152 @@
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router';
+import { paymentApi } from '../../lib/api';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { StripePaymentForm } from '../menu/StripePaymentForm';
+import { CreditCard, Lock, Clock, CheckCircle, XCircle, Store } from 'lucide-react';
+import type { PaymentLinkResponse } from '../../lib/api/types';
+
+let stripePromise: Promise<Stripe | null> | null | undefined;
+function getStripe() {
+  if (stripePromise === undefined) {
+    const key = import.meta.env.VITE_STRIPE_KEY || '';
+    stripePromise = key ? loadStripe(key) : null;
+  }
+  return stripePromise;
+}
+
+export function PaymentLinkPage() {
+  const { token } = useParams();
+  const [link, setLink] = useState<PaymentLinkResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [paid, setPaid] = useState(false);
+
+  useEffect(() => {
+    if (!token) { setError('Invalid payment link'); setLoading(false); return; }
+    paymentApi.getPaymentLink(token)
+      .then(setLink)
+      .catch((err: { message?: string }) => setError(err.message || 'Payment link not found'))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState message={error} />;
+  if (!link) return <ErrorState message="Payment link not found" />;
+
+  if (link.status === 'paid') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center space-y-4">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+          <h1 className="text-2xl font-bold text-gray-900">Payment Completed</h1>
+          <p className="text-gray-500">This payment has already been processed.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (link.status === 'expired' || link.status === 'cancelled') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center space-y-4">
+          <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+          <h1 className="text-2xl font-bold text-gray-900">Link {link.status === 'expired' ? 'Expired' : 'Cancelled'}</h1>
+          <p className="text-gray-500">This payment link is no longer valid.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const canPayCard = getStripe() && link.tenantSlug && link.orderId;
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full space-y-6">
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 bg-[#F5DEB3] rounded-full flex items-center justify-center mx-auto">
+            <CreditCard className="w-8 h-8 text-[#8B4513]" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Payment</h1>
+          {link.description && <p className="text-gray-500">{link.description}</p>}
+          {link.tenantName && (
+            <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
+              <Store className="w-4 h-4" />
+              <span>{link.tenantName}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-[#F5DEB3]/30 rounded-lg p-4 text-center">
+          <p className="text-sm text-gray-600">Amount Due</p>
+          <p className="text-3xl font-bold text-[#8B4513]">${link.amount.toFixed(2)}</p>
+        </div>
+
+        {link.expiresAt && (
+          <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
+            <Clock className="w-4 h-4" />
+            <span>Expires {new Date(link.expiresAt).toLocaleDateString()}</span>
+          </div>
+        )}
+
+        {paid ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-2">
+            <CheckCircle className="w-8 h-8 text-green-600 mx-auto" />
+            <p className="text-green-700 font-medium">Payment Successful!</p>
+            <p className="text-green-600 text-sm">Thank you for your payment.</p>
+          </div>
+        ) : paying && link.tenantSlug && link.orderId && getStripe() ? (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <Elements stripe={getStripe()!}>
+              <StripePaymentForm
+                slug={link.tenantSlug}
+                orderId={link.orderId}
+                amount={link.amount}
+                onSuccess={() => setPaid(true)}
+                onCancel={() => setPaying(false)}
+              />
+            </Elements>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {canPayCard && (
+              <button onClick={() => setPaying(true)}
+                className="w-full py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033] transition-colors">
+                Pay with Card
+              </button>
+            )}
+            <div className="flex items-center justify-center gap-1 text-xs text-gray-400">
+              <Lock className="w-3 h-3" />
+              <span>Secured by Stripe</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <div className="w-8 h-8 border-2 border-[#8B4513] border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-gray-500">Loading payment details...</p>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center space-y-4">
+        <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+        <h1 className="text-2xl font-bold text-gray-900">Payment Link Error</h1>
+        <p className="text-gray-500">{message}</p>
+      </div>
+    </div>
+  );
+}

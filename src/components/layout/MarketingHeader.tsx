@@ -32,6 +32,12 @@ export function MarketingHeader() {
               </Link>
             ))}
             <Link
+              to="/signin"
+              className="text-sm font-medium text-gray-600 hover:text-[#8B4513] transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
               to="/demo"
               className="px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-lg hover:bg-[#5C4033] transition-colors"
             >
@@ -58,6 +64,13 @@ export function MarketingHeader() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/signin"
+              onClick={() => setOpen(false)}
+              className="block text-sm font-medium text-gray-600 hover:text-[#8B4513] py-2"
+            >
+              Sign in
+            </Link>
             <Link
               to="/demo"
               onClick={() => setOpen(false)}

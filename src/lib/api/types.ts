@@ -121,6 +121,18 @@ export interface PaymentLink {
   expiresAt?: string;
 }
 
+export interface PaymentLinkResponse {
+  id: string;
+  orderId?: string;
+  amount: number;
+  description?: string;
+  tenantName?: string;
+  tenantSlug?: string;
+  tenantLogo?: string;
+  status: string;
+  expiresAt?: string;
+}
+
 export interface AnalyticsSummary {
   todaysSales: number;
   totalSales: number;

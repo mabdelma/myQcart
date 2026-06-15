@@ -32,4 +32,12 @@ describe('endpoints', () => {
     expect(typeof mod.orderApi.list).toBe('function');
     expect(typeof mod.orderApi.updateStatus).toBe('function');
   });
+
+  it('exports payment endpoints', async () => {
+    const mod = await import('./endpoints.js');
+    expect(mod.paymentApi).toBeDefined();
+    expect(typeof mod.paymentApi.createIntent).toBe('function');
+    expect(typeof mod.paymentApi.recordCash).toBe('function');
+    expect(typeof mod.paymentApi.getPaymentLink).toBe('function');
+  });
 });

@@ -189,11 +189,15 @@ export async function getPaymentLinkByToken(token: string) {
 
   return {
     data: {
+      id: link.id,
+      orderId: link.orderId,
       amount: link.amount,
       description: link.description,
       tenantName: tenant?.name,
+      tenantSlug: tenant?.slug,
       tenantLogo: tenant?.logoUrl,
       status: link.status,
+      expiresAt: link.expiresAt,
     },
     status: 200 as const,
   };

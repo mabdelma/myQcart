@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLink, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats } from './types';
 
 // Auth
 export const authApi = {
@@ -105,7 +105,7 @@ export const paymentApi = {
   list: (slug: string) =>
     api.get<Payment[]>(`/r/${slug}/payments`),
   getPaymentLink: (token: string) =>
-    api.get<PaymentLink>(`/payment-links/${token}`, { skipAuth: true }),
+    api.get<PaymentLinkResponse>(`/r/payment-links/${token}`, { skipAuth: true }),
 };
 
 // Analytics
