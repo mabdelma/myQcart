@@ -123,10 +123,12 @@ users.put('/:slug/users/:userId', authMiddleware, requireRole('admin'), resolveT
   return c.json({ success: true });
 });
 
-users.patch('/:slug/users/:userId/status', authMiddleware, requireRole('admin'), resolveTenant, async (c) => {
+const isActiveSchema = z.object({ isActive: z.boolean() });
+
+users.patch('/:slug/users/:userId/status', authMiddleware, requireRole('admin'), resolveTenant, zValidator('json', isActiveSchema), async (c) => {
   const tenantId = c.get('tenantId');
   const userId = c.req.param('userId')!;
-  const { isActive } = await c.req.json<{ isActive: boolean }>();
+  const { isActive } = c.req.valid('json');
 
   const [existing] = await db
     .select()

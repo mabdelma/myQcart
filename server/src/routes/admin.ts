@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
 import { db, schema } from '../db/index.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
@@ -61,9 +63,9 @@ admin.get('/admin/tenants/:tenantId', authMiddleware, requireRole('super_admin')
   });
 });
 
-admin.put('/admin/tenants/:tenantId/status', authMiddleware, requireRole('super_admin'), async (c) => {
+admin.put('/admin/tenants/:tenantId/status', authMiddleware, requireRole('super_admin'), zValidator('json', z.object({ isActive: z.boolean() })), async (c) => {
   const tenantId = c.req.param('tenantId')!;
-  const { isActive } = await c.req.json<{ isActive: boolean }>();
+  const { isActive } = c.req.valid('json');
 
   const [existing] = await db
     .select()

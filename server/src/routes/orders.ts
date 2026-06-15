@@ -68,10 +68,14 @@ orders.get('/:slug/orders/:orderId', authMiddleware, resolveTenant, async (c) =>
   return c.json(result.data);
 });
 
-orders.patch('/:slug/orders/:orderId/status', authMiddleware, requireRole('admin', 'manager', 'kitchen', 'waiter'), resolveTenant, async (c) => {
+const statusUpdateSchema = z.object({
+  status: z.enum(['pending', 'preparing', 'ready', 'delivered', 'cancelled']),
+});
+
+orders.patch('/:slug/orders/:orderId/status', authMiddleware, requireRole('admin', 'manager', 'kitchen', 'waiter'), resolveTenant, zValidator('json', statusUpdateSchema), async (c) => {
   const tenantId = c.get('tenantId');
   const orderId = c.req.param('orderId')!;
-  const { status } = await c.req.json<{ status: string }>();
+  const { status } = c.req.valid('json');
 
   await updateOrderStatus(tenantId, orderId, status);
   return c.json({ success: true });
