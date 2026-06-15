@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
+import { parsePagination } from '../lib/pagination.js';
 import {
   createOrder,
   getTableOrders,
@@ -51,7 +52,8 @@ orders.get('/:slug/table/:tableId/orders', resolveTenant, async (c) => {
 orders.get('/:slug/orders', authMiddleware, requireRole('admin', 'manager', 'kitchen', 'waiter'), resolveTenant, async (c) => {
   const tenantId = c.get('tenantId');
   const status = c.req.query('status');
-  const result = await getAllOrders(tenantId, status || undefined);
+  const { page, limit } = parsePagination(c.req.query());
+  const result = await getAllOrders(tenantId, status || undefined, { page, limit });
   return c.json(result);
 });
 

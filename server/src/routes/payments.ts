@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
+import { parsePagination } from '../lib/pagination.js';
 import {
   createPaymentIntent,
   recordCashPayment,
@@ -32,7 +33,8 @@ payments.post('/:slug/payments/cash', authMiddleware, requireRole('admin', 'cash
 
 payments.get('/:slug/payments', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
   const tenantId = c.get('tenantId');
-  const result = await listPayments(tenantId);
+  const { page, limit } = parsePagination(c.req.query());
+  const result = await listPayments(tenantId, { page, limit });
   return c.json(result);
 });
 

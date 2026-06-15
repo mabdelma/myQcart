@@ -65,8 +65,8 @@ function initRedis() {
       lazyConnect: true,
     });
 
-    redis.on('error', (err: Error) => logger.error({ err }, 'Redis error'));
-    redisSub.on('error', (err: Error) => logger.error({ err }, 'Redis subscriber error'));
+    redis.on('error', (err: unknown) => logger.error({ err }, 'Redis error'));
+    redisSub.on('error', (err: unknown) => logger.error({ err }, 'Redis subscriber error'));
   } catch (err) {
     logger.error({ err }, 'Failed to initialize Redis');
     redis = null;
@@ -108,7 +108,8 @@ export function onOrderEvent(tenantId: string, handler: (event: OrderEvent) => v
       logger.error({ err, channel }, 'Redis subscribe failed');
     });
 
-    const onMessage = (_channel: string, message: string) => {
+    const onMessage = (...args: unknown[]) => {
+      const [_channel, message] = args as [string, string];
       if (_channel !== channel) return;
       try {
         handler(JSON.parse(message));

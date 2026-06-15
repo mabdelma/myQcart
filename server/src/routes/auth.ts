@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { registerUser, loginUser, getCurrentUser } from '../services/authService.js';
+import { registerUser, loginUser, getCurrentUser, requestPasswordReset, resetPassword } from '../services/authService.js';
 
 const auth = new Hono();
 
@@ -31,6 +31,35 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
 auth.post('/login', zValidator('json', loginSchema), async (c) => {
   const input = c.req.valid('json');
   const result = await loginUser(input);
+
+  if ('error' in result) {
+    return c.json({ error: result.error }, result.status);
+  }
+  return c.json(result.data, result.status);
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(100),
+});
+
+auth.post('/forgot-password', zValidator('json', forgotPasswordSchema), async (c) => {
+  const { email } = c.req.valid('json');
+  const result = await requestPasswordReset(email);
+
+  if ('error' in result) {
+    return c.json({ error: result.error }, result.status);
+  }
+  return c.json(result.data, result.status);
+});
+
+auth.post('/reset-password', zValidator('json', resetPasswordSchema), async (c) => {
+  const { token, password } = c.req.valid('json');
+  const result = await resetPassword(token, password);
 
   if ('error' in result) {
     return c.json({ error: result.error }, result.status);

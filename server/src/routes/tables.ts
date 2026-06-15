@@ -5,6 +5,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
+import qrcode from 'qrcode';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
 import { logger } from '../lib/logger.js';
@@ -48,6 +49,7 @@ tables.get('/resolve/:qrToken', async (c) => {
     capacity: table.capacity,
     status: table.status,
     qrToken: table.qrToken,
+    qrImage: table.qrImage,
     tenantSlug: tenant.slug,
     tenantName: tenant.name,
   });
@@ -73,6 +75,7 @@ tables.get('/:slug/table/:qrToken', resolveTenant, async (c) => {
     number: table.number,
     capacity: table.capacity,
     status: table.status,
+    qrImage: table.qrImage,
   });
 });
 
@@ -83,10 +86,13 @@ tables.post('/:slug/tables', authMiddleware, requireRole('admin'), resolveTenant
   const id = uuid();
   const qrToken = crypto.randomBytes(16).toString('hex');
 
-  await db.insert(schema.tables).values({ id, tenantId, qrToken, ...input });
+  const qrUrl = `https://${c.req.header('host')}/api/tables/resolve/${qrToken}`;
+  const qrImage = await qrcode.toDataURL(qrUrl, { width: 300, margin: 2 });
+
+  await db.insert(schema.tables).values({ id, tenantId, qrToken, qrImage, ...input });
 
   logger.info({ tenantId, tableId: id, number: input.number }, 'Table created');
-  return c.json({ id, qrToken, ...input }, 201);
+  return c.json({ id, qrToken, qrImage, ...input }, 201);
 });
 
 tables.get('/:slug/tables', authMiddleware, requireRole('admin', 'manager', 'waiter'), resolveTenant, async (c) => {

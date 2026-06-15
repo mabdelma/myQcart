@@ -32,6 +32,8 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   avatar: text('avatar'),
   isActive: boolean('is_active').notNull().default(true),
+  resetToken: text('reset_token'),
+  resetTokenExpiry: text('reset_token_expiry'),
   joinedAt: text('joined_at').notNull().default(sql`now()`),
   lastActive: text('last_active').notNull().default(sql`now()`),
 });

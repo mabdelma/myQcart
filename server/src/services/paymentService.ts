@@ -1,9 +1,11 @@
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
 import { logger } from '../lib/logger.js';
 import Stripe from 'stripe';
+import type { PaginationParams, PaginatedResult } from '../lib/pagination.js';
+import { buildPagination } from '../lib/pagination.js';
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -96,12 +98,24 @@ export async function recordCashPayment(tenantId: string, orderId: string, amoun
   return { id: paymentId, status: 'paid' };
 }
 
-export async function listPayments(tenantId: string) {
-  return db
+export async function listPayments(tenantId: string, params: PaginationParams = {}): Promise<PaginatedResult<typeof schema.payments.$inferSelect>> {
+  const { page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.payments)
+    .where(eq(schema.payments.tenantId, tenantId));
+
+  const data = await db
     .select()
     .from(schema.payments)
     .where(eq(schema.payments.tenantId, tenantId))
-    .orderBy(schema.payments.createdAt);
+    .orderBy(schema.payments.createdAt)
+    .limit(limit)
+    .offset(offset);
+
+  return buildPagination(data, Number(count), { page, limit });
 }
 
 export async function createPaymentLink(tenantId: string, orderId?: string, amount?: number, description?: string) {

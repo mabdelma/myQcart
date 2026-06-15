@@ -1,9 +1,12 @@
+import crypto from 'node:crypto';
 import { db, schema } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { createToken, verifyToken, getTokenFromRequest } from '../lib/auth.js';
+import { createSession, cleanupExpiredSessions } from './sessionService.js';
 import { logger } from '../lib/logger.js';
+import { sendEmail } from '../lib/mail.js';
 import type { Context } from 'hono';
 
 export interface RegisterInput {
@@ -102,6 +105,9 @@ export async function loginUser(input: LoginInput) {
     .set({ lastActive: new Date().toISOString() })
     .where(eq(schema.users.id, user.id));
 
+  await createSession(user.id, user.tenantId!);
+  await cleanupExpiredSessions();
+
   logger.info({ userId: user.id, tenantId: user.tenantId }, 'User logged in');
 
   return {
@@ -117,6 +123,86 @@ export async function loginUser(input: LoginInput) {
     },
     status: 200 as const,
   };
+}
+
+export async function requestPasswordReset(email: string) {
+  const [user] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.email, email))
+    .limit(1);
+
+  if (!user) {
+    logger.info({ email }, 'Password reset requested for non-existent email');
+    return { data: { message: 'If an account with that email exists, a reset link has been sent.' }, status: 200 as const };
+  }
+
+  const rawToken = uuid();
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+  await db
+    .update(schema.users)
+    .set({ resetToken: tokenHash, resetTokenExpiry: expiry })
+    .where(eq(schema.users.id, user.id));
+
+  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${rawToken}`;
+
+  await sendEmail({
+    to: user.email,
+    subject: 'Reset your QCart password',
+    html: `
+      <h2>Password Reset</h2>
+      <p>Hi ${user.name},</p>
+      <p>You requested a password reset. Click the link below to reset your password:</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+      <p>This link expires in 1 hour.</p>
+      <p>If you didn't request this, you can safely ignore this email.</p>
+      <hr />
+      <p style="color:#666;font-size:12px;">QCart</p>
+    `,
+  });
+
+  logger.info({ userId: user.id }, 'Password reset token generated');
+
+  return { data: { message: 'If an account with that email exists, a reset link has been sent.' }, status: 200 as const };
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const [user] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.resetToken, tokenHash))
+    .limit(1);
+
+  if (!user) {
+    return { error: 'Invalid or expired reset token', status: 400 as const };
+  }
+
+  if (!user.resetTokenExpiry || new Date(user.resetTokenExpiry) < new Date()) {
+    return { error: 'Reset token has expired', status: 400 as const };
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+
+  await db
+    .update(schema.users)
+    .set({
+      passwordHash,
+      resetToken: null,
+      resetTokenExpiry: null,
+    })
+    .where(eq(schema.users.id, user.id));
+
+  await db
+    .delete(schema.sessions)
+    .where(eq(schema.sessions.userId, user.id));
+
+  logger.info({ userId: user.id }, 'Password reset completed');
+
+  return { data: { message: 'Password has been reset successfully.' }, status: 200 as const };
 }
 
 export async function getCurrentUser(c: Context) {

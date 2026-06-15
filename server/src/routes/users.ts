@@ -2,12 +2,13 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
 import { logger } from '../lib/logger.js';
+import { parsePagination, buildPagination } from '../lib/pagination.js';
 
 const users = new Hono();
 
@@ -29,8 +30,17 @@ const updateUserSchema = z.object({
 
 users.get('/:slug/users', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
   const tenantId = c.get('tenantId');
+  const { page, limit } = parsePagination(c.req.query());
+  const offset = (page - 1) * limit;
 
-  const result = await db
+  const conditions = eq(schema.users.tenantId, tenantId);
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.users)
+    .where(conditions);
+
+  const data = await db
     .select({
       id: schema.users.id,
       name: schema.users.name,
@@ -43,10 +53,12 @@ users.get('/:slug/users', authMiddleware, requireRole('admin', 'manager'), resol
       lastActive: schema.users.lastActive,
     })
     .from(schema.users)
-    .where(eq(schema.users.tenantId, tenantId))
-    .orderBy(schema.users.joinedAt);
+    .where(conditions)
+    .orderBy(schema.users.joinedAt)
+    .limit(limit)
+    .offset(offset);
 
-  return c.json(result);
+  return c.json(buildPagination(data, Number(count), { page, limit }));
 });
 
 users.post('/:slug/users', authMiddleware, requireRole('admin'), resolveTenant, zValidator('json', createUserSchema), async (c) => {

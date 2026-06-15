@@ -1,8 +1,10 @@
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { logger } from '../lib/logger.js';
 import { emitOrderEvent } from '../lib/events.js';
+import type { PaginationParams, PaginatedResult } from '../lib/pagination.js';
+import { buildPagination } from '../lib/pagination.js';
 
 export interface OrderItemInput {
   menuItemId: string;
@@ -87,25 +89,50 @@ export async function createOrder(tenantId: string, input: CreateOrderInput) {
   };
 }
 
-export async function getTableOrders(tenantId: string, tableId: string) {
-  return db
+export async function getTableOrders(tenantId: string, tableId: string, params: PaginationParams = {}): Promise<PaginatedResult<typeof schema.orders.$inferSelect>> {
+  const { page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+  const conditions = and(eq(schema.orders.tenantId, tenantId), eq(schema.orders.tableId, tableId));
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.orders)
+    .where(conditions);
+
+  const data = await db
     .select()
     .from(schema.orders)
-    .where(and(eq(schema.orders.tenantId, tenantId), eq(schema.orders.tableId, tableId)))
-    .orderBy(schema.orders.createdAt);
+    .where(conditions)
+    .orderBy(schema.orders.createdAt)
+    .limit(limit)
+    .offset(offset);
+
+  return buildPagination(data, Number(count), { page, limit });
 }
 
-export async function getAllOrders(tenantId: string, statusFilter?: string) {
+export async function getAllOrders(tenantId: string, statusFilter?: string, params: PaginationParams = {}): Promise<PaginatedResult<typeof schema.orders.$inferSelect>> {
   const conditions = [eq(schema.orders.tenantId, tenantId)];
   if (statusFilter) {
     conditions.push(eq(schema.orders.status, statusFilter as typeof schema.orders.$inferSelect.status));
   }
 
-  return db
+  const { page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.orders)
+    .where(and(...conditions));
+
+  const data = await db
     .select()
     .from(schema.orders)
     .where(and(...conditions))
-    .orderBy(schema.orders.createdAt);
+    .orderBy(schema.orders.createdAt)
+    .limit(limit)
+    .offset(offset);
+
+  return buildPagination(data, Number(count), { page, limit });
 }
 
 export async function getOrderDetail(tenantId: string, orderId: string) {
@@ -142,10 +169,23 @@ export async function updateOrderStatus(tenantId: string, orderId: string, statu
   emitOrderEvent({ type: 'order_status_changed', tenantId, orderId, data: { status } });
 }
 
-export async function getServerOrders(tenantId: string, serverId: string) {
-  return db
+export async function getServerOrders(tenantId: string, serverId: string, params: PaginationParams = {}): Promise<PaginatedResult<typeof schema.orders.$inferSelect>> {
+  const { page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+  const conditions = and(eq(schema.orders.tenantId, tenantId), eq(schema.orders.serverId, serverId));
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.orders)
+    .where(conditions);
+
+  const data = await db
     .select()
     .from(schema.orders)
-    .where(and(eq(schema.orders.tenantId, tenantId), eq(schema.orders.serverId, serverId)))
-    .orderBy(schema.orders.createdAt);
+    .where(conditions)
+    .orderBy(schema.orders.createdAt)
+    .limit(limit)
+    .offset(offset);
+
+  return buildPagination(data, Number(count), { page, limit });
 }
