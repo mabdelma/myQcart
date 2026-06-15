@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Building2, User, Check } from 'lucide-react';
+import { Building2, Check } from 'lucide-react';
 import { tenantApi } from '../../lib/api';
 
 type Step = 'tenant' | 'admin' | 'done';

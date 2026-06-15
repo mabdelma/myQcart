@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Clock } from 'lucide-react';
 import { getDB } from '../../lib/db';
-import { useAuth } from '../../contexts/AuthContext';
 import type { Order, MenuItem } from '../../lib/db/schema';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
@@ -11,7 +10,6 @@ export function Orders() {
   const [menuItems, setMenuItems] = useState<Record<string, MenuItem>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { state: authState } = useAuth();
 
   useEffect(() => {
     loadOrders();

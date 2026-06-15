@@ -25,60 +25,59 @@ export function StaffPerformance() {
 
   useEffect(() => {
     if (!slug) return;
+    async function loadStaffData() {
+      if (!slug) return;
+      try {
+        const [users, orders] = await Promise.all([
+          userApi.list(slug),
+          orderApi.list(slug),
+        ]);
+
+        const staffMembers = users.filter(
+          (u) => ['waiter', 'kitchen', 'cashier'].includes(u.role)
+        );
+
+        const now = new Date();
+        const rangeStart = new Date();
+        if (timeRange === 'day') rangeStart.setHours(0, 0, 0, 0);
+        else if (timeRange === 'week') rangeStart.setDate(now.getDate() - 7);
+        else rangeStart.setMonth(now.getMonth() - 1);
+
+        const metrics: Record<string, StaffMetrics> = {};
+
+        staffMembers.forEach((member) => {
+          const memberOrders = orders.filter((o) => {
+            const orderDate = new Date(o.createdAt);
+            return o.serverId === member.id && orderDate >= rangeStart && orderDate <= now;
+          });
+
+          const serviceTimes = memberOrders
+            .filter((o) => o.completedAt)
+            .map((o) => (new Date(o.completedAt!).getTime() - new Date(o.createdAt).getTime()) / 60000);
+
+          metrics[member.id] = {
+            ordersHandled: memberOrders.length,
+            avgServiceTime: serviceTimes.length > 0
+              ? serviceTimes.reduce((a, b) => a + b, 0) / serviceTimes.length
+              : 0,
+            totalSales: memberOrders.reduce((sum, o) => sum + o.total, 0),
+            rating: calculateRating(memberOrders),
+          };
+        });
+
+        setStaff(staffMembers);
+        setStaffMetrics(metrics);
+        setError(null);
+      } catch {
+        setError('Failed to load staff performance data');
+      } finally {
+        setLoading(false);
+      }
+    }
     loadStaffData();
     const interval = setInterval(loadStaffData, 300000);
     return () => clearInterval(interval);
   }, [slug, timeRange]);
-
-  async function loadStaffData() {
-    if (!slug) return;
-    try {
-      const [users, orders] = await Promise.all([
-        userApi.list(slug),
-        orderApi.list(slug),
-      ]);
-
-      const staffMembers = users.filter(
-        (u) => ['waiter', 'kitchen', 'cashier'].includes(u.role)
-      );
-
-      const now = new Date();
-      const rangeStart = new Date();
-      if (timeRange === 'day') rangeStart.setHours(0, 0, 0, 0);
-      else if (timeRange === 'week') rangeStart.setDate(now.getDate() - 7);
-      else rangeStart.setMonth(now.getMonth() - 1);
-
-      const metrics: Record<string, StaffMetrics> = {};
-
-      staffMembers.forEach((member) => {
-        const memberOrders = orders.filter((o) => {
-          const orderDate = new Date(o.createdAt);
-          return o.serverId === member.id && orderDate >= rangeStart && orderDate <= now;
-        });
-
-        const serviceTimes = memberOrders
-          .filter((o) => o.completedAt)
-          .map((o) => (new Date(o.completedAt!).getTime() - new Date(o.createdAt).getTime()) / 60000);
-
-        metrics[member.id] = {
-          ordersHandled: memberOrders.length,
-          avgServiceTime: serviceTimes.length > 0
-            ? serviceTimes.reduce((a, b) => a + b, 0) / serviceTimes.length
-            : 0,
-          totalSales: memberOrders.reduce((sum, o) => sum + o.total, 0),
-          rating: calculateRating(memberOrders),
-        };
-      });
-
-      setStaff(staffMembers);
-      setStaffMetrics(metrics);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load staff performance data');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function calculateRating(orders: Order[]): number {
     if (orders.length === 0) return 0;

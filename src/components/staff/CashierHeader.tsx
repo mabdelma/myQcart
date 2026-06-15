@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, ClipboardList, DollarSign, LogOut, Store, Settings, Clock } from 'lucide-react';
+import { User, DollarSign, LogOut, Store, Settings, Clock } from 'lucide-react';
 import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';

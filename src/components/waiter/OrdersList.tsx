@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Clock, AlertTriangle, Check } from 'lucide-react';
-import { orderApi, menuApi, tableApi } from '../../lib/api';
+import { orderApi, tableApi } from '../../lib/api';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { OrderEditDialog } from '../orders/OrderEditDialog';
@@ -189,8 +189,8 @@ export function OrdersList() {
         })}
       </div>
 
-      {editingOrder && <OrderEditDialog order={editingOrder as any} onClose={() => setEditingOrder(null)} onUpdate={loadOrders} />}
-      {selectedOrder && <OrderDetails order={selectedOrder as any} onClose={() => setSelectedOrder(null)} />}
+      {editingOrder && <OrderEditDialog order={editingOrder as OrderWithDetails} onClose={() => setEditingOrder(null)} onUpdate={loadOrders} />}
+      {selectedOrder && <OrderDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
 
       {orders.length === 0 && (
         <div className="text-center py-12">

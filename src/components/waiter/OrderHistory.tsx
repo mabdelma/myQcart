@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Clock, Search, Filter } from 'lucide-react';
-import { orderApi, menuApi, tableApi } from '../../lib/api';
+import { orderApi, tableApi } from '../../lib/api';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { OrderDetails } from '../shared/OrderDetails';
@@ -237,7 +237,7 @@ export function OrderHistory() {
         })}
       </div>
 
-      {selectedOrder && <OrderDetails order={selectedOrder as any} onClose={() => setSelectedOrder(null)} />}
+      {selectedOrder && <OrderDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
 
       {filteredOrders.length === 0 && (
         <div className="text-center py-12">

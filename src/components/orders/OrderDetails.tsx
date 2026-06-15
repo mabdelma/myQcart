@@ -114,15 +114,3 @@ export function OrderDetails({ order, onClose }: OrderDetailsProps) {
     </div>
   );
 }
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center text-lg font-bold">
-                <span>Total</span>
-                <span>${order.total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}

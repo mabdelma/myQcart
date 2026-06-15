@@ -12,9 +12,22 @@ export function downloadCSV(data: string, filename: string) {
   document.body.removeChild(link);
 }
 
+interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
+}
+
+interface StaffMetricData {
+  ordersHandled: number;
+  avgServiceTime: number;
+  totalSales: number;
+  rating: number;
+}
+
 export function generateStaffReport(
-  staff: any[],
-  metrics: Record<string, any>,
+  staff: StaffMember[],
+  metrics: Record<string, StaffMetricData>,
   timeRange: string
 ) {
   const headers = [

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, AlertTriangle, Check, ChefHat, Ban } from 'lucide-react';
+import { Clock, Check, ChefHat, Ban } from 'lucide-react';
 import { orderApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Order } from '../../lib/api/types';

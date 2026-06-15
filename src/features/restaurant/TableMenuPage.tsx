@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { useTableFlow } from './TableFlowLayout';
 import { useCart } from '../../contexts/CartContext';
 import { Plus, Check } from 'lucide-react';
@@ -6,6 +7,8 @@ import { Plus, Check } from 'lucide-react';
 export function TableMenuPage() {
   const { categories, items } = useTableFlow();
   const { dispatch } = useCart();
+  const navigate = useNavigate();
+  const { slug, tableId } = useParams();
   const [selectedCat, setSelectedCat] = useState<string>('');
   const [addingId, setAddingId] = useState<string | null>(null);
 
@@ -18,7 +21,8 @@ export function TableMenuPage() {
     (i) => i.available && i.categoryId === selectedCat
   );
 
-  function handleAdd(item: typeof items[0]) {
+  function handleAdd(e: React.MouseEvent, item: typeof items[0]) {
+    e.stopPropagation();
     dispatch({ type: 'ADD_ITEM', payload: item, quantity: 1 });
     setAddingId(item.id);
     setTimeout(() => setAddingId(null), 800);
@@ -39,7 +43,8 @@ export function TableMenuPage() {
 
       <div className="space-y-3">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4">
+          <div key={item.id} onClick={() => navigate(`/r/${slug}/table/${tableId}/menu/${item.id}`)}
+            className="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow">
             {item.imageUrl && (
               <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
             )}
@@ -48,7 +53,7 @@ export function TableMenuPage() {
               {item.description && <p className="text-sm text-gray-500 truncate">{item.description}</p>}
               <p className="text-[#8B4513] font-bold mt-1">${item.price.toFixed(2)}</p>
             </div>
-            <button onClick={() => handleAdd(item)}
+            <button onClick={(e) => handleAdd(e, item)}
               className="px-3 py-1.5 bg-[#8B4513] text-white rounded-full text-sm hover:bg-[#5C4033] flex-shrink-0 transition-colors">
               {addingId === item.id ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             </button>

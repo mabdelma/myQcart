@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { CreditCard, Check, X, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { CreditCard, Check, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { tenantApi } from '../../lib/api';
 

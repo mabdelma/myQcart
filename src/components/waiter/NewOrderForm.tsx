@@ -27,7 +27,7 @@ export function NewOrderForm({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   async function loadData() {
     if (!slug) return;

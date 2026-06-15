@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Edit, Trash2, Shield } from 'lucide-react';
 import { userApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,24 +12,24 @@ export function UserManagement() {
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<Partial<User> & { password?: string } | null>(null);
 
-  useEffect(() => {
-    if (!slug) return;
-    loadUsers();
-  }, [slug]);
-
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     if (!slug) return;
     setLoading(true);
     try {
       const data = await userApi.list(slug);
       setUsers(data);
       setError(null);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load users');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
       setLoading(false);
     }
-  }
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    loadUsers();
+  }, [slug, loadUsers]);
 
   async function saveUser(e: React.FormEvent) {
     e.preventDefault();
@@ -51,8 +51,8 @@ export function UserManagement() {
       }
       setEditingUser(null);
       await loadUsers();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to save user');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save user');
     }
   }
 
@@ -61,8 +61,8 @@ export function UserManagement() {
     try {
       await userApi.delete(slug, id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
-    } catch (err: any) {
-      setError(err?.message || 'Failed to delete user');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete user');
     }
   }
 

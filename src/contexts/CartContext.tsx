@@ -17,6 +17,7 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: MenuItem; quantity: number; comment?: string; tableId?: string }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'SET_COMMENT'; payload: { id: string; comment: string } }
   | { type: 'CLEAR_CART' };
 
 const CartContext = createContext<{
@@ -85,6 +86,17 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             : item
         ),
         total: state.total + (item.menuItem.price * quantityDiff)
+      };
+    }
+
+    case 'SET_COMMENT': {
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.menuItem.id === action.payload.id
+            ? { ...item, comment: action.payload.comment || undefined }
+            : item
+        ),
       };
     }
 

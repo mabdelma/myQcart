@@ -13,11 +13,8 @@ interface StaffStatsProps {
   }>;
 }
 
-export function StaffStats({ staff, metrics }: StaffStatsProps) {
+export function StaffStats({ metrics }: StaffStatsProps) {
   const staffCount = Object.keys(metrics).length;
-
-  const totalOrders = Object.values(metrics)
-    .reduce((sum, m) => sum + (m.ordersHandled || 0), 0);
 
   const avgServiceTime = Object.values(metrics)
     .reduce((sum, m) => sum + (m.avgServiceTime || 0), 0) / (staffCount || 1);

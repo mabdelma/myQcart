@@ -1,6 +1,6 @@
 import {
-  Smartphone, QrCode, CreditCard, Users, BarChart3, Bell,
-  Shield, Globe, Clock, Printer, Sliders, Zap
+  Smartphone, CreditCard, Users, BarChart3, Bell,
+  Globe, Clock, Printer, Sliders
 } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';

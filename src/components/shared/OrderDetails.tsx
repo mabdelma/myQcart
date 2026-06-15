@@ -1,4 +1,4 @@
-import { X, MessageCircle, Clock } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 
 interface OrderItemDisplay {
   id: string;

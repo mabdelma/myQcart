@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDB } from '../../../lib/db';
-import type { Payment, Order, MenuCategory } from '../../../lib/db/schema';
+import type { Payment, Order } from '../../../lib/db/schema';
 import { RevenueBreakdown } from './RevenueBreakdown';
 import { PaymentsList } from './PaymentsList';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
@@ -11,7 +11,7 @@ export function FinancialInsights() {
   const [error, setError] = useState<string | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [orders, setOrders] = useState<Record<string, Order>>({});
-  const [revenueData, setRevenueData] = useState({
+  const [, setRevenueData] = useState({
     daily: 0,
     weekly: 0,
     monthly: 0,

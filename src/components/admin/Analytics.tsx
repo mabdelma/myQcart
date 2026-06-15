@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { analyticsApi, tableApi } from '../../lib/api';
+import { analyticsApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
-import { Clock, DollarSign, Users, AlertTriangle, TrendingUp, Utensils } from 'lucide-react';
+import { Clock, DollarSign, Users, AlertTriangle, Utensils } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { AnalyticsSkeleton } from '../ui/Skeleton';
 import type { AnalyticsSummary } from '../../lib/api/types';
@@ -17,25 +16,24 @@ export function Analytics() {
 
   useEffect(() => {
     if (!slug) return;
+    async function loadSummary() {
+      if (!slug) return;
+      try {
+        const [data] = await Promise.all([
+          analyticsApi.summary(slug),
+        ]);
+        setSummary(data);
+        setError(null);
+      } catch {
+        setError('Failed to load analytics data');
+      } finally {
+        setLoading(false);
+      }
+    }
     loadSummary();
     const interval = setInterval(loadSummary, 300000);
     return () => clearInterval(interval);
   }, [slug]);
-
-  async function loadSummary() {
-    if (!slug) return;
-    try {
-      const [data] = await Promise.all([
-        analyticsApi.summary(slug),
-      ]);
-      setSummary(data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load analytics data');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   if (loading) return <AnalyticsSkeleton />;
   if (error) return <ErrorMessage message={error} />;

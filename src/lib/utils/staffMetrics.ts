@@ -1,5 +1,5 @@
 import { getDB } from '../db';
-import type { Order, User, Payment } from '../db/schema';
+import type { User } from '../db/schema';
 
 export interface StaffMetrics {
   ordersHandled: number;

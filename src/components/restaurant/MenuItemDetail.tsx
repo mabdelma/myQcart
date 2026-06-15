@@ -17,7 +17,7 @@ export function MenuItemDetail() {
 
   React.useEffect(() => {
     loadItem();
-  }, [itemId]);
+  }, [itemId, loadItem]);
 
   async function loadItem() {
     if (!itemId) return;

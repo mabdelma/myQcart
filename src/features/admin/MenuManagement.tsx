@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, useSortable, rectSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { menuApi, uploadApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -82,7 +82,7 @@ export function MenuManagement() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, selectedCategory]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -91,7 +91,7 @@ export function MenuManagement() {
       if (editing.id) {
         await menuApi.updateItem(slug, editing.id, editing);
       } else {
-        await menuApi.createItem(slug, editing as any);
+        await menuApi.createItem(slug, editing as Parameters<typeof menuApi.createItem>[1]);
       }
       setEditing(null);
       const data = await menuApi.getFullMenu(slug);
@@ -134,7 +134,7 @@ export function MenuManagement() {
     } catch (err) {
       console.error('Failed to reorder items:', err);
     }
-  }, [items, selectedCategory, slug]);
+  }, [selectedCategory, slug, filteredItems]);
 
   if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
   if (loading) return <div className="p-4 text-gray-500">Loading menu...</div>;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Camera, Mail, Key } from 'lucide-react';
+import { User, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { userApi } from '../../lib/api';
 import { LoadingSpinner } from '../ui/LoadingSpinner';

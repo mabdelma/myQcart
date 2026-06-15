@@ -47,7 +47,6 @@ export function RestaurantLanding() {
   }
 
   const mainCats = categories.filter((c) => c.type === 'main');
-  const mainCatIds = new Set(mainCats.map((c) => c.id));
 
   return (
     <div className="min-h-screen bg-gray-50">

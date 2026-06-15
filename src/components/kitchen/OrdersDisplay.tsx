@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Clock, AlertTriangle, ChefHat } from 'lucide-react';
-import { orderApi, tableApi, menuApi } from '../../lib/api';
-import type { Order, TableData, MenuItem, MenuCategory } from '../../lib/api/types';
+import { orderApi, tableApi } from '../../lib/api';
+import type { Order, TableData } from '../../lib/api/types';
 import { OrderListSkeleton } from '../ui/Skeleton';
 import { OrderDetails } from './OrderDetails';
 import { ErrorMessage } from '../ui/ErrorMessage';
@@ -33,15 +33,12 @@ export function OrdersDisplay() {
   const loadOrders = useCallback(async () => {
     if (!slug) return;
     try {
-      const [allOrders, allTables, menuData] = await Promise.all([
+      const [allOrders, allTables] = await Promise.all([
         orderApi.list(slug),
         tableApi.list(slug),
-        menuApi.getFullMenu(slug),
       ]);
 
       const tablesMap = Object.fromEntries(allTables.map((t) => [t.id, t]));
-      const menuItemsMap = Object.fromEntries(menuData.items.map((i) => [i.id, i]));
-
       const orderDetails = await Promise.all(
         allOrders
           .filter((o) => o.status !== 'delivered' && o.status !== 'cancelled')
@@ -140,7 +137,7 @@ export function OrdersDisplay() {
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  {(order as any).items?.map((item: any) => (
+                    {order.items?.map((item) => (
                     <div key={item.id} className="flex justify-between items-center">
                       <div className="flex items-center">
                         <span className="w-6 h-6 flex items-center justify-center bg-[#F5DEB3] text-[#8B4513] rounded-full text-sm font-medium">{item.quantity}</span>
@@ -166,7 +163,7 @@ export function OrdersDisplay() {
         })}
       </div>
 
-      {selectedOrder && <OrderDetails order={selectedOrder as any} onClose={() => setSelectedOrder(null)} />}
+      {selectedOrder && <OrderDetails order={selectedOrder as OrderWithItems & { paymentStatus?: string }} onClose={() => setSelectedOrder(null)} />}
 
       {orders.length === 0 && (
         <div className="text-center py-12">

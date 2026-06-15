@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { getDB } from '../../lib/db';
 import type { MenuItem, MenuCategory } from '../../lib/db/schema';
@@ -13,20 +13,7 @@ export function MenuManagement() {
   const [showCategories, setShowCategories] = useState(false);
   const [availableSubCategories, setAvailableSubCategories] = useState<MenuCategory[]>([]);
 
-  useEffect(() => {
-    loadMenuItems();
-  }, []);
-
-  useEffect(() => {
-    if (editingItem) {
-      const subs = categories.filter(
-        c => c.type === 'sub' && c.parentId === editingItem.mainCategoryId
-      );
-      setAvailableSubCategories(subs);
-    }
-  }, [editingItem?.mainCategoryId, categories]);
-
-  async function loadMenuItems() {
+  const loadMenuItems = useCallback(async () => {
     const db = await getDB();
     const [items, cats] = await Promise.all([
       db.getAll('menu_items'),
@@ -42,7 +29,20 @@ export function MenuManagement() {
     if (mainCategories.length > 0 && !selectedMainCategory) {
       setSelectedMainCategory(mainCategories[0].id);
     }
-  }
+  }, [selectedMainCategory]);
+
+  useEffect(() => {
+    loadMenuItems();
+  }, [loadMenuItems]);
+
+  useEffect(() => {
+    if (editingItem) {
+      const subs = categories.filter(
+        c => c.type === 'sub' && c.parentId === editingItem.mainCategoryId
+      );
+      setAvailableSubCategories(subs);
+    }
+  }, [editingItem, categories]);
 
   async function saveMenuItem(item: MenuItem) {
     const db = await getDB();
@@ -58,10 +58,6 @@ export function MenuManagement() {
   }
 
   const mainCategories = categories.filter(c => c.type === 'main');
-  const subCategories = categories.filter(
-    c => c.type === 'sub' && 
-    c.parentId === selectedMainCategory
-  );
 
   return (
     <div className="space-y-6">

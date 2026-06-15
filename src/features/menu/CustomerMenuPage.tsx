@@ -1,8 +1,8 @@
-import { useState, useEffect, createContext, useContext, useReducer } from 'react';
+import { useState, useEffect, createContext, useReducer } from 'react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { menuApi, tableApi, orderApi, paymentApi } from '../../lib/api';
-import type { MenuItem, MenuCategory, TableData } from '../../lib/api/types';
+import type { MenuItem, MenuCategory, TableData, OrderWithItems } from '../../lib/api/types';
 import { StripePaymentForm } from './StripePaymentForm';
 
 // Lazy, memoized Stripe loader. App.tsx imports this module eagerly, so calling
@@ -56,7 +56,6 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 const CartCtx = createContext<{ state: CartState; dispatch: React.Dispatch<CartAction> } | null>(null);
-function useCart() { const c = useContext(CartCtx); if (!c) throw new Error('useCart'); return c; }
 
 export function CustomerMenuPage() {
   const params = new URLSearchParams(window.location.search);
@@ -64,20 +63,17 @@ export function CustomerMenuPage() {
   const [table, setTable] = useState<TableData | null>(null);
   const [slug, setSlug] = useState<string>('');
   const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [items, setItems] = useState<MenuItem[]>([]);
   const [selectedCat, setSelectedCat] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'menu' | 'cart' | 'orders' | 'checkout'>('menu');
   const [cartState, dispatch] = useReducer(cartReducer, { items: [], total: 0 });
   const [placing, setPlacing] = useState(false);
   const [orderResult, setOrderResult] = useState<{ id: string; total: number } | null>(null);
-  const [tableOrders, setTableOrders] = useState<any[]>([]);
+  const [tableOrders, setTableOrders] = useState<OrderWithItems[]>([]);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) { setError('No QR token'); setLoading(false); return; }
+    if (!token) { return; }
     tableApi.resolve(token)
       .then((data) => {
         setTable(data);
@@ -86,11 +82,9 @@ export function CustomerMenuPage() {
       })
       .then((menu) => {
         setCategories(menu.categories.filter((c) => c.type === 'main'));
-        setItems(menu.items);
         if (menu.categories.length > 0) setSelectedCat(menu.categories[0].id);
       })
-      .catch((err) => setError(err.message || 'Failed to load'))
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, [token]);
 
   useEffect(() => {
@@ -115,7 +109,7 @@ export function CustomerMenuPage() {
       dispatch({ type: 'CLEAR' });
       setTab('orders');
     } catch (err) {
-      setError((err as any).message || 'Failed to place order');
+      console.error('Failed to place order:', err);
     } finally {
       setPlacing(false);
     }
@@ -127,7 +121,7 @@ export function CustomerMenuPage() {
       await paymentApi.recordCash(slug, { orderId, amount: total });
       setPayingOrderId(null);
     } catch (err) {
-      setError((err as any).message || 'Payment failed');
+      console.error('Payment failed:', err);
     }
   }
 
@@ -248,7 +242,7 @@ export function CustomerMenuPage() {
                 </div>
               )}
               {tableOrders.length === 0 && <p className="text-center text-gray-500 py-8">No orders yet</p>}
-              {tableOrders.map((order: any) => (
+              {tableOrders.map((order) => (
                 <div key={order.id} className="bg-white rounded-lg shadow-sm p-4">
                   <div className="flex justify-between items-start mb-2">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${

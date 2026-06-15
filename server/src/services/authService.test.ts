@@ -121,7 +121,7 @@ describe('authService', () => {
       db.__setQueryData([
         { id: 'user-1', isActive: true, passwordHash: 'hash', tenantId: 't1', role: 'waiter' },
       ]);
-      (bcrypt.compare as any).mockResolvedValue(false);
+      vi.mocked(bcrypt.compare).mockResolvedValue(false);
 
       const result = await loginUser({ email: 'test@test.com', password: 'wrong' });
 
@@ -136,7 +136,7 @@ describe('authService', () => {
       db.__setQueryData([
         { id: 'user-1', isActive: true, passwordHash: 'hash', tenantId: 't1', role: 'waiter', name: 'Test', email: 'test@test.com' },
       ]);
-      (bcrypt.compare as any).mockResolvedValue(true);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true);
 
       const result = await loginUser({ email: 'test@test.com', password: 'correct' });
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getDB } from '../../../lib/db';
-import type { Order, Payment, MenuCategory, MenuItem } from '../../../lib/db/schema';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
 import { ErrorMessage } from '../../ui/ErrorMessage';
 import { DollarSign, TrendingUp, Calendar } from 'lucide-react';

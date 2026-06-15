@@ -120,7 +120,7 @@ export async function createPaymentLink(tenantId: string, orderId?: string, amou
           unit_amount: Math.round(amount * 100),
         })).id,
         quantity: 1,
-      }] as any,
+      }] as Stripe.PaymentLinkCreateParams.LineItem[],
     });
     stripeLinkId = link.id;
   }

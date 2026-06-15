@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { getDB } from '../../../lib/db';
-import type { Order } from '../../../lib/db/schema';
 import { Skeleton } from '../../ui/Skeleton';
 
 export function RevenueChart() {
@@ -50,8 +49,6 @@ export function RevenueChart() {
   // Calculate chart dimensions
   const maxRevenue = Math.max(...data.map(d => d.revenue));
   const chartHeight = 200;
-  const barWidth = 40;
-  const gap = 20;
 
   return (
     <div className="relative h-64">

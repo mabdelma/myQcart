@@ -9,7 +9,7 @@ import { TableFilters } from './table/TableFilters';
 import { TableList } from './table/TableList';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
-import { QrCode, Settings, Trash2 } from 'lucide-react';
+
 
 export function TableManagement() {
   const [tables, setTables] = useState<Table[]>([]);

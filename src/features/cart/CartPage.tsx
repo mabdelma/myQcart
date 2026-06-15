@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useCart } from '../../contexts/CartContext';
-import { ShoppingBag, Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, MessageCircle } from 'lucide-react';
 
 export function CartPage() {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
   const { slug, tableId } = useParams();
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
 
   return (
     <div className="space-y-4">
@@ -47,13 +50,40 @@ export function CartPage() {
                       className="w-8 h-8 rounded-full bg-[#8B4513] text-white flex items-center justify-center hover:bg-[#5C4033]">
                       <Plus className="w-4 h-4" />
                     </button>
+                    <button onClick={() => { setEditingComment(item.menuItem.id); setCommentText(item.comment || ''); }}
+                      className={`p-1.5 rounded ml-1 transition-colors ${item.comment ? 'text-[#8B4513] bg-[#F5DEB3]' : 'text-gray-400 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                      <MessageCircle className="w-4 h-4" />
+                    </button>
                     <button onClick={() => dispatch({ type: 'REMOVE_ITEM', payload: item.menuItem.id })}
-                      className="p-1 text-red-500 hover:bg-red-50 rounded ml-2">
+                      className="p-1 text-red-500 hover:bg-red-50 rounded ml-1">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                {item.comment && (
+
+                {editingComment === item.menuItem.id && (
+                  <div className="mt-3 space-y-2">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Add special instructions..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#8B4513] focus:border-[#8B4513] text-sm"
+                      rows={2}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setEditingComment(null)}
+                        className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md">
+                        Cancel
+                      </button>
+                      <button onClick={() => { dispatch({ type: 'SET_COMMENT', payload: { id: item.menuItem.id, comment: commentText } }); setEditingComment(null); }}
+                        className="px-3 py-1 text-sm bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {item.comment && editingComment !== item.menuItem.id && (
                   <p className="mt-1 text-sm text-gray-600 italic">"{item.comment}"</p>
                 )}
               </div>

@@ -16,7 +16,8 @@ interface PointOfSaleProps {
   role: 'waiter' | 'cashier';
 }
 
-export function PointOfSale({ role }: PointOfSaleProps) {
+export function PointOfSale(props: PointOfSaleProps) {
+  void props;
   const { state: authState } = useAuth();
   const slug = authState.tenant?.slug;
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export function PointOfSale({ role }: PointOfSaleProps) {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   async function loadData() {
     if (!slug) return;

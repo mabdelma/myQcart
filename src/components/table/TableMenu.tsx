@@ -16,7 +16,7 @@ export function TableMenu() {
 
   useEffect(() => {
     loadTable();
-  }, [tableId]);
+  }, [tableId, loadTable]);
 
   async function loadTable() {
     if (!tableId) {

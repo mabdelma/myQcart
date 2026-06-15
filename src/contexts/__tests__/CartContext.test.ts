@@ -23,6 +23,7 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: MenuItem; quantity: number; comment?: string; tableId?: string }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'SET_COMMENT'; payload: { id: string; comment: string } }
   | { type: 'CLEAR_CART' };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
@@ -69,6 +70,16 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             : item
         ),
         total: state.total + (item.menuItem.price * quantityDiff)
+      };
+    }
+    case 'SET_COMMENT': {
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.menuItem.id === action.payload.id
+            ? { ...item, comment: action.payload.comment || undefined }
+            : item
+        ),
       };
     }
     case 'CLEAR_CART':
@@ -137,6 +148,25 @@ describe('cartReducer', () => {
   it('does nothing when removing non-existent item', () => {
     const initial = { items: [{ menuItem: burger, quantity: 1 }], total: 10.99 };
     const state = cartReducer(initial, { type: 'REMOVE_ITEM', payload: '999' });
+    expect(state).toEqual(initial);
+  });
+
+  it('sets comment on existing item', () => {
+    const initial = { items: [{ menuItem: burger, quantity: 1 }], total: 10.99 };
+    const state = cartReducer(initial, { type: 'SET_COMMENT', payload: { id: '1', comment: 'No onions' } });
+    expect(state.items[0].comment).toBe('No onions');
+    expect(state.total).toBe(10.99);
+  });
+
+  it('clears comment when empty string', () => {
+    const initial = { items: [{ menuItem: burger, quantity: 1, comment: 'No onions' }], total: 10.99 };
+    const state = cartReducer(initial, { type: 'SET_COMMENT', payload: { id: '1', comment: '' } });
+    expect(state.items[0].comment).toBeUndefined();
+  });
+
+  it('does nothing for SET_COMMENT on non-existent item', () => {
+    const initial = { items: [{ menuItem: burger, quantity: 1 }], total: 10.99 };
+    const state = cartReducer(initial, { type: 'SET_COMMENT', payload: { id: '999', comment: 'Test' } });
     expect(state).toEqual(initial);
   });
 });

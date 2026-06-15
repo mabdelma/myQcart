@@ -68,7 +68,8 @@ const STORES = {
 
 async function createDatabase(): Promise<IDBPDatabase<QCartDB>> {
   return openDB<QCartDB>('qcart-v1', 1, {
-    async upgrade(database, oldVersion, newVersion, transaction) {
+    async upgrade(database, _oldVersion, _newVersion, _transaction) {
+      void _oldVersion; void _newVersion; void _transaction;
       // Create all stores and their indexes
       for (const [storeName, config] of Object.entries(STORES)) {
         if (!database.objectStoreNames.contains(storeName)) {

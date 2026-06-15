@@ -2,10 +2,20 @@ import { EventEmitter } from 'events';
 import { createRequire } from 'module';
 import { logger } from './logger.js';
 
+interface Redis {
+  publish(channel: string, message: string): Promise<number>;
+  subscribe(channel: string): Promise<void>;
+  unsubscribe(channel: string): Promise<void>;
+  on(event: string, handler: (...args: unknown[]) => void): unknown;
+  off(event: string, handler: (...args: unknown[]) => void): unknown;
+}
+
+type RedisConstructor = new (url: string, options: Record<string, unknown>) => Redis;
+
 // ioredis v5 type declarations don't play nicely with ESM TypeScript projects.
-// We load it via createRequire and cast to any to avoid the namespace-vs-class issue.
+// We load it via createRequire and use a minimal interface to avoid the namespace-vs-class issue.
 const _require = createRequire(import.meta.url);
-let RedisClient: any = null;
+let RedisClient: RedisConstructor | null = null;
 try {
   RedisClient = _require('ioredis');
 } catch {
@@ -21,8 +31,8 @@ export interface OrderEvent {
 
 const redisUrl = process.env.REDIS_URL;
 
-let redis: any = null;
-let redisSub: any = null;
+let redis: Redis | null = null;
+let redisSub: Redis | null = null;
 let fallbackEmitter: EventEmitter | null = null;
 
 function initRedis() {

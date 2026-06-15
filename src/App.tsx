@@ -18,6 +18,7 @@ import { ContactPage } from './features/marketing/ContactPage';
 import { DemoPage } from './features/marketing/DemoPage';
 import { TableFlowLayout } from './features/restaurant/TableFlowLayout';
 import { TableMenuPage } from './features/restaurant/TableMenuPage';
+import { TableMenuItemDetail } from './features/restaurant/TableMenuItemDetail';
 import { CartPage } from './features/cart/CartPage';
 import { OrdersPage } from './features/orders/OrdersPage';
 import { CheckoutPage } from './features/checkout/CheckoutPage';
@@ -71,6 +72,7 @@ function App() {
           }>
             <Route index element={<Navigate to="menu" replace />} />
             <Route path="menu" element={<TableMenuPage />} />
+            <Route path="menu/:itemId" element={<TableMenuItemDetail />} />
             <Route path="cart" element={<CartPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="checkout" element={<CheckoutPage />} />

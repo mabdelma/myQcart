@@ -7,29 +7,31 @@ interface CartPanelProps {
   isOpen: boolean;
   onClose: () => void;
   tableId?: string;
+  slug?: string;
 }
 
-export function CartPanel({ isOpen, onClose, tableId }: CartPanelProps) {
+export function CartPanel({ isOpen, onClose, tableId, slug }: CartPanelProps) {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
 
   const handleCheckout = () => {
-    navigate(tableId ? `/table/${tableId}/checkout` : '/checkout');
+    if (slug && tableId) {
+      navigate(`/r/${slug}/table/${tableId}/checkout`);
+    } else if (tableId) {
+      navigate(`/table/${tableId}/checkout`);
+    } else {
+      navigate('/checkout');
+    }
     onClose();
   };
 
   const handleSaveComment = (itemId: string) => {
-    const item = state.items.find(i => i.menuItem.id === itemId);
-    if (item) {
-      dispatch({
-        type: 'ADD_ITEM',
-        payload: item.menuItem,
-        quantity: item.quantity,
-        comment: commentText
-      });
-    }
+    dispatch({
+      type: 'SET_COMMENT',
+      payload: { id: itemId, comment: commentText },
+    });
     setEditingComment(null);
     setCommentText('');
   };

@@ -1,46 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Minus, Check, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { getDB } from '../../lib/db';
 import type { MenuItem, MenuCategory } from '../../lib/db/schema';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { useCart } from '../../contexts/CartContext';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { useNavigate, useParams } from 'react-router';
 
 export function Menu() {
   const navigate = useNavigate();
   const { tableId } = useParams();
-  const { dispatch } = useCart();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [addingItem, setAddingItem] = useState<string | null>(null);
-  const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
-  const [showConfirmation, setShowConfirmation] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('1'); // Default to Food Menu
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('4'); // Default to Main Courses
-
-  const handleAddToCart = (item: MenuItem) => {
-    const quantity = itemQuantities[item.id] || 1;
-    dispatch({ 
-      type: 'ADD_ITEM', 
-      payload: { ...item },
-      quantity
-    });
-    setAddingItem(null);
-    setItemQuantities({ ...itemQuantities, [item.id]: 1 });
-    setShowConfirmation(item.id);
-    setTimeout(() => setShowConfirmation(null), 2000);
-  };
-
-  const updateQuantity = (e: React.MouseEvent, itemId: string, delta: number) => {
-    e.stopPropagation();
-    e.preventDefault();
-    const currentQuantity = itemQuantities[itemId] || 1;
-    const newQuantity = Math.max(1, currentQuantity + delta);
-    setItemQuantities({ ...itemQuantities, [itemId]: newQuantity });
-  };
 
   useEffect(() => {
     loadData();

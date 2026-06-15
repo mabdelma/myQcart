@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Clock, Search, Filter, DollarSign, Receipt } from 'lucide-react';
-import { paymentApi, orderApi, menuApi } from '../../lib/api';
+import { paymentApi, orderApi } from '../../lib/api';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import type { Payment } from '../../lib/api/types';

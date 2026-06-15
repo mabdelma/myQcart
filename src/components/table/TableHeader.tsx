@@ -3,7 +3,6 @@ import { NavLink, useParams } from 'react-router';
 import { ShoppingCart, ClipboardList, ChefHat } from 'lucide-react';
 import { CartPanel } from '../restaurant/CartPanel';
 import { useCart } from '../../contexts/CartContext';
-import type { Table } from '../../lib/db/schema';
 
 export function TableHeader() {
   const { tableId } = useParams();

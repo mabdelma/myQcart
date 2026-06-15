@@ -1,8 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { Outlet, NavLink, useParams } from 'react-router';
+import { Outlet, NavLink, useParams, useLocation } from 'react-router';
 import { ShoppingCart, ClipboardList, ChefHat, Receipt } from 'lucide-react';
 import { CartProvider, useCart } from '../../contexts/CartContext';
-import { CartPanel } from '../../components/restaurant/CartPanel';
 import { tenantApi, menuApi, tableApi } from '../../lib/api';
 import type { Tenant, MenuItem, MenuCategory, TableData } from '../../lib/api/types';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -25,6 +24,7 @@ export function useTableFlow() {
 
 function TableFlowInner() {
   const { slug, tableId } = useParams();
+  const location = useLocation();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [table, setTable] = useState<TableData | null>(null);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -32,7 +32,6 @@ function TableFlowInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { state } = useCart();
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     if (!slug || !tableId) return;
@@ -57,6 +56,7 @@ function TableFlowInner() {
   if (!tenant || !table) return <ErrorMessage message="Data not found" />;
 
   const value: TableFlowContextValue = { tenant, table, categories, items, slug: slug! };
+  const isCartPage = location.pathname.endsWith('/cart');
 
   return (
     <TableFlowContext.Provider value={value}>
@@ -73,40 +73,48 @@ function TableFlowInner() {
                   Table {table.number}
                 </span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-1 sm:space-x-3">
                 <NavLink to={`/r/${slug}/table/${tableId}/menu`}
-                  className={({ isActive }) => `px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
                   Menu
                 </NavLink>
-                <button onClick={() => setIsCartOpen(true)}
-                  className="relative px-3 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50 transition-colors">
-                  <ShoppingCart className="h-4 w-4 inline mr-1" />
-                  Cart
+                <NavLink to={`/r/${slug}/table/${tableId}/cart`}
+                  className={({ isActive }) => `relative px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  <ShoppingCart className="h-4 w-4 inline sm:mr-1" />
+                  <span className="hidden sm:inline">Cart</span>
                   {state.items.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-[#8B4513] text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                       {state.items.length}
                     </span>
                   )}
-                </button>
+                </NavLink>
                 <NavLink to={`/r/${slug}/table/${tableId}/orders`}
-                  className={({ isActive }) => `px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
-                  <ClipboardList className="h-4 w-4 inline mr-1" />
-                  Orders
+                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  <ClipboardList className="h-4 w-4 inline sm:mr-1" />
+                  <span className="hidden sm:inline">Orders</span>
                 </NavLink>
                 <NavLink to={`/r/${slug}/table/${tableId}/bill`}
-                  className={({ isActive }) => `px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
-                  <Receipt className="h-4 w-4 inline mr-1" />
-                  Bill
+                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  <Receipt className="h-4 w-4 inline sm:mr-1" />
+                  <span className="hidden sm:inline">Bill</span>
                 </NavLink>
               </div>
             </div>
           </div>
         </header>
-        <main className="max-w-3xl mx-auto px-4 py-6">
+        <main className="max-w-3xl mx-auto px-4 py-6 pb-20">
           <Outlet />
         </main>
       </div>
-      <CartPanel isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} tableId={tableId} />
+
+      {state.items.length > 0 && !isCartPage && (
+        <NavLink to={`/r/${slug}/table/${tableId}/cart`}
+          className="fixed bottom-6 right-6 bg-[#8B4513] text-white rounded-full px-5 py-3 shadow-lg flex items-center gap-2 hover:bg-[#5C4033] transition-colors z-30">
+          <ShoppingCart className="w-5 h-5" />
+          <span className="font-medium">{state.items.length}</span>
+          <span className="font-bold">${state.total.toFixed(2)}</span>
+        </NavLink>
+      )}
     </TableFlowContext.Provider>
   );
 }
