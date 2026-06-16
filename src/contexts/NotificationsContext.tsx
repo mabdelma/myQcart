@@ -67,10 +67,12 @@ function areOrdersEqual(a: { id: string; status: string; tableId: string }[], b:
 
 export function NotificationsProvider({
   children,
-  role
+  role,
+  formatNotification
 }: {
   children: React.ReactNode;
   role: 'admin' | 'kitchen' | 'waiter';
+  formatNotification?: (type: string, context: Record<string, string | number>) => string;
 }) {
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
@@ -107,11 +109,12 @@ export function NotificationsProvider({
         switch (role) {
           case 'kitchen':
             if (order.status === 'pending') {
+              const msg = formatNotification ? formatNotification('newOrder', { tableNumber }) : `New order from Table ${tableNumber}`;
               dispatch({
                 type: 'ADD_NOTIFICATION',
                 payload: {
                   id: crypto.randomUUID(),
-                  message: `New order from Table ${tableNumber}`,
+                  message: msg,
                   type: 'info',
                   createdAt: new Date(),
                   read: false,
@@ -122,11 +125,12 @@ export function NotificationsProvider({
 
           case 'waiter':
             if (order.status === 'ready') {
+              const msg = formatNotification ? formatNotification('orderReady', { tableNumber }) : `Order for Table ${tableNumber} is ready`;
               dispatch({
                 type: 'ADD_NOTIFICATION',
                 payload: {
                   id: crypto.randomUUID(),
-                  message: `Order for Table ${tableNumber} is ready`,
+                  message: msg,
                   type: 'success',
                   createdAt: new Date(),
                   read: false,
@@ -137,22 +141,24 @@ export function NotificationsProvider({
 
           case 'admin':
             if (order.status === 'pending') {
+              const msg = formatNotification ? formatNotification('newOrder', { tableNumber }) : `New order from Table ${tableNumber}`;
               dispatch({
                 type: 'ADD_NOTIFICATION',
                 payload: {
                   id: crypto.randomUUID(),
-                  message: `New order from Table ${tableNumber}`,
+                  message: msg,
                   type: 'info',
                   createdAt: new Date(),
                   read: false,
                 },
               });
             } else if (order.status === 'ready') {
+              const msg = formatNotification ? formatNotification('orderReady', { tableNumber }) : `Order for Table ${tableNumber} is ready`;
               dispatch({
                 type: 'ADD_NOTIFICATION',
                 payload: {
                   id: crypto.randomUUID(),
-                  message: `Order for Table ${tableNumber} is ready`,
+                  message: msg,
                   type: 'success',
                   createdAt: new Date(),
                   read: false,
@@ -165,7 +171,7 @@ export function NotificationsProvider({
     } catch {
       // Silently ignore polling errors
     }
-  }, [slug, role]);
+  }, [slug, role, formatNotification]);
 
   React.useEffect(() => {
     checkForUpdates();

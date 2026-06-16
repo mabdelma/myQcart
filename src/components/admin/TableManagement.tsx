@@ -1,23 +1,24 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
-import { getDB } from '../../lib/db';
-import type { Table, Order } from '../../lib/db/schema';
+import { tableApi, orderApi } from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import type { TableData, Order } from '../../lib/api/types';
 import { QRCodeModal } from './QRCodeModal';
-import { generateQRCode } from '../../lib/utils/qrcode';
 import { TableEfficiencyStats } from './table/TableEfficiencyStats';
 import { TableFilters } from './table/TableFilters';
 import { TableList } from './table/TableList';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 
-
 export function TableManagement() {
-  const [tables, setTables] = useState<Table[]>([]);
+  const { state: { tenant } } = useAuth();
+  const slug = tenant?.slug;
+  const [tables, setTables] = useState<TableData[]>([]);
   const [activeOrders, setActiveOrders] = useState<Record<string, Order>>({});
-  const [editingTable, setEditingTable] = useState<Table | null>(null);
-  const [viewingQRCode, setViewingQRCode] = useState<Table | null>(null);
+  const [editingTable, setEditingTable] = useState<TableData | null>(null);
+  const [viewingQRCode, setViewingQRCode] = useState<TableData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deletingTable, setDeletingTable] = useState<Table | null>(null);
+  const [deletingTable, setDeletingTable] = useState<TableData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,22 +29,22 @@ export function TableManagement() {
   });
 
   useEffect(() => {
-    loadTables();
-    // Refresh data every minute
-    const interval = setInterval(loadTables, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    if (slug) {
+      loadTables();
+      const interval = setInterval(loadTables, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [slug]);
 
   async function loadTables() {
+    if (!slug) return;
     setLoading(true);
     try {
-      const db = await getDB();
       const [allTables, allOrders] = await Promise.all([
-        db.getAll('tables'),
-        db.getAll('orders')
+        tableApi.list(slug),
+        orderApi.list(slug)
       ]);
 
-      // Get active orders for occupied tables
       const activeOrdersMap = allOrders.reduce((acc, order) => {
         if (order.status !== 'delivered' && order.status !== 'paid') {
           acc[order.tableId] = order;
@@ -51,12 +52,11 @@ export function TableManagement() {
         return acc;
       }, {} as Record<string, Order>);
 
-      // Calculate efficiency metrics
       const completedOrders = allOrders.filter(o => o.status === 'paid');
       const turnoverTimes = completedOrders.map(order => {
         const start = new Date(order.createdAt).getTime();
         const end = new Date(order.updatedAt).getTime();
-        return (end - start) / 60000; // minutes
+        return (end - start) / 60000;
       });
 
       const avgTurnover = turnoverTimes.length > 0
@@ -82,43 +82,44 @@ export function TableManagement() {
     }
   }
 
-  async function saveTable(table: Table) {
-    const db = await getDB();
-    const isNew = !table.qrCode;
-    
-    // Ensure number and capacity are valid integers
+  async function saveTable(table: TableData) {
+    if (!slug) return;
+    const isNew = !tables.find(t => t.id === table.id);
+
     table.number = Math.max(1, Math.floor(Number(table.number)));
     table.capacity = Math.max(1, Math.floor(Number(table.capacity)));
-    
-    // Generate new QR code if table is new or number changed
-    if (isNew || (
-      !isNew && 
-      tables.find(t => t.id === table.id)?.number !== table.number
-    )) {
-      table.qrCode = await generateQRCode(`table/${table.id}`);
+
+    if (isNew) {
+      await tableApi.create(slug, {
+        number: table.number,
+        capacity: table.capacity,
+      });
+    } else {
+      await tableApi.update(slug, table.id, {
+        number: table.number,
+        capacity: table.capacity,
+        status: table.status,
+      });
     }
-    
-    await db.put('tables', table);
+
     setEditingTable(null);
     loadTables();
   }
 
-  async function handleDeleteTable(table: Table) {
+  async function handleDeleteTable(table: TableData) {
+    if (!slug) return;
     try {
-      const db = await getDB();
-      
-      // Check if table has active orders
-      const orders = await db.getAll('orders');
-      const activeOrders = orders.filter(
-        order => order.tableId === table.id && 
+      const orders = await orderApi.list(slug);
+      const activeOrdersForTable = orders.filter(
+        order => order.tableId === table.id &&
         !['delivered', 'paid'].includes(order.status)
       );
-      
-      if (activeOrders.length > 0) {
+
+      if (activeOrdersForTable.length > 0) {
         throw new Error('Cannot delete table with active orders');
       }
-      
-      await db.delete('tables', table.id);
+
+      await tableApi.delete(slug, table.id);
       setDeletingTable(null);
       loadTables();
     } catch (error) {
@@ -155,7 +156,8 @@ export function TableManagement() {
             number: tables.length + 1,
             capacity: 4,
             status: 'available',
-            qrCode: '',
+            tenantId: '',
+            qrToken: '',
           })}
           className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
         >
@@ -186,8 +188,9 @@ export function TableManagement() {
         onDeleteTable={setDeletingTable}
         onStatusChange={async (tableId, status) => {
           const table = tables.find(t => t.id === tableId);
-          if (table) {
-            await saveTable({ ...table, status });
+          if (table && slug) {
+            await tableApi.update(slug, tableId, { status });
+            loadTables();
           }
         }}
       />
@@ -208,9 +211,9 @@ export function TableManagement() {
                   id="table-number"
                   type="number"
                   value={editingTable.number || ''}
-                  onChange={(e) => setEditingTable({ 
-                    ...editingTable, 
-                    number: e.target.value ? parseInt(e.target.value) : 0 
+                  onChange={(e) => setEditingTable({
+                    ...editingTable,
+                    number: e.target.value ? parseInt(e.target.value) : 0
                   })}
                   min="1"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -222,9 +225,9 @@ export function TableManagement() {
                   id="table-capacity"
                   type="number"
                   value={editingTable.capacity || ''}
-                  onChange={(e) => setEditingTable({ 
-                    ...editingTable, 
-                    capacity: e.target.value ? parseInt(e.target.value) : 0 
+                  onChange={(e) => setEditingTable({
+                    ...editingTable,
+                    capacity: e.target.value ? parseInt(e.target.value) : 0
                   })}
                   min="1"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -235,7 +238,7 @@ export function TableManagement() {
                 <select
                   id="table-status"
                   value={editingTable.status}
-                  onChange={(e) => setEditingTable({ ...editingTable, status: e.target.value as Table['status'] })}
+                  onChange={(e) => setEditingTable({ ...editingTable, status: e.target.value as TableData['status'] })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
                   <option value="available">Available</option>
@@ -262,15 +265,14 @@ export function TableManagement() {
           </div>
         </div>
       )}
-      
+
       {viewingQRCode && (
         <QRCodeModal
           table={viewingQRCode}
           onClose={() => setViewingQRCode(null)}
         />
       )}
-      
-      {/* Delete Confirmation Modal */}
+
       {deletingTable && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -298,3 +300,4 @@ export function TableManagement() {
     </div>
   );
 }
+

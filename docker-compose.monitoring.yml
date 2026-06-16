@@ -1,0 +1,77 @@
+# ─── QCart Monitoring Stack ──────────────────────────────────────────────────
+# Self-hosted log aggregation & metrics. Standalone stack (not an overlay):
+#   docker compose -f docker-compose.monitoring.yml up -d
+#
+# Provides:
+#   - Grafana  (port 3001 — dashboards for API, Postgres, system metrics)
+#   - Loki     (port 3100 — log aggregation, no auth — keep internal)
+#   - Promtail          — Docker log shipping to Loki
+#   - Node Exporter     — system metrics (CPU, memory, disk)
+#   - Postgres Exporter — DB metrics (also needs infra/pgbouncer/ exposed)
+#
+# Promtail reads Docker container logs by mounting /var/lib/docker/containers.
+# On the VPS this requires the docker socket to be mounted.
+# ─────────────────────────────────────────────────────────────────────────────
+name: qcart-monitoring
+
+services:
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./infra/monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+    command:
+      - -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env.prod}"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/monitoring/grafana-datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    command:
+      - --path.rootfs=/host
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      DATA_SOURCE_NAME: "postgresql://qcart:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}@postgres:5432/qcart?sslmode=disable"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  loki_data:
+  grafana_data:

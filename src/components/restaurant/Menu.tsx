@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { getDB } from '../../lib/db';
-import type { MenuItem, MenuCategory } from '../../lib/db/schema';
+import { menuApi } from '../../lib/api';
+import { useI18n } from '../../contexts/I18nContext';
+import type { MenuItem, MenuCategory } from '../../lib/api/types';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { useNavigate, useParams } from 'react-router';
 
 export function Menu() {
+  const { t } = useI18n();
   const navigate = useNavigate();
-  const { tableId } = useParams();
+  const { slug, tableId } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string>('1'); // Default to Food Menu
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('4'); // Default to Main Courses
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
 
   useEffect(() => {
     loadData();
@@ -22,16 +24,12 @@ export function Menu() {
 
   async function loadData() {
     try {
-      const db = await getDB();
-      const [items, cats] = await Promise.all([
-        db.getAll('menu_items'),
-        db.getAll('menu_categories')
-      ]);
+      const data = await menuApi.getFullMenu(slug || '');
 
-      const sortedCategories = cats.sort((a, b) => a.order - b.order);
+      const sortedCategories = data.categories.sort((a, b) => a.sortOrder - b.sortOrder);
       const mainCategories = sortedCategories.filter(c => c.type === 'main');
       
-      setMenuItems(items);
+      setMenuItems(data.items);
       setCategories(sortedCategories);
       
       // Set initial selections
@@ -49,7 +47,7 @@ export function Menu() {
       
       setError(null);
     } catch (err) {
-      setError('Failed to load menu items');
+      setError(t('error.generic'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -65,7 +63,7 @@ export function Menu() {
   );
 
   const filteredItems = menuItems.filter(
-    item => item.mainCategoryId === selectedMainCategory &&
+    item => item.categoryId === selectedMainCategory &&
            item.subCategoryId === selectedSubCategory &&
            item.available
   );
@@ -73,10 +71,9 @@ export function Menu() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-serif text-[#5C4033] mb-4">QCart Menu</h1>
+        <h1 className="text-4xl font-serif text-[#5C4033] mb-4">{t('nav.menu')}</h1>
         <p className="text-lg text-[#8B4513] max-w-3xl mx-auto">
-          Experience culinary excellence with our carefully crafted menu, featuring the finest ingredients
-          and expert preparation.
+          {t('common.notAvailable')}
         </p>
       </div>
       
@@ -136,15 +133,18 @@ export function Menu() {
             disabled={!item.available}
           >
             <div className="aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">
-              {item.image ? (
+              {item.imageUrl ? (
                 <img
-                  src={item.image}
+                  src={item.imageUrl}
                   alt={item.name}
+                  width="160"
+                  height="160"
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  No image
+                  {t('menu.noImage')}
                 </div>
               )}
             </div>
@@ -152,7 +152,7 @@ export function Menu() {
             <p className="text-[#8B4513] font-medium mt-1">
               ${item.price.toFixed(2)}
               {!item.available && (
-                <span className="ml-2 text-red-600 text-sm">(Unavailable)</span>
+                <span className="ml-2 text-red-600 text-sm">{t('common.notAvailable')}</span>
               )}
               <ArrowRight className="w-4 h-4 inline-block ml-2" />
             </p>

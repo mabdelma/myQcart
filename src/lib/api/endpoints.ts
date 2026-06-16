@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption } from './types';
 
 // Auth
 export const authApi = {
@@ -17,6 +17,7 @@ export const adminApi = {
   getTenant: (tenantId: string) => api.get<TenantWithStats>(`/admin/tenants/${tenantId}`),
   setTenantStatus: (tenantId: string, isActive: boolean) =>
     api.put<{ success: boolean }>(`/admin/tenants/${tenantId}/status`, { isActive }),
+  getTenantUsage: (tenantId: string) => api.get<TenantUsage>(`/admin/tenants/${tenantId}/usage`),
 };
 
 // Tenants
@@ -48,6 +49,20 @@ export const menuApi = {
     api.put<{ success: boolean }>(`/r/${slug}/menu/reorder`, { items }),
   reorderCategories: (slug: string, categories: { id: string; sortOrder: number }[]) =>
     api.put<{ success: boolean }>(`/r/${slug}/menu/categories/reorder`, { categories }),
+  getModifierGroups: (slug: string) =>
+    api.get<{ data: ModifierGroup[] }>(`/r/${slug}/modifier-groups`),
+  createModifierGroup: (slug: string, data: { name: string; selectionType: string; isRequired: boolean; sortOrder?: number }) =>
+    api.post<{ data: ModifierGroup }>(`/r/${slug}/modifier-groups`, data),
+  updateModifierGroup: (slug: string, groupId: string, data: Partial<ModifierGroup>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/modifier-groups/${groupId}`, data),
+  deleteModifierGroup: (slug: string, groupId: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/modifier-groups/${groupId}`),
+  createModifierOption: (slug: string, groupId: string, data: { name: string; priceAdjustment?: number; maxSelectable?: number; sortOrder?: number }) =>
+    api.post<{ data: ModifierOption }>(`/r/${slug}/modifier-groups/${groupId}/options`, data),
+  updateModifierOption: (slug: string, optionId: string, data: Partial<ModifierOption>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/modifier-options/${optionId}`, data),
+  deleteModifierOption: (slug: string, optionId: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/modifier-options/${optionId}`),
 };
 
 // Tables
@@ -80,6 +95,8 @@ export const orderApi = {
     api.patch<{ success: boolean }>(`/r/${slug}/orders/${orderId}/status`, { status }),
   getByServer: (slug: string, serverId: string) =>
     api.get<Order[]>(`/r/${slug}/orders/server/${serverId}`),
+  updateItems: (slug: string, orderId: string, data: { addItems?: { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string; modifiers?: string }[]; removeItemIds?: string[] }) =>
+    api.patch<{ items: OrderItem[]; itemCount: number; subtotal: number; tax: number; serviceCharge: number; total: number }>(`/r/${slug}/orders/${orderId}/items`, data),
 };
 
 // Users / Staff management
@@ -116,6 +133,16 @@ export const analyticsApi = {
     api.get<{ daily: RevenueDataPoint[] }>(`/r/${slug}/analytics/revenue`),
   financial: (slug: string) =>
     api.get<FinancialAnalytics>(`/r/${slug}/analytics/financial`),
+  hourlyTraffic: (slug: string) =>
+    api.get<{ data: HourlyTrafficPoint[] }>(`/r/${slug}/analytics/hourly-traffic`),
+  peakHours: (slug: string) =>
+    api.get<{ data: PeakHour[] }>(`/r/${slug}/analytics/peak-hours`),
+  categoryPerformance: (slug: string) =>
+    api.get<{ data: CategoryPerformanceItem[] }>(`/r/${slug}/analytics/category-performance`),
+  trending: (slug: string) =>
+    api.get<{ data: TrendingItem[] }>(`/r/${slug}/analytics/trending`),
+  recommendations: (slug: string, menuItemId?: string) =>
+    api.get<{ data: RecommendationItem[] }>(`/r/${slug}/analytics/recommendations${menuItemId ? `?menuItemId=${menuItemId}` : ''}`),
 };
 
 export const uploadApi = {
@@ -124,4 +151,18 @@ export const uploadApi = {
     formData.append('file', file);
     return api.upload<{ url: string; filename: string }>(`/r/${slug}/upload`, formData);
   },
+};
+
+export const loyaltyApi = {
+  get: (slug: string) =>
+    api.get<{ points: number; tier: string; lifetimePoints: number; history: { id: string; type: string; amount: number; description: string; createdAt: string }[]; rewards: { id: string; name: string; pointsCost: number; description: string }[] }>(`/r/${slug}/loyalty`),
+  earn: (slug: string, data: { amount: number; orderId?: string }) =>
+    api.post<{ success: boolean; points: number; tier: string }>(`/r/${slug}/loyalty/earn`, data),
+  redeem: (slug: string, data: { points: number; rewardId?: string }) =>
+    api.post<{ success: boolean; points: number; discount: number }>(`/r/${slug}/loyalty/redeem`, data),
+};
+
+export const promoApi = {
+  validate: (slug: string, code: string, subtotal?: number) =>
+    api.get<{ valid: boolean; code: string; type: string; value: number; discount: number; description: string }>(`/r/${slug}/promo/validate?code=${encodeURIComponent(code)}${subtotal ? `&subtotal=${subtotal}` : ''}`),
 };

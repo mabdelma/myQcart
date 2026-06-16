@@ -1,13 +1,15 @@
 import React from 'react';
 import { ShoppingBag, Minus, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { getDB } from '../../lib/db';
-import { generateOrderId } from '../../lib/utils/orderUtils';
-import { useNavigate } from 'react-router';
+import { useI18n } from '../../contexts/I18nContext';
+import { orderApi } from '../../lib/api';
+import { useNavigate, useParams } from 'react-router';
 
 export function Cart() {
+  const { t } = useI18n();
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
+  const { slug, tableId } = useParams();
   const [checkoutError, setCheckoutError] = React.useState<string | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
@@ -18,32 +20,22 @@ export function Cart() {
     setCheckoutError(null);
     
     try {
-      const db = await getDB();
-      
-      const order = {
-        id: generateOrderId(),
-        tableId: '1', // Default table for now
-        userId: '1', // Default user for now
-        status: 'pending',
+      await orderApi.create(slug || '', {
+        tableId: tableId || '1',
         items: state.items.map(item => ({
-          id: crypto.randomUUID(),
           menuItemId: item.menuItem.id,
+          name: item.menuItem.name,
           quantity: item.quantity,
+          unitPrice: item.menuItem.price,
           notes: item.comment || undefined
         })),
-        total: state.total,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      });
       
-      await db.add('orders', order);
-      
-      // Clear the cart and redirect to orders page
       dispatch({ type: 'CLEAR_CART' });
-      navigate('/orders');
+      navigate(slug ? `/r/${slug}/table/${tableId}/orders` : '/orders');
     } catch (error) {
       console.error('Checkout failed:', error);
-      setCheckoutError('Failed to process your order. Please try again.');
+      setCheckoutError(t('error.generic'));
     } finally {
       setIsProcessing(false);
     }
@@ -51,7 +43,7 @@ export function Cart() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-900 mb-8">Shopping Cart</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-8">{t('nav.cart')}</h2>
       
       {checkoutError && (
         <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700">
@@ -67,9 +59,9 @@ export function Cart() {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Cart is empty</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">{t('order.emptyCart')}</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Start adding some items to your cart
+                {t('order.addNotes')}
               </p>
             </div>
           </div>
@@ -78,10 +70,13 @@ export function Cart() {
             {state.items.map((item) => (
               <div key={item.menuItem.id} className="flex items-center space-x-4 py-4 border-b">
                 <div className="w-20 h-20 flex-shrink-0">
-                  {item.menuItem.image ? (
+                  {item.menuItem.imageUrl ? (
                     <img
-                      src={item.menuItem.image}
+                      src={item.menuItem.imageUrl}
                       alt={item.menuItem.name}
+                      width="80"
+                      height="80"
+                      loading="lazy"
                       className="w-full h-full object-cover rounded-md"
                     />
                   ) : (
@@ -133,21 +128,21 @@ export function Cart() {
             
             <div className="pt-4 border-t">
               <div className="flex justify-between text-lg font-medium">
-                <span>Total</span>
+                <span>{t('common.total')}</span>
                 <span>${state.total.toFixed(2)}</span>
               </div>
               <button
                 onClick={() => dispatch({ type: 'CLEAR_CART' })}
                 className="mt-4 w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
               >
-                Clear Cart
+                {t('order.clearCart')}
               </button>
               <button
                 onClick={handleCheckout}
                 disabled={isProcessing}
                 className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
               >
-                {isProcessing ? 'Processing...' : 'Proceed to Checkout'}
+                {isProcessing ? t('common.loading') : t('nav.checkout')}
               </button>
             </div>
           </div>

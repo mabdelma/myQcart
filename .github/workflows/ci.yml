@@ -1,45 +1,215 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 24
 
 jobs:
   frontend:
     name: Frontend
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
-
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: qcart
+          POSTGRES_PASSWORD: qcart
+          POSTGRES_DB: qcart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U qcart -d qcart"
+          --health-interval 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci
-      - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm test
       - run: npm run build
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: dist/
+          retention-days: 1
 
   server:
     name: Server
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
-
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: qcart
+          POSTGRES_PASSWORD: qcart
+          POSTGRES_DB: qcart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U qcart -d qcart"
+          --health-interval 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
           cache-dependency-path: server/package-lock.json
+      - run: cd server && npm ci
+      - run: cd server && npx tsc --noEmit
+      - run: cd server && npm test
+        env:
+          DATABASE_URL: postgresql://qcart:qcart@localhost:5432/qcart
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret
+      - name: Upload server build
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-build
+          path: server/dist/
+          retention-days: 1
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-24.04
+    needs: [frontend, server]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: qcart
+          POSTGRES_PASSWORD: qcart
+          POSTGRES_DB: qcart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U qcart -d qcart"
+          --health-interval 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npm test
+      - run: cd server && npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Build server
+        run: cd server && npx tsc
+      - name: Run migrations & seed
+        run: |
+          cd server
+          npx drizzle-kit migrate --config=drizzle.config.ts
+        env:
+          DATABASE_URL: postgresql://qcart:qcart@localhost:5432/qcart
+      - name: Start API server
+        run: |
+          cd server && node dist/index.js &
+          sleep 2
+        env:
+          DATABASE_URL: postgresql://qcart:qcart@localhost:5432/qcart
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret
+          PORT: 3001
+          CORS_ORIGIN: http://localhost:4173
+      - name: Start Vite preview
+        run: |
+          npx vite preview --port 4173 &
+          sleep 2
+      - name: Run Playwright
+        run: npx playwright test --config=e2e/playwright.config.ts
+        env:
+          E2E_BASE_URL: http://localhost:4173
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-screenshots
+          path: test-results/
+          retention-days: 3
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-24.04
+    needs: [frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dist/
+      - name: Start preview server
+        run: |
+          npx vite preview --port 4173 &
+          sleep 3
+      - name: Run Lighthouse CI
+        run: |
+          npx lhci autorun --upload.target=temporary-public-storage || echo "Lighthouse audit completed"
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN || '' }}
+        continue-on-error: true
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 7

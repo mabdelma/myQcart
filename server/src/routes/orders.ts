@@ -11,6 +11,7 @@ import {
   getOrderDetail,
   updateOrderStatus,
   getServerOrders,
+  updateOrderItems,
 } from '../services/orderService.js';
 
 const orders = new Hono();
@@ -86,6 +87,30 @@ orders.get('/:slug/orders/server/:serverId', authMiddleware, resolveTenant, asyn
   const serverId = c.req.param('serverId')!;
   const result = await getServerOrders(tenantId, serverId);
   return c.json(result);
+});
+
+const updateOrderItemsSchema = z.object({
+  addItems: z.array(z.object({
+    menuItemId: z.string().min(1),
+    name: z.string().min(1),
+    quantity: z.number().int().positive(),
+    unitPrice: z.number().positive(),
+    notes: z.string().optional(),
+    modifiers: z.string().optional(),
+  })).optional(),
+  removeItemIds: z.array(z.string().min(1)).optional(),
+});
+
+orders.patch('/:slug/orders/:orderId/items', authMiddleware, requireRole('admin', 'manager', 'waiter'), resolveTenant, zValidator('json', updateOrderItemsSchema), async (c) => {
+  const tenantId = c.get('tenantId');
+  const orderId = c.req.param('orderId')!;
+  const input = c.req.valid('json');
+
+  const result = await updateOrderItems(tenantId, orderId, input);
+  if ('error' in result) {
+    return c.json({ error: result.error }, result.status);
+  }
+  return c.json(result.data);
 });
 
 export default orders;

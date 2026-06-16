@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline — QCart</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb; color: #111827;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 1rem;
+    }
+    .container { text-align: center; max-width: 420px; }
+    .icon { font-size: 4rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    p { color: #6b7280; margin-bottom: 0.5rem; line-height: 1.5; }
+    .cached-pages { margin-top: 1.5rem; text-align: left; }
+    .cached-pages a { display: block; padding: 0.5rem; color: #8B4513; text-decoration: none; border-radius: 0.25rem; }
+    .cached-pages a:hover { background: #f3f4f6; }
+    .btn {
+      display: inline-block; margin-top: 1.5rem; padding: 0.625rem 1.5rem;
+      background: #8B4513; color: #fff; border-radius: 0.5rem;
+      text-decoration: none; font-weight: 500; cursor: pointer;
+    }
+    .btn:hover { background: #5C4033; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>You're offline</h1>
+    <p>QCart needs a network connection to work.</p>
+    <p>Please check your connection and try again.</p>
+    <div class="cached-pages">
+      <a href="/">Home</a>
+      <a href="/signin">Sign In</a>
+    </div>
+    <button class="btn" onclick="window.location.reload()">Retry</button>
+  </div>
+</body>
+</html>

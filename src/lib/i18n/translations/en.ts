@@ -1,0 +1,579 @@
+﻿export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'de' | 'pt' | 'zh' | 'hi' | 'ru' | 'ja';
+export type TranslationKey =
+  | 'app.name'
+  | 'nav.home' | 'nav.menu' | 'nav.cart' | 'nav.orders' | 'nav.checkout' | 'nav.bill'
+  | 'nav.signin' | 'nav.signup' | 'nav.signout' | 'nav.profile' | 'nav.admin' | 'nav.staff'
+  | 'nav.pricing' | 'nav.features' | 'nav.contact' | 'nav.demo' | 'nav.kitchen'
+  | 'nav.dashboard' | 'nav.reports' | 'nav.marketing' | 'nav.customers' | 'nav.inventory' | 'nav.modifiers' | 'nav.analytics'
+  | 'auth.email' | 'auth.password' | 'auth.signin' | 'auth.signup' | 'auth.name'
+  | 'auth.confirmPassword' | 'auth.forgotPassword' | 'auth.resetPassword' | 'auth.newPassword'
+  | 'auth.sendResetLink' | 'auth.resetYourPassword' | 'auth.troubleSigningIn'
+  | 'auth.backToSignIn' | 'auth.or' | 'auth.noAccount' | 'auth.haveAccount'
+  | 'auth.checkEmail' | 'auth.resetSent' | 'auth.passwordResetSuccess'
+  | 'auth.invalidToken' | 'auth.tokenExpired' | 'auth.createAccount'
+  | 'auth.accountCreated' | 'auth.verificationSent' | 'auth.resendEmail'
+  | 'auth.changePassword' | 'auth.currentPassword'
+  | 'common.loading' | 'common.error' | 'common.save' | 'common.cancel'
+  | 'common.delete' | 'common.edit' | 'common.search' | 'common.back'
+  | 'common.submit' | 'common.confirm' | 'common.total' | 'common.quantity'
+  | 'common.price' | 'common.notes' | 'common.status' | 'common.date'
+  | 'common.actions' | 'common.yes' | 'common.no' | 'common.close'
+  | 'common.offline' | 'common.offlineMessage' | 'common.retry'
+  | 'common.print' | 'common.receipt' | 'common.item' | 'common.items'
+  | 'common.subtotal' | 'common.tax' | 'common.discount' | 'common.name'
+  | 'common.description' | 'common.phone' | 'common.address' | 'common.create'
+  | 'common.update' | 'common.remove' | 'common.continue' | 'common.done'
+  | 'common.notAvailable' | 'common.confirmDelete' | 'common.noResults'
+  | 'common.minutes' | 'common.hours' | 'common.settings' | 'common.viewAll'
+  | 'order.pending' | 'order.preparing' | 'order.ready' | 'order.delivered'
+  | 'order.cancelled' | 'order.newOrder' | 'order.orderReady' | 'order.orderHistory'
+  | 'order.processOrder' | 'order.clearCart' | 'order.emptyCart' | 'order.addNotes'
+  | 'order.placedAt' | 'order.itemCount' | 'order.specialInstructions'
+  | 'order.dineIn' | 'order.takeaway' | 'order.delivery' | 'order.allOrders'
+  | 'order.activeOrders' | 'order.pastOrders'
+  | 'table.available' | 'table.occupied' | 'table.reserved' | 'table.closed'
+  | 'table.tableNumber' | 'table.changeStatus' | 'table.orderCount'
+  | 'table.totalSpent' | 'table.noTable' | 'table.selectTable'
+  | 'menu.categories' | 'menu.items' | 'menu.addToCart' | 'menu.noImage'
+  | 'menu.search' | 'menu.description' | 'menu.options' | 'menu.soldOut'
+  | 'menu.categoryAll' | 'menu.quantity' | 'menu.specialInstructions'
+  | 'menu.allergenInfo' | 'menu.availableItems'
+  | 'payment.pay' | 'payment.paid' | 'payment.unpaid' | 'payment.refunded'
+  | 'payment.cash' | 'payment.card' | 'payment.wallet' | 'payment.tip'
+  | 'payment.receipt' | 'payment.bill' | 'payment.split' | 'payment.paymentMethod'
+  | 'payment.amount' | 'payment.change' | 'payment.totalDue' | 'payment.remainingBalance'
+  | 'payment.payFull' | 'payment.payPartial' | 'payment.printReceipt'
+  | 'payment.transactionId' | 'payment.payNow' | 'payment.orderSummary'
+  | 'staff.kitchen' | 'staff.waiter' | 'staff.cashier' | 'staff.manager' | 'staff.admin'
+  | 'staff.tables' | 'staff.orders' | 'staff.pos' | 'staff.payments'
+  | 'staff.history' | 'staff.activeOrders' | 'staff.orderHistory'
+  | 'staff.profileSettings' | 'staff.signOut' | 'staff.waiterPanel'
+  | 'staff.kitchenDisplay' | 'staff.cashierPanel'
+  | 'settings.darkMode' | 'settings.language' | 'settings.theme'
+  | 'settings.light' | 'settings.dark' | 'settings.system'
+  | 'settings.profile' | 'settings.notifications' | 'settings.about' | 'settings.version'
+  | 'cta.startTrial' | 'cta.learnMore' | 'cta.getStarted' | 'cta.contactUs'
+  | 'cta.bookDemo' | 'cta.subscribe' | 'cta.tryForFree' | 'cta.requestDemo'
+  | 'cta.signIn' | 'cta.signUp' | 'cta.enableNotifications' | 'cta.notificationDesc' | 'cta.enable'
+  | 'footer.privacy' | 'footer.terms' | 'footer.copyright'
+  | 'footer.company' | 'footer.support' | 'footer.legal'
+  | 'marketing.trustedBy'
+  | 'marketing.heroTitle' | 'marketing.heroDesc'
+  | 'marketing.noCreditCard' | 'marketing.seeFeatures'
+  | 'marketing.featuresTitle' | 'marketing.featuresDesc'
+  | 'marketing.howItWorksTitle' | 'marketing.howItWorksDesc' | 'marketing.stepLabel'
+  | 'marketing.showcaseTitle' | 'marketing.showcaseDesc'
+  | 'marketing.showcaseItem1' | 'marketing.showcaseItem2' | 'marketing.showcaseItem3' | 'marketing.showcaseItem4'
+  | 'marketing.testimonialsTitle' | 'marketing.testimonialsDesc'
+  | 'marketing.pricingTitle' | 'marketing.pricingDesc'
+  | 'marketing.mostPopular' | 'marketing.faqTitle'
+  | 'marketing.ctaTitle' | 'marketing.ctaDesc'
+  | 'marketing.scanToOrder'
+  | 'marketing.statRestaurants' | 'marketing.statOrdersServed' | 'marketing.statFasterTurnover' | 'marketing.statOwnerRating'
+  | 'marketing.statTodaySales' | 'marketing.statOrders' | 'marketing.statAvgTicket' | 'marketing.statRevenueWeek'
+  | 'marketing.phoneTableDineIn' | 'marketing.phoneDemoCafe' | 'marketing.phonePopularSection' | 'marketing.phoneViewCart'
+  | 'marketing.phoneItemBurger' | 'marketing.phoneItemPizza' | 'marketing.phoneItemLemonade'
+  | 'marketing.featureQrCode' | 'marketing.featureQrCodeDesc'
+  | 'marketing.featurePayments' | 'marketing.featurePaymentsDesc'
+  | 'marketing.featureKitchen' | 'marketing.featureKitchenDesc'
+  | 'marketing.featureStaff' | 'marketing.featureStaffDesc'
+  | 'marketing.featureAnalytics' | 'marketing.featureAnalyticsDesc'
+  | 'marketing.featureMultiLocation' | 'marketing.featureMultiLocationDesc'
+  | 'marketing.stepMenu' | 'marketing.stepMenuDesc'
+  | 'marketing.stepPrintQr' | 'marketing.stepPrintQrDesc'
+  | 'marketing.stepStartServing' | 'marketing.stepStartServingDesc'
+  | 'marketing.planStarterName' | 'marketing.planStarterDesc'
+  | 'marketing.planStarterFeature0' | 'marketing.planStarterFeature1' | 'marketing.planStarterFeature2' | 'marketing.planStarterFeature3'
+  | 'marketing.planGrowthName' | 'marketing.planGrowthDesc'
+  | 'marketing.planGrowthFeature0' | 'marketing.planGrowthFeature1' | 'marketing.planGrowthFeature2' | 'marketing.planGrowthFeature3' | 'marketing.planGrowthFeature4'
+  | 'marketing.planEnterpriseName' | 'marketing.planEnterpriseDesc'
+  | 'marketing.planEnterpriseFeature0' | 'marketing.planEnterpriseFeature1' | 'marketing.planEnterpriseFeature2' | 'marketing.planEnterpriseFeature3' | 'marketing.planEnterpriseFeature4'
+  | 'marketing.testimonial1Quote' | 'marketing.testimonial1Name' | 'marketing.testimonial1Role'
+  | 'marketing.testimonial2Quote' | 'marketing.testimonial2Name' | 'marketing.testimonial2Role'
+  | 'marketing.testimonial3Quote' | 'marketing.testimonial3Name' | 'marketing.testimonial3Role'
+  | 'marketing.faq1Q' | 'marketing.faq1A'
+  | 'marketing.faq2Q' | 'marketing.faq2A'
+  | 'marketing.faq3Q' | 'marketing.faq3A'
+  | 'marketing.faq4Q' | 'marketing.faq4A'
+  | 'pricing.pageTitle' | 'pricing.pageDesc'
+  | 'pricing.faqTitle'
+  | 'pricing.planStarterDesc'
+  | 'pricing.planStarterFeature0' | 'pricing.planStarterFeature1' | 'pricing.planStarterFeature2' | 'pricing.planStarterFeature3' | 'pricing.planStarterFeature4' | 'pricing.planStarterFeature5'
+  | 'pricing.planGrowthDesc'
+  | 'pricing.planGrowthFeature0' | 'pricing.planGrowthFeature1' | 'pricing.planGrowthFeature2' | 'pricing.planGrowthFeature3' | 'pricing.planGrowthFeature4' | 'pricing.planGrowthFeature5' | 'pricing.planGrowthFeature6' | 'pricing.planGrowthFeature7'
+  | 'pricing.planEnterpriseDesc'
+  | 'pricing.planEnterpriseFeature0' | 'pricing.planEnterpriseFeature1' | 'pricing.planEnterpriseFeature2' | 'pricing.planEnterpriseFeature3' | 'pricing.planEnterpriseFeature4' | 'pricing.planEnterpriseFeature5' | 'pricing.planEnterpriseFeature6' | 'pricing.planEnterpriseFeature7'
+  | 'pricing.faq1Q' | 'pricing.faq1A'
+  | 'pricing.faq2Q' | 'pricing.faq2A'
+  | 'pricing.faq3Q' | 'pricing.faq3A'
+  | 'pricing.faq4Q' | 'pricing.faq4A'
+  | 'features.pageTitle' | 'features.pageDesc'
+  | 'features.groupCustomers' | 'features.groupStaff' | 'features.groupManagement'
+  | 'features.itemScanOrder' | 'features.itemScanOrderDesc'
+  | 'features.itemPayAtTable' | 'features.itemPayAtTableDesc'
+  | 'features.itemOrderTracking' | 'features.itemOrderTrackingDesc'
+  | 'features.itemKitchenDisplay' | 'features.itemKitchenDisplayDesc'
+  | 'features.itemRoleManagement' | 'features.itemRoleManagementDesc'
+  | 'features.itemMultiTable' | 'features.itemMultiTableDesc'
+  | 'features.itemAnalytics' | 'features.itemAnalyticsDesc'
+  | 'features.itemMenuManagement' | 'features.itemMenuManagementDesc'
+  | 'features.itemPaymentLinks' | 'features.itemPaymentLinksDesc'
+  | 'contact.pageTitle' | 'contact.pageDesc'
+  | 'contact.email' | 'contact.phone' | 'contact.location'
+  | 'contact.formName' | 'contact.formNamePlaceholder'
+  | 'contact.formEmail' | 'contact.formEmailPlaceholder'
+  | 'contact.formSubject' | 'contact.formSubjectPlaceholder'
+  | 'contact.formMessage' | 'contact.formMessagePlaceholder'
+  | 'contact.sendMessage'
+  | 'contact.successTitle' | 'contact.successDesc'
+  | 'demo.pageTitle' | 'demo.pageDesc'
+  | 'demo.formName' | 'demo.formNamePlaceholder'
+  | 'demo.formEmail' | 'demo.formEmailPlaceholder'
+  | 'demo.formRestaurant' | 'demo.formRestaurantPlaceholder'
+  | 'demo.formPhone' | 'demo.formPhonePlaceholder'
+  | 'demo.formSize' | 'demo.formSizePlaceholder'
+  | 'demo.formSizeOption0' | 'demo.formSizeOption1' | 'demo.formSizeOption2' | 'demo.formSizeOption3'
+  | 'demo.formMessage' | 'demo.formMessagePlaceholder'
+  | 'demo.requestDemo' | 'demo.sending'
+  | 'demo.selfServiceSetup'
+  | 'demo.successTitle' | 'demo.successDesc'
+  | 'demo.successExplorer' | 'demo.successWizardLink' | 'demo.successAfterLink'
+  | 'demo.backToHome'
+  | 'demo.errorMessage'
+  | 'error.generic' | 'error.notFound' | 'error.forbidden' | 'error.serverError'
+  | 'error.networkError' | 'error.tryAgain' | 'error.somethingWentWrong'
+  | 'error.pageNotFound' | 'error.sessionExpired' | 'error.unauthorized';
+
+export const translations: Record<TranslationKey, string> = {
+  'app.name': 'QCart',
+
+  'nav.home': 'Home',
+  'nav.menu': 'Menu',
+  'nav.cart': 'Cart',
+  'nav.orders': 'Orders',
+  'nav.checkout': 'Checkout',
+  'nav.bill': 'Bill',
+  'nav.signin': 'Sign In',
+  'nav.signup': 'Sign Up',
+  'nav.signout': 'Sign Out',
+  'nav.profile': 'Profile',
+  'nav.admin': 'Admin',
+  'nav.staff': 'Staff',
+  'nav.pricing': 'Pricing',
+  'nav.features': 'Features',
+  'nav.contact': 'Contact',
+  'nav.demo': 'Get a Demo',
+  'nav.kitchen': 'Kitchen',
+  'nav.dashboard': 'Dashboard',
+  'nav.reports': 'Reports',
+  'nav.marketing': 'Marketing',
+  'nav.customers': 'Customers',
+  'nav.inventory': 'Inventory',
+  'nav.modifiers': 'Modifiers',
+  'nav.analytics': 'Analytics',
+
+  'auth.email': 'Email address',
+  'auth.password': 'Password',
+  'auth.name': 'Full name',
+  'auth.confirmPassword': 'Confirm password',
+  'auth.signin': 'Sign In',
+  'auth.signup': 'Sign Up',
+  'auth.forgotPassword': 'Forgot Password',
+  'auth.resetPassword': 'Reset Password',
+  'auth.newPassword': 'New Password',
+  'auth.sendResetLink': 'Send Reset Link',
+  'auth.resetYourPassword': 'Reset your password',
+  'auth.troubleSigningIn': 'Trouble signing in?',
+  'auth.backToSignIn': 'Back to sign in',
+  'auth.or': 'or',
+  'auth.noAccount': "Don't have an account?",
+  'auth.haveAccount': 'Already have an account?',
+  'auth.checkEmail': 'Check your email',
+  'auth.resetSent': 'If an account with that email exists, a reset link has been sent.',
+  'auth.passwordResetSuccess': 'Password has been reset successfully.',
+  'auth.invalidToken': 'Invalid or expired reset token.',
+  'auth.tokenExpired': 'This reset link has expired.',
+  'auth.createAccount': 'Create account',
+  'auth.accountCreated': 'Account created successfully!',
+  'auth.verificationSent': 'Verification email sent.',
+  'auth.resendEmail': 'Resend email',
+  'auth.changePassword': 'Change password',
+  'auth.currentPassword': 'Current password',
+
+  'common.loading': 'Loading...',
+  'common.error': 'Error',
+  'common.save': 'Save',
+  'common.cancel': 'Cancel',
+  'common.delete': 'Delete',
+  'common.edit': 'Edit',
+  'common.search': 'Search',
+  'common.back': 'Back',
+  'common.submit': 'Submit',
+  'common.confirm': 'Confirm',
+  'common.total': 'Total',
+  'common.quantity': 'Qty',
+  'common.price': 'Price',
+  'common.notes': 'Notes',
+  'common.status': 'Status',
+  'common.date': 'Date',
+  'common.actions': 'Actions',
+  'common.yes': 'Yes',
+  'common.no': 'No',
+  'common.close': 'Close',
+  'common.offline': 'You are offline',
+  'common.offlineMessage': 'Some features may be unavailable. Check your connection.',
+  'common.retry': 'Retry',
+  'common.print': 'Print',
+  'common.receipt': 'Receipt',
+  'common.item': 'Item',
+  'common.items': 'Items',
+  'common.subtotal': 'Subtotal',
+  'common.tax': 'Tax',
+  'common.discount': 'Discount',
+  'common.name': 'Name',
+  'common.description': 'Description',
+  'common.phone': 'Phone',
+  'common.address': 'Address',
+  'common.create': 'Create',
+  'common.update': 'Update',
+  'common.remove': 'Remove',
+  'common.continue': 'Continue',
+  'common.done': 'Done',
+  'common.notAvailable': 'N/A',
+  'common.confirmDelete': 'Are you sure you want to delete this?',
+  'common.noResults': 'No results found',
+  'common.minutes': 'min',
+  'common.hours': 'hrs',
+  'common.settings': 'Settings',
+  'common.viewAll': 'View all',
+
+  'order.pending': 'Pending',
+  'order.preparing': 'Preparing',
+  'order.ready': 'Ready',
+  'order.delivered': 'Delivered',
+  'order.cancelled': 'Cancelled',
+  'order.newOrder': 'New order',
+  'order.orderReady': 'Order is ready',
+  'order.orderHistory': 'Order History',
+  'order.processOrder': 'Process Order',
+  'order.clearCart': 'Clear Cart',
+  'order.emptyCart': 'Cart is empty',
+  'order.addNotes': 'Add notes',
+  'order.placedAt': 'Placed at',
+  'order.itemCount': '{count} items',
+  'order.specialInstructions': 'Special instructions',
+  'order.dineIn': 'Dine In',
+  'order.takeaway': 'Takeaway',
+  'order.delivery': 'Delivery',
+  'order.allOrders': 'All Orders',
+  'order.activeOrders': 'Active Orders',
+  'order.pastOrders': 'Past Orders',
+
+  'table.available': 'Available',
+  'table.occupied': 'Occupied',
+  'table.reserved': 'Reserved',
+  'table.closed': 'Closed',
+  'table.tableNumber': 'Table {number}',
+  'table.changeStatus': 'Change status',
+  'table.orderCount': '{count} orders',
+  'table.totalSpent': 'Total: {amount}',
+  'table.noTable': 'No table selected',
+  'table.selectTable': 'Select a table',
+
+  'menu.categories': 'Categories',
+  'menu.items': 'Menu Items',
+  'menu.addToCart': 'Add to Cart',
+  'menu.noImage': 'No image',
+  'menu.search': 'Search menu...',
+  'menu.description': 'Description',
+  'menu.options': 'Options',
+  'menu.soldOut': 'Sold out',
+  'menu.categoryAll': 'All',
+  'menu.quantity': 'Qty',
+  'menu.specialInstructions': 'Special instructions',
+  'menu.allergenInfo': 'Allergen info',
+  'menu.availableItems': '{count} items available',
+
+  'payment.pay': 'Pay',
+  'payment.paid': 'Paid',
+  'payment.unpaid': 'Unpaid',
+  'payment.refunded': 'Refunded',
+  'payment.cash': 'Cash',
+  'payment.card': 'Card',
+  'payment.wallet': 'Wallet',
+  'payment.tip': 'Tip',
+  'payment.receipt': 'Receipt',
+  'payment.bill': 'Bill',
+  'payment.split': 'Split',
+  'payment.paymentMethod': 'Payment method',
+  'payment.amount': 'Amount',
+  'payment.change': 'Change',
+  'payment.totalDue': 'Total due',
+  'payment.remainingBalance': 'Remaining balance',
+  'payment.payFull': 'Pay full amount',
+  'payment.payPartial': 'Pay partial amount',
+  'payment.printReceipt': 'Print receipt',
+  'payment.transactionId': 'Transaction ID',
+  'payment.payNow': 'Pay Now',
+  'payment.orderSummary': 'Order Summary',
+
+  'staff.kitchen': 'Kitchen',
+  'staff.waiter': 'Waiter',
+  'staff.cashier': 'Cashier',
+  'staff.manager': 'Manager',
+  'staff.admin': 'Admin',
+  'staff.tables': 'Tables',
+  'staff.orders': 'Orders',
+  'staff.pos': 'Point of Sale',
+  'staff.payments': 'Payments',
+  'staff.history': 'History',
+  'staff.activeOrders': 'Active Orders',
+  'staff.orderHistory': 'Order History',
+  'staff.profileSettings': 'Profile Settings',
+  'staff.signOut': 'Sign Out',
+  'staff.waiterPanel': 'Waiter Panel',
+  'staff.kitchenDisplay': 'Kitchen Display',
+  'staff.cashierPanel': 'Cashier Panel',
+
+  'settings.darkMode': 'Dark mode',
+  'settings.language': 'Language',
+  'settings.theme': 'Theme',
+  'settings.light': 'Light',
+  'settings.dark': 'Dark',
+  'settings.system': 'System',
+  'settings.profile': 'Profile',
+  'settings.notifications': 'Notifications',
+  'settings.about': 'About',
+  'settings.version': 'Version',
+
+  'cta.startTrial': 'Start Free Trial',
+  'cta.learnMore': 'Learn More',
+  'cta.getStarted': 'Get Started',
+  'cta.contactUs': 'Contact Us',
+  'cta.bookDemo': 'Book a Demo',
+  'cta.subscribe': 'Subscribe',
+  'cta.tryForFree': 'Try for Free',
+  'cta.requestDemo': 'Request a Demo',
+  'cta.signIn': 'Sign in',
+  'cta.signUp': 'Sign up',
+  'cta.enableNotifications': 'Get notified when your order is ready',
+  'cta.notificationDesc': "We'll send a browser notification when your food is ready",
+  'cta.enable': 'Enable',
+
+  'footer.privacy': 'Privacy Policy',
+  'footer.terms': 'Terms of Service',
+  'footer.copyright': '© {year} QCart. All rights reserved.',
+  'footer.company': 'Company',
+  'footer.support': 'Support',
+  'footer.legal': 'Legal',
+
+  'marketing.trustedBy': 'Trusted by 300+ restaurants',
+  'marketing.heroTitle': 'Turn every table into a self-service revenue engine',
+  'marketing.heroDesc': 'QCart lets guests scan, order, and pay from their phones — no app, no waiting. Your kitchen and staff stay in sync in real time.',
+  'marketing.noCreditCard': 'No credit card required · 14-day free trial',
+  'marketing.seeFeatures': 'See Features',
+  'marketing.featuresTitle': 'Everything you need to run service',
+  'marketing.featuresDesc': 'From the first scan to the final payment, QCart handles it all.',
+  'marketing.howItWorksTitle': 'Live in three steps',
+  'marketing.howItWorksDesc': 'No hardware. No installs. Just your menu and a printer.',
+  'marketing.stepLabel': 'STEP {num}',
+  'marketing.showcaseTitle': 'From scan to paid in under a minute',
+  'marketing.showcaseDesc': 'Cut wait times, eliminate order errors, and free your staff to focus on hospitality — while the dashboard keeps you on top of every table and every dollar.',
+  'marketing.showcaseItem1': 'Live order feed across kitchen, waiters, and cashiers',
+  'marketing.showcaseItem2': 'Tips & split payments handled by the guest',
+  'marketing.showcaseItem3': 'Revenue, best-sellers, and peak hours at a glance',
+  'marketing.showcaseItem4': 'One dashboard for every location',
+  'marketing.testimonialsTitle': 'Loved by restaurant owners',
+  'marketing.testimonialsDesc': 'Real operators, real results.',
+  'marketing.pricingTitle': 'Simple, transparent pricing',
+  'marketing.pricingDesc': 'No hidden fees. No long-term contracts. Cancel anytime.',
+  'marketing.mostPopular': 'Most Popular',
+  'marketing.faqTitle': 'Frequently asked questions',
+  'marketing.ctaTitle': 'Ready to digitize your restaurant?',
+  'marketing.ctaDesc': 'Join hundreds of restaurants using QCart to streamline service and grow revenue.',
+  'marketing.scanToOrder': 'Scan to order',
+  'marketing.statRestaurants': 'Restaurants',
+  'marketing.statOrdersServed': 'Orders served',
+  'marketing.statFasterTurnover': 'Faster turnover',
+  'marketing.statOwnerRating': 'Owner rating',
+  'marketing.statTodaySales': "Today's Sales",
+  'marketing.statOrders': 'Orders',
+  'marketing.statAvgTicket': 'Avg. Ticket',
+  'marketing.statRevenueWeek': 'Revenue · this week',
+  'marketing.phoneTableDineIn': 'Table {num} · Dine in',
+  'marketing.phoneDemoCafe': 'Demo Cafe',
+  'marketing.phonePopularSection': 'Popular',
+  'marketing.phoneViewCart': 'View cart · {count}',
+  'marketing.phoneItemBurger': 'Classic Burger',
+  'marketing.phoneItemPizza': 'Margherita Pizza',
+  'marketing.phoneItemLemonade': 'Fresh Lemonade',
+  'marketing.featureQrCode': 'QR Code Ordering',
+  'marketing.featureQrCodeDesc': 'Guests scan a code at the table to browse, order, and pay from their own phone — no app to download.',
+  'marketing.featurePayments': 'Seamless Payments',
+  'marketing.featurePaymentsDesc': 'Stripe-powered checkout with tips, split bills, and shareable payment links over SMS or WhatsApp.',
+  'marketing.featureKitchen': 'Real-Time Kitchen',
+  'marketing.featureKitchenDesc': "Orders hit the kitchen display the instant they're placed. Staff are notified automatically.",
+  'marketing.featureStaff': 'Role-Based Staff',
+  'marketing.featureStaffDesc': 'Tailored views for waiters, kitchen, cashiers, and managers — everyone sees exactly what they need.',
+  'marketing.featureAnalytics': 'Analytics & Reports',
+  'marketing.featureAnalyticsDesc': 'Track revenue, best-sellers, peak hours, and staff performance with built-in dashboards.',
+  'marketing.featureMultiLocation': 'Multi-Location',
+  'marketing.featureMultiLocationDesc': 'Run every branch from one platform, each with its own menu, tables, staff, and reporting.',
+  'marketing.stepMenu': 'Build your menu',
+  'marketing.stepMenuDesc': 'Add categories and items with photos, prices, and modifiers in minutes.',
+  'marketing.stepPrintQr': 'Print QR codes',
+  'marketing.stepPrintQrDesc': 'Generate a unique code per table, print it, and place it on the table tent.',
+  'marketing.stepStartServing': 'Start serving',
+  'marketing.stepStartServingDesc': 'Guests scan, order, and pay. Your kitchen gets every order in real time.',
+  'marketing.planStarterName': 'Starter',
+  'marketing.planStarterDesc': 'For small cafes and bistros',
+  'marketing.planStarterFeature0': 'Up to 3 staff accounts',
+  'marketing.planStarterFeature1': 'Single location',
+  'marketing.planStarterFeature2': 'Basic analytics',
+  'marketing.planStarterFeature3': 'Email support',
+  'marketing.planGrowthName': 'Growth',
+  'marketing.planGrowthDesc': 'For busy, growing restaurants',
+  'marketing.planGrowthFeature0': 'Up to 20 staff accounts',
+  'marketing.planGrowthFeature1': 'Up to 3 locations',
+  'marketing.planGrowthFeature2': 'Advanced analytics',
+  'marketing.planGrowthFeature3': 'Priority support',
+  'marketing.planGrowthFeature4': 'Custom branding',
+  'marketing.planEnterpriseName': 'Enterprise',
+  'marketing.planEnterpriseDesc': 'For multi-location chains',
+  'marketing.planEnterpriseFeature0': 'Unlimited staff & locations',
+  'marketing.planEnterpriseFeature1': 'White-label',
+  'marketing.planEnterpriseFeature2': 'Dedicated support',
+  'marketing.planEnterpriseFeature3': 'API access',
+  'marketing.planEnterpriseFeature4': 'Custom integrations',
+  'marketing.testimonial1Quote': 'Table turnover went up noticeably in the first month. Guests love ordering without flagging down a server.',
+  'marketing.testimonial1Name': 'Maria S.',
+  'marketing.testimonial1Role': 'Owner, Bella Cucina',
+  'marketing.testimonial2Quote': 'Setup took an afternoon. The kitchen display alone paid for itself — no more lost paper tickets.',
+  'marketing.testimonial2Name': 'James O.',
+  'marketing.testimonial2Role': 'Manager, The Corner Diner',
+  'marketing.testimonial3Quote': 'Split bills and tips used to be chaos. Now customers handle it themselves and we just watch revenue land.',
+  'marketing.testimonial3Name': 'Priya K.',
+  'marketing.testimonial3Role': 'Owner, Spice Route',
+  'marketing.faq1Q': 'Do my customers need to download an app?',
+  'marketing.faq1A': 'No. Guests scan the table QR code and everything runs in their phone\'s browser — menu, ordering, and payment.',
+  'marketing.faq2Q': 'How long does setup take?',
+  'marketing.faq2A': 'Most restaurants are live the same day. Add your menu, generate table QR codes, and you\'re ready to take orders.',
+  'marketing.faq3Q': 'Can I take payments?',
+  'marketing.faq3A': 'Yes. QCart uses Stripe for secure card payments, with tips, split bills, and shareable payment links built in.',
+  'marketing.faq4Q': 'Can I manage more than one location?',
+  'marketing.faq4A': 'Absolutely. Run multiple restaurants from one account, each with its own menu, staff, tables, and analytics.',
+  'pricing.pageTitle': 'Simple, transparent pricing',
+  'pricing.pageDesc': 'No hidden fees. No long-term contracts. Cancel anytime.',
+  'pricing.faqTitle': 'Frequently asked questions',
+  'pricing.planStarterDesc': 'Perfect for small cafes and bistros getting started with digital ordering.',
+  'pricing.planStarterFeature0': 'Up to 3 staff accounts',
+  'pricing.planStarterFeature1': 'Single restaurant location',
+  'pricing.planStarterFeature2': 'Basic sales analytics',
+  'pricing.planStarterFeature3': 'Email support (48h response)',
+  'pricing.planStarterFeature4': 'Standard QR code generation',
+  'pricing.planStarterFeature5': 'Up to 50 menu items',
+  'pricing.planGrowthDesc': 'Ideal for busy restaurants that need more flexibility and control.',
+  'pricing.planGrowthFeature0': 'Up to 20 staff accounts',
+  'pricing.planGrowthFeature1': 'Up to 3 locations',
+  'pricing.planGrowthFeature2': 'Advanced analytics & reports',
+  'pricing.planGrowthFeature3': 'Priority email & chat support',
+  'pricing.planGrowthFeature4': 'Custom branding (logo, colors)',
+  'pricing.planGrowthFeature5': 'Unlimited menu items',
+  'pricing.planGrowthFeature6': 'Payment link generation',
+  'pricing.planGrowthFeature7': 'Staff performance metrics',
+  'pricing.planEnterpriseDesc': 'For multi-location chains and high-volume operations.',
+  'pricing.planEnterpriseFeature0': 'Unlimited staff accounts',
+  'pricing.planEnterpriseFeature1': 'Unlimited locations',
+  'pricing.planEnterpriseFeature2': 'White-label (your domain, your brand)',
+  'pricing.planEnterpriseFeature3': 'Dedicated account manager',
+  'pricing.planEnterpriseFeature4': 'API access for custom integrations',
+  'pricing.planEnterpriseFeature5': 'On-premise deployment option',
+  'pricing.planEnterpriseFeature6': 'Custom reporting & exports',
+  'pricing.planEnterpriseFeature7': 'SLA guarantee (99.9% uptime)',
+  'pricing.faq1Q': 'Is there a setup fee?',
+  'pricing.faq1A': 'No. All plans include free setup and onboarding assistance.',
+  'pricing.faq2Q': 'Can I cancel anytime?',
+  'pricing.faq2A': 'Yes. No long-term contracts. Cancel with 30 days notice.',
+  'pricing.faq3Q': 'Do you offer a free trial?',
+  'pricing.faq3A': 'Yes. All plans include a 14-day free trial with full features.',
+  'pricing.faq4Q': 'What payment methods are supported?',
+  'pricing.faq4A': 'We integrate with Stripe, supporting credit cards, digital wallets, and bank transfers.',
+  'features.pageTitle': 'All Features',
+  'features.pageDesc': 'Everything your restaurant needs to go digital, from the first scan to the final receipt.',
+  'features.groupCustomers': 'For Customers',
+  'features.groupStaff': 'For Staff',
+  'features.groupManagement': 'For Management',
+  'features.itemScanOrder': 'Scan & Order',
+  'features.itemScanOrderDesc': 'Customers scan a QR code to view the menu and place orders from their phone. No app download required.',
+  'features.itemPayAtTable': 'Pay at Table',
+  'features.itemPayAtTableDesc': 'Integrated Stripe payments let customers pay by card or digital wallet. Support tips and split bills.',
+  'features.itemOrderTracking': 'Order Tracking',
+  'features.itemOrderTrackingDesc': "Real-time order status shows when the kitchen starts preparing, when it's ready, and when it's delivered.",
+  'features.itemKitchenDisplay': 'Kitchen Display',
+  'features.itemKitchenDisplayDesc': 'Orders appear instantly on the kitchen screen. Staff update status with one tap.',
+  'features.itemRoleManagement': 'Role Management',
+  'features.itemRoleManagementDesc': 'Assign roles — waiter, kitchen, cashier, manager — each with tailored views and permissions.',
+  'features.itemMultiTable': 'Multi-Table View',
+  'features.itemMultiTableDesc': 'Waiters see all their tables at a glance: new orders, pending deliveries, and bill requests.',
+  'features.itemAnalytics': 'Analytics',
+  'features.itemAnalyticsDesc': 'Track revenue, popular items, peak hours, and table turnover. Export reports for accounting.',
+  'features.itemMenuManagement': 'Menu Management',
+  'features.itemMenuManagementDesc': 'Update prices, descriptions, and availability in real time. Add modifiers and photos.',
+  'features.itemPaymentLinks': 'Payment Links',
+  'features.itemPaymentLinksDesc': 'Generate shareable payment links for takeout, delivery, or split bills sent via SMS or WhatsApp.',
+  'contact.pageTitle': 'Get in touch',
+  'contact.pageDesc': "Have a question? We'd love to hear from you.",
+  'contact.email': 'Email',
+  'contact.phone': 'Phone',
+  'contact.location': 'Location',
+  'contact.formName': 'Name',
+  'contact.formNamePlaceholder': 'Your name',
+  'contact.formEmail': 'Email',
+  'contact.formEmailPlaceholder': 'you@example.com',
+  'contact.formSubject': 'Subject',
+  'contact.formSubjectPlaceholder': 'How can we help?',
+  'contact.formMessage': 'Message',
+  'contact.formMessagePlaceholder': 'Tell us more...',
+  'contact.sendMessage': 'Send Message',
+  'contact.successTitle': 'Message sent!',
+  'contact.successDesc': "We'll get back to you within 24 hours.",
+  'demo.pageTitle': 'Get a Demo',
+  'demo.pageDesc': "See QCart in action. Fill out the form and we'll show you how it works.",
+  'demo.formName': 'Your Name',
+  'demo.formNamePlaceholder': 'John Doe',
+  'demo.formEmail': 'Email',
+  'demo.formEmailPlaceholder': 'john@myrestaurant.com',
+  'demo.formRestaurant': 'Restaurant Name',
+  'demo.formRestaurantPlaceholder': 'My Restaurant',
+  'demo.formPhone': 'Phone (optional)',
+  'demo.formPhonePlaceholder': '+1 234 567 8900',
+  'demo.formSize': 'Restaurant Size',
+  'demo.formSizePlaceholder': 'Select size...',
+  'demo.formSizeOption0': '1-10 tables',
+  'demo.formSizeOption1': '11-25 tables',
+  'demo.formSizeOption2': '26-50 tables',
+  'demo.formSizeOption3': '50+ tables',
+  'demo.formMessage': 'Message (optional)',
+  'demo.formMessagePlaceholder': 'Tell us about your needs...',
+  'demo.requestDemo': 'Request Demo',
+  'demo.sending': 'Sending...',
+  'demo.selfServiceSetup': 'Self-Service Setup',
+  'demo.successTitle': 'Thank you!',
+  'demo.successDesc': "We've received your demo request and will be in touch within 24 hours.",
+  'demo.successExplorer': 'In the meantime, you can explore the',
+  'demo.successWizardLink': 'self-service setup wizard',
+  'demo.successAfterLink': 'to get started right away.',
+  'demo.backToHome': 'Back to Home',
+  'demo.errorMessage': 'Something went wrong. Please try again later.',
+
+  'error.generic': 'Something went wrong',
+  'error.notFound': 'Not found',
+  'error.forbidden': 'Access denied',
+  'error.serverError': 'Server error',
+  'error.networkError': 'Network error',
+  'error.tryAgain': 'Please try again',
+  'error.somethingWentWrong': 'Something went wrong. Please try again.',
+  'error.pageNotFound': 'Page not found',
+  'error.sessionExpired': 'Your session has expired. Please sign in again.',
+  'error.unauthorized': 'You are not authorized to view this page.',
+};

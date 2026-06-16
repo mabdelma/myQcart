@@ -87,9 +87,15 @@ describe('paymentService', () => {
 
   describe('recordCashPayment', () => {
     it('records cash payment and marks order as paid', async () => {
+      const orderData = { id: 'order-1', total: 25, paymentStatus: 'unpaid', paidAmount: 0, tenantId: 'tenant-1', tableId: null, subtotal: 0, tax: 0, tip: 0, createdAt: '', updatedAt: '' };
+      db.__setQueryQueue([[orderData], [], [orderData], []]);
+
       const result = await recordCashPayment('tenant-1', 'order-1', 25, 3);
 
-      expect(result.status).toBe('paid');
+      expect('data' in result).toBe(true);
+      if ('data' in result) {
+        expect(result.data.status).toBe('paid');
+      }
       expect(db.update).toHaveBeenCalled();
       expect(db.insert).toHaveBeenCalled();
     });

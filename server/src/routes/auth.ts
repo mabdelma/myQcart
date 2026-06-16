@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { registerUser, loginUser, getCurrentUser, requestPasswordReset, resetPassword } from '../services/authService.js';
+import { registerUser, loginUser, loginWithRefresh, refreshAccessToken, revokeRefreshToken, verifyEmail, resendVerificationEmail, getCurrentUser, requestPasswordReset, resetPassword } from '../services/authService.js';
 
 const auth = new Hono();
 
@@ -30,7 +30,55 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
 
 auth.post('/login', zValidator('json', loginSchema), async (c) => {
   const input = c.req.valid('json');
-  const result = await loginUser(input);
+  const result = await loginWithRefresh(input);
+
+  if ('error' in result) {
+    return c.json({ error: result.error }, result.status);
+  }
+  return c.json(result.data, result.status);
+});
+
+const refreshSchema = z.object({
+  refreshToken: z.string().min(1),
+});
+
+auth.post('/refresh', zValidator('json', refreshSchema), async (c) => {
+  const { refreshToken } = c.req.valid('json');
+  const result = await refreshAccessToken(refreshToken);
+
+  if ('error' in result) {
+    return c.json({ error: result.error }, result.status);
+  }
+  return c.json(result.data, result.status);
+});
+
+auth.post('/logout', zValidator('json', refreshSchema), async (c) => {
+  const { refreshToken } = c.req.valid('json');
+  await revokeRefreshToken(refreshToken);
+  return c.json({ success: true });
+});
+
+const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
+auth.post('/verify-email', zValidator('json', verifyEmailSchema), async (c) => {
+  const { token } = c.req.valid('json');
+  const result = await verifyEmail(token);
+
+  if ('error' in result) {
+    return c.json({ error: result.error }, result.status);
+  }
+  return c.json(result.data, result.status);
+});
+
+const resendVerificationSchema = z.object({
+  email: z.string().email(),
+});
+
+auth.post('/resend-verification', zValidator('json', resendVerificationSchema), async (c) => {
+  const { email } = c.req.valid('json');
+  const result = await resendVerificationEmail(email);
 
   if ('error' in result) {
     return c.json({ error: result.error }, result.status);

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { getDB } from '../../lib/db';
-import type { Order, MenuItem, Table } from '../../lib/db/schema';
+﻿import React, { useState, useEffect } from 'react';
+import { menuApi, orderApi, tableApi } from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import type { Order, MenuItem, TableData, OrderWithItems } from '../../lib/api/types';
 import { OrderStats } from './order/OrderStats';
 import { OrderFilters } from './order/OrderFilters';
 import { OrderList } from './order/OrderList';
@@ -9,42 +10,44 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 
 export function OrderManagement() {
+  const { state: { tenant } } = useAuth();
+  const slug = tenant?.slug;
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<Record<string, MenuItem>>({});
-  const [tables, setTables] = useState<Record<string, Table>>({});
+  const [tables, setTables] = useState<Record<string, TableData>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('all');
 
   useEffect(() => {
-    loadOrders();
-    // Refresh orders every 30 seconds
-    const interval = setInterval(loadOrders, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (slug) {
+      loadOrders();
+      const interval = setInterval(loadOrders, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [slug]);
 
   async function loadOrders() {
+    if (!slug) return;
     try {
-      const db = await getDB();
-      const [allOrders, allMenuItems, allTables] = await Promise.all([
-        db.getAll('orders'),
-        db.getAll('menu_items'),
-        db.getAll('tables')
+      const [allOrders, menuData, allTables] = await Promise.all([
+        orderApi.list(slug),
+        menuApi.getFullMenu(slug),
+        tableApi.list(slug)
       ]);
 
-      // Create lookup maps
       const menuItemsMap = Object.fromEntries(
-        allMenuItems.map(item => [item.id, item])
+        menuData.items.map(item => [item.id, item])
       );
       const tablesMap = Object.fromEntries(
         allTables.map(table => [table.id, table])
       );
 
-      setOrders(allOrders.sort((a, b) => 
+      setOrders(allOrders.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ));
       setMenuItems(menuItemsMap);
@@ -59,16 +62,9 @@ export function OrderManagement() {
   }
 
   async function handleStatusChange(orderId: string, status: Order['status']) {
+    if (!slug) return;
     try {
-      const db = await getDB();
-      const order = orders.find(o => o.id === orderId);
-      if (!order) return;
-
-      await db.put('orders', {
-        ...order,
-        status,
-        updatedAt: new Date()
-      });
+      await orderApi.updateStatus(slug, orderId, status);
       loadOrders();
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -77,18 +73,26 @@ export function OrderManagement() {
 
   async function handleCancelOrder(orderId: string) {
     if (!confirm('Are you sure you want to cancel this order?')) return;
-    
+    if (!slug) return;
     try {
-      const db = await getDB();
-      await db.delete('orders', orderId);
+      await orderApi.updateStatus(slug, orderId, 'cancelled');
       loadOrders();
     } catch (error) {
       console.error('Failed to cancel order:', error);
     }
   }
 
+  async function handleViewDetails(order: Order) {
+    if (!slug) return;
+    try {
+      const detail = await orderApi.getDetail(slug, order.id);
+      setSelectedOrder(detail);
+    } catch (err) {
+      console.error('Failed to load order details:', err);
+    }
+  }
+
   const filteredOrders = orders.filter(order => {
-    // Status filter
     if (statusFilter) {
       if (statusFilter === 'paid') {
         if (order.paymentStatus !== 'paid') return false;
@@ -97,12 +101,10 @@ export function OrderManagement() {
       }
     }
 
-    // Payment filter
     if (paymentFilter !== 'all') {
       if (paymentFilter !== order.paymentStatus) return false;
     }
 
-    // Time filter
     const orderTime = new Date(order.createdAt).getTime();
     const now = Date.now();
     if (timeFilter === 'today') {
@@ -116,22 +118,16 @@ export function OrderManagement() {
       if (age <= 15 || order.paymentStatus === 'paid') return false;
     }
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const table = tables[order.tableId];
       const tableMatch = table && table.number.toString().includes(query);
-      const itemsMatch = order.items.some(item => {
-        const menuItem = menuItems[item.menuItemId];
-        return menuItem && menuItem.name.toLowerCase().includes(query);
-      });
-      if (!tableMatch && !itemsMatch) return false;
+      if (!tableMatch) return false;
     }
 
     return true;
   });
 
-  // Calculate stats
   const stats = {
     pendingOrders: orders.filter(o => o.status === 'pending').length,
     preparingOrders: orders.filter(o => o.status === 'preparing').length,
@@ -171,18 +167,21 @@ export function OrderManagement() {
         orders={filteredOrders}
         menuItems={menuItems}
         tables={tables}
-        onViewDetails={setSelectedOrder}
+        onViewDetails={handleViewDetails}
         onStatusChange={handleStatusChange}
         onCancelOrder={handleCancelOrder}
       />
-      
+
       {selectedOrder && (
         <OrderDetails
           order={{
             ...selectedOrder,
             items: selectedOrder.items.map(item => ({
-              ...item,
-              menuItem: menuItems[item.menuItemId]
+              id: item.id,
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              notes: item.notes,
             }))
           }}
           onClose={() => setSelectedOrder(null)}
@@ -191,3 +190,4 @@ export function OrderManagement() {
     </div>
   );
 }
+

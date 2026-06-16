@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ChefHat, UserCircle, DollarSign, Shield } from 'lucide-react';
@@ -8,6 +9,7 @@ import { ChefHat, UserCircle, DollarSign, Shield } from 'lucide-react';
 export function StaffSignIn() {
   const navigate = useNavigate();
   const { login, state } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -20,7 +22,7 @@ export function StaffSignIn() {
         else if (['kitchen', 'waiter', 'cashier'].includes(user.role)) {
           navigate('/staff');
         } else {
-          throw new Error('Unauthorized role');
+          throw new Error(t('error.unauthorized'));
         }
       }
     } catch (error) {
@@ -29,31 +31,31 @@ export function StaffSignIn() {
   };
 
   return (
-    <AuthLayout title="Staff Sign In">
+    <AuthLayout title={t('auth.signin')}>
       <div className="flex justify-center space-x-8 mb-8">
         <div className="text-center">
           <div className="p-3 bg-purple-100 rounded-full inline-flex mb-2">
             <Shield className="w-6 h-6 text-purple-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600">Admin</p>
+          <p className="text-sm font-medium text-gray-600">{t('staff.admin')}</p>
         </div>
         <div className="text-center">
           <div className="p-3 bg-blue-100 rounded-full inline-flex mb-2">
             <ChefHat className="w-6 h-6 text-blue-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600">Kitchen Staff</p>
+          <p className="text-sm font-medium text-gray-600">{t('staff.kitchen')}</p>
         </div>
         <div className="text-center">
           <div className="p-3 bg-yellow-100 rounded-full inline-flex mb-2">
             <DollarSign className="w-6 h-6 text-yellow-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600">Cashier</p>
+          <p className="text-sm font-medium text-gray-600">{t('staff.cashier')}</p>
         </div>
         <div className="text-center">
           <div className="p-3 bg-green-100 rounded-full inline-flex mb-2">
             <UserCircle className="w-6 h-6 text-green-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600">Waiter Staff</p>
+          <p className="text-sm font-medium text-gray-600">{t('staff.waiter')}</p>
         </div>
       </div>
 
@@ -66,7 +68,7 @@ export function StaffSignIn() {
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
+            {t('auth.email')}
           </label>
           <div className="mt-1">
             <input
@@ -84,7 +86,7 @@ export function StaffSignIn() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
+            {t('auth.password')}
           </label>
           <div className="mt-1">
             <input
@@ -106,7 +108,7 @@ export function StaffSignIn() {
             disabled={state.loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#8B4513] hover:bg-[#5C4033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8B4513] disabled:opacity-50"
           >
-            {state.loading ? <LoadingSpinner /> : 'Sign in'}
+            {state.loading ? <LoadingSpinner /> : t('auth.signin')}
           </button>
         </div>
 
@@ -116,7 +118,7 @@ export function StaffSignIn() {
             onClick={() => navigate('/staff/signup')}
             className="font-medium text-[#8B4513] hover:text-[#5C4033]"
           >
-            New staff member? Sign up
+            {t('auth.noAccount')} {t('cta.signUp')}
           </button>
         </div>
       </form>

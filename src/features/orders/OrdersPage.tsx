@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTableFlow } from '../restaurant/TableFlowLayout';
 import { orderApi, paymentApi } from '../../lib/api';
+import { useI18n } from '../../contexts/I18nContext';
+import { useSSE } from '../../hooks/useSSE';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { StripePaymentForm } from '../menu/StripePaymentForm';
@@ -25,6 +27,7 @@ function getStripe() {
 }
 
 export function OrdersPage() {
+  const { t } = useI18n();
   const { table, slug } = useTableFlow();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +47,12 @@ export function OrdersPage() {
     return () => clearInterval(interval);
   }, [loadOrders]);
 
+  useSSE(slug, {
+    onOrderCreated: () => { loadOrders(); },
+    onOrderUpdated: () => { loadOrders(); },
+    onOrderStatusChanged: () => { loadOrders(); },
+  });
+
   async function handlePayCash(orderId: string, total: number) {
     if (!slug) return;
     try {
@@ -58,19 +67,19 @@ export function OrdersPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">Orders</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('nav.orders')}</h2>
         <button onClick={loadOrders} className="flex items-center text-sm text-gray-500 hover:text-[#8B4513]">
-          <RefreshCw className="w-4 h-4 mr-1" /> Refresh
+          <RefreshCw className="w-4 h-4 mr-1" /> {t('common.retry')}
         </button>
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-500 py-8">Loading orders...</p>
+        <p className="text-center text-gray-500 py-8">{t('common.loading')}...</p>
       ) : orders.length === 0 ? (
         <div className="text-center py-12">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No orders yet</h3>
-          <p className="text-sm text-gray-500">Place an order to get started</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('common.noResults')}</h3>
+          <p className="text-sm text-gray-500">{t('order.emptyCart')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -83,7 +92,7 @@ export function OrdersPage() {
                       {order.status}
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                      {order.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                      {order.paymentStatus === 'paid' ? t('payment.paid') : t('payment.unpaid')}
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-1">
@@ -109,23 +118,23 @@ export function OrdersPage() {
                           />
                         </Elements>
                       ) : (
-                        <p className="text-sm text-red-600">Stripe not configured</p>
+                        <p className="text-sm text-red-600">{t('common.notAvailable')}</p>
                       )}
                       <button onClick={() => handlePayCash(order.id, order.total)}
                         className="w-full py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
-                        Pay with Cash
+                        {t('payment.cash')}
                       </button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
                       <button onClick={() => handlePayCash(order.id, order.total)}
                         className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
-                        Pay Cash
+                        {t('payment.cash')}
                       </button>
                       {getStripe() && (
                         <button onClick={() => setPayingOrderId(order.id)}
                           className="flex-1 py-2 bg-[#8B4513] text-white rounded-lg text-sm hover:bg-[#5C4033]">
-                          Pay Card
+                          {t('payment.card')}
                         </button>
                       )}
                     </div>

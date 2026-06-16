@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
 import qrcode from 'qrcode';
@@ -133,6 +133,133 @@ tables.delete('/:slug/tables/:tableId', authMiddleware, requireRole('admin'), re
     .where(and(eq(schema.tables.id, tableId), eq(schema.tables.tenantId, tenantId)));
 
   return c.json({ success: true });
+});
+
+tables.post('/:slug/tables/merge', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const { sourceTableId, targetTableId } = await c.req.json() as { sourceTableId: string; targetTableId: string };
+
+  const [source] = await db.select().from(schema.tables).where(and(eq(schema.tables.id, sourceTableId), eq(schema.tables.tenantId, tenantId))).limit(1);
+  const [target] = await db.select().from(schema.tables).where(and(eq(schema.tables.id, targetTableId), eq(schema.tables.tenantId, tenantId))).limit(1);
+  if (!source || !target) return c.json({ error: 'Table not found' }, 404);
+
+  const sourceOrders = await db.select().from(schema.orders).where(and(eq(schema.orders.tableId, sourceTableId), eq(schema.orders.paymentStatus, 'unpaid')));
+
+  for (const order of sourceOrders) {
+    await db.update(schema.orders)
+      .set({ tableId: targetTableId, notes: `Merged from table ${source.number} | ${order.notes || ''}` })
+      .where(eq(schema.orders.id, order.id));
+  }
+
+  const mergedCapacity = source.capacity + target.capacity;
+  await db.update(schema.tables)
+    .set({ status: 'closed', capacity: 0 })
+    .where(eq(schema.tables.id, sourceTableId));
+  await db.update(schema.tables)
+    .set({ capacity: mergedCapacity })
+    .where(eq(schema.tables.id, targetTableId));
+
+  logger.info({ tenantId, sourceTableId, targetTableId }, 'Tables merged');
+  return c.json({ data: { targetTableId, mergedCapacity, ordersTransferred: sourceOrders.length } });
+});
+
+tables.post('/:slug/tables/split', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const { tableId, orderItemIds } = await c.req.json() as { tableId: string; orderItemIds: string[] };
+
+  const [existing] = await db.select().from(schema.tables).where(and(eq(schema.tables.id, tableId), eq(schema.tables.tenantId, tenantId))).limit(1);
+  if (!existing) return c.json({ error: 'Table not found' }, 404);
+
+  const newTableId = uuid();
+  const qrToken = crypto.randomBytes(16).toString('hex');
+  const qrUrl = `https://${c.req.header('host')}/api/tables/resolve/${qrToken}`;
+  const qrImage = await qrcode.toDataURL(qrUrl, { width: 300, margin: 2 });
+
+  await db.insert(schema.tables).values({
+    id: newTableId, tenantId, number: 0, capacity: existing.capacity,
+    status: 'occupied', qrToken, qrImage,
+  });
+
+  const maxNumber = await db
+    .select({ max: sql<number>`max(number)` })
+    .from(schema.tables)
+    .where(eq(schema.tables.tenantId, tenantId));
+  const newNumber = (maxNumber[0]?.max || 0) + 1;
+  await db.update(schema.tables).set({ number: newNumber }).where(eq(schema.tables.id, newTableId));
+
+  const orderItemsToMove = await db
+    .select()
+    .from(schema.orderItems)
+    .where(sql`${schema.orderItems.id} IN (${sql.join(orderItemIds.map((id) => sql`${id}`), sql`, `)})`);
+
+  const orderIds = [...new Set(orderItemsToMove.map((i) => i.orderId))];
+
+  for (const orderId of orderIds) {
+    const itemsForOrder = orderItemsToMove.filter((i) => i.orderId === orderId);
+    const [existingOrder] = await db.select().from(schema.orders).where(eq(schema.orders.id, orderId)).limit(1);
+    if (!existingOrder) continue;
+
+    const newOrderId = uuid();
+    const movedSubtotal = itemsForOrder.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const movedCount = itemsForOrder.reduce((s, i) => s + i.quantity, 0);
+
+    await db.insert(schema.orders).values({
+      id: newOrderId, tenantId, tableId: newTableId,
+      customerName: existingOrder.customerName,
+      status: existingOrder.status, itemCount: movedCount,
+      subtotal: movedSubtotal, tax: 0, serviceCharge: 0, total: movedSubtotal,
+      notes: `Split from table ${existing.number}`,
+    });
+
+    for (const item of itemsForOrder) {
+      await db.insert(schema.orderItems).values({
+        id: uuid(), orderId: newOrderId, menuItemId: item.menuItemId,
+        name: item.name, quantity: item.quantity, unitPrice: item.unitPrice,
+        notes: item.notes, modifiers: item.modifiers,
+      });
+      await db.delete(schema.orderItems).where(eq(schema.orderItems.id, item.id));
+    }
+
+    const remainingItems = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, orderId));
+    if (remainingItems.length === 0) {
+      await db.update(schema.orders).set({ status: 'cancelled' }).where(eq(schema.orders.id, orderId));
+    } else {
+      const remainingSubtotal = remainingItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+      const remainingCount = remainingItems.reduce((s, i) => s + i.quantity, 0);
+      await db.update(schema.orders).set({
+        subtotal: remainingSubtotal, total: remainingSubtotal,
+        itemCount: remainingCount,
+      }).where(eq(schema.orders.id, orderId));
+    }
+  }
+
+  logger.info({ tenantId, tableId, newTableId }, 'Table split');
+  return c.json({ data: { newTableId, newTableNumber: newNumber, ordersCreated: orderIds.length } });
+});
+
+tables.post('/:slug/tables/transfer-order', authMiddleware, requireRole('admin', 'manager', 'waiter'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const { orderId, targetTableId } = await c.req.json() as { orderId: string; targetTableId: string };
+
+  const [order] = await db.select().from(schema.orders).where(and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenantId))).limit(1);
+  if (!order) return c.json({ error: 'Order not found' }, 404);
+
+  const [targetTable] = await db.select().from(schema.tables).where(and(eq(schema.tables.id, targetTableId), eq(schema.tables.tenantId, tenantId))).limit(1);
+  if (!targetTable) return c.json({ error: 'Target table not found' }, 404);
+
+  const oldTableId = order.tableId;
+  await db.update(schema.orders)
+    .set({ tableId: targetTableId, notes: `Transferred from table ${order.tableId} | ${order.notes || ''}` })
+    .where(eq(schema.orders.id, orderId));
+
+  const remainingOrders = await db.select().from(schema.orders).where(and(eq(schema.orders.tableId, oldTableId), eq(schema.orders.paymentStatus, 'unpaid'), eq(schema.orders.id, sql`${schema.orders.id} != ${orderId}`)));
+  if (remainingOrders.length === 0) {
+    await db.update(schema.tables).set({ status: 'available' }).where(eq(schema.tables.id, oldTableId));
+  }
+  await db.update(schema.tables).set({ status: 'occupied' }).where(eq(schema.tables.id, targetTableId));
+
+  logger.info({ tenantId, orderId, oldTableId, targetTableId }, 'Order transferred');
+  return c.json({ data: { orderId, oldTableId, newTableId: targetTableId } });
 });
 
 export default tables;

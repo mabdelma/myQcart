@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { authApi } from '../../lib/api';
+import { useI18n } from '../../contexts/I18nContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function StaffSignUp() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -31,7 +33,7 @@ export function StaffSignUp() {
       });
       navigate('/signin');
     } catch (err) {
-      setError((err as { message?: string }).message || 'Sign up failed');
+      setError((err as { message?: string }).message || t('error.somethingWentWrong'));
     } finally {
       setLoading(false);
     }
@@ -44,7 +46,7 @@ export function StaffSignUp() {
   const inputCls = 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#8B4513] focus:border-[#8B4513]';
 
   return (
-    <AuthLayout title="Staff Sign Up">
+    <AuthLayout title={t('auth.signup')}>
       <form className="space-y-6" onSubmit={handleSubmit}>
         {error && (
           <div className="bg-red-50 border-l-4 border-red-400 p-4">
@@ -62,21 +64,21 @@ export function StaffSignUp() {
         </div>
 
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full name</label>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">{t('auth.name')}</label>
           <div className="mt-1">
             <input id="name" name="name" type="text" autoComplete="name" required value={formData.name} onChange={handleChange} className={inputCls} />
           </div>
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">{t('auth.email')}</label>
           <div className="mt-1">
             <input id="email" name="email" type="email" autoComplete="email" required value={formData.email} onChange={handleChange} className={inputCls} />
           </div>
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('auth.password')}</label>
           <div className="mt-1">
             <input id="password" name="password" type="password" autoComplete="new-password" required minLength={6} value={formData.password} onChange={handleChange} className={inputCls} />
           </div>
@@ -86,10 +88,10 @@ export function StaffSignUp() {
           <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
           <div className="mt-1">
             <select id="role" name="role" value={formData.role} onChange={handleChange} className={inputCls}>
-              <option value="kitchen">Kitchen Staff</option>
-              <option value="cashier">Cashier</option>
-              <option value="waiter">Waiter</option>
-              <option value="admin">Administrator</option>
+              <option value="kitchen">{t('staff.kitchen')}</option>
+              <option value="cashier">{t('staff.cashier')}</option>
+              <option value="waiter">{t('staff.waiter')}</option>
+              <option value="admin">{t('staff.admin')}</option>
             </select>
           </div>
         </div>
@@ -97,13 +99,13 @@ export function StaffSignUp() {
         <div>
           <button type="submit" disabled={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#8B4513] hover:bg-[#5C4033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8B4513] disabled:opacity-50">
-            {loading ? <LoadingSpinner /> : 'Sign up'}
+            {loading ? <LoadingSpinner /> : t('auth.signup')}
           </button>
         </div>
 
         <div className="text-sm text-center">
           <button type="button" onClick={() => navigate('/signin')} className="font-medium text-[#8B4513] hover:text-[#5C4033]">
-            Already have an account? Sign in
+            {t('auth.haveAccount')} {t('cta.signIn')}
           </button>
         </div>
       </form>

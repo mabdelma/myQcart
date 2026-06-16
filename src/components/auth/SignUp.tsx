@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { getDB } from '../../lib/db';
+import { authApi } from '../../lib/api';
+import type { User } from '../../lib/api/types';
+import { useI18n } from '../../contexts/I18nContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function SignUp() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -21,23 +24,16 @@ export function SignUp() {
     setError(null);
 
     try {
-      const db = await getDB();
-      
-      // Check if email already exists
-      const users = await db.getAll('users');
-      if (users.some(user => user.email === formData.email)) {
-        throw new Error('Email already exists');
-      }
-
-      // Create new user
-      await db.add('users', {
-        id: crypto.randomUUID(),
+      const res = await authApi.register({
+        tenantSlug: '',
         name: formData.name,
         email: formData.email,
-        role: formData.role as 'waiter' | 'kitchen' | 'admin'
+        password: formData.password,
+        role: formData.role
       });
 
-      // Redirect to sign in
+      localStorage.setItem('token', res.token);
+
       navigate('/signin');
     } catch (err) {
       setError((err as Error).message);
@@ -54,7 +50,7 @@ export function SignUp() {
   };
 
   return (
-    <AuthLayout title="Create your account">
+    <AuthLayout title={t('auth.createAccount')}>
       <form className="space-y-6" onSubmit={handleSubmit}>
         {error && (
           <div className="bg-red-50 border-l-4 border-red-400 p-4">
@@ -64,7 +60,7 @@ export function SignUp() {
 
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Full name
+            {t('auth.name')}
           </label>
           <div className="mt-1">
             <input
@@ -82,7 +78,7 @@ export function SignUp() {
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
+            {t('auth.email')}
           </label>
           <div className="mt-1">
             <input
@@ -100,7 +96,7 @@ export function SignUp() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
+            {t('auth.password')}
           </label>
           <div className="mt-1">
             <input
@@ -128,8 +124,8 @@ export function SignUp() {
               onChange={handleChange}
               className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#8B4513] focus:border-[#8B4513]"
             >
-              <option value="waiter">Waiter</option>
-              <option value="kitchen">Kitchen Staff</option>
+              <option value="waiter">{t('staff.waiter')}</option>
+              <option value="kitchen">{t('staff.kitchen')}</option>
             </select>
           </div>
         </div>
@@ -140,7 +136,7 @@ export function SignUp() {
             disabled={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#8B4513] hover:bg-[#5C4033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8B4513] disabled:opacity-50"
           >
-            {loading ? <LoadingSpinner /> : 'Sign up'}
+            {loading ? <LoadingSpinner /> : t('auth.signup')}
           </button>
         </div>
 
@@ -150,7 +146,7 @@ export function SignUp() {
             onClick={() => navigate('/signin')}
             className="font-medium text-[#8B4513] hover:text-[#5C4033]"
           >
-            Already have an account? Sign in
+            {t('auth.haveAccount')} {t('cta.signIn')}
           </button>
         </div>
       </form>

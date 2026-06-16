@@ -29,24 +29,37 @@ services:
     ports: !reset []
     networks: [default]
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks: [default]
+
   migrate:
+    image: ghcr.io/anomalyco/qcart/api:latest
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
       # Seed creates the platform super_admin (idempotent) with these on first run.
-      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:-}"
-      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:-}"
+      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:?set SUPER_ADMIN_EMAIL in .env.prod}"
+      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:?set SUPER_ADMIN_PASSWORD in .env.prod}"
     networks: [default]
 
   api:
+    image: ghcr.io/anomalyco/qcart/api:latest
+    depends_on:
+      redis:
+        condition: service_started
     restart: always
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
       JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET in .env.prod}"
       PORT: 3001
       CORS_ORIGIN: "https://${DOMAIN:-qcart.gmtmall.com}"
+      REDIS_URL: "redis://redis:6379"
       STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
       STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
       NODE_ENV: production
+      VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
+      VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
     ports: !reset []
     volumes:
       # Uploaded menu images/logos live on the API container's filesystem
@@ -55,13 +68,7 @@ services:
     networks: [default]
 
   qcart-frontend:
-    build:
-      context: .
-      dockerfile: frontend.Dockerfile
-      args:
-        # Baked into the JS bundle at build time — must be the LIVE publishable key.
-        VITE_STRIPE_KEY: "${VITE_STRIPE_KEY:-}"
-        VITE_API_URL: ""
+    image: ghcr.io/anomalyco/qcart/frontend:latest
     # Caddy proxies this by name over `edge`. The service name doubles as the
     # edge DNS alias, so it MUST be unique across all stacks on the VPS — a
     # generic "frontend" alias collides with qarrito's upstream and 502s it.

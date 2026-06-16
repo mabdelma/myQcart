@@ -10,7 +10,7 @@ interface CartPanelProps {
   slug?: string;
 }
 
-export function CartPanel({ isOpen, onClose, tableId, slug }: CartPanelProps) {
+export const CartPanel = React.memo(function CartPanel({ isOpen, onClose, tableId, slug }: CartPanelProps) {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
   const [editingComment, setEditingComment] = useState<string | null>(null);
@@ -189,4 +189,4 @@ export function CartPanel({ isOpen, onClose, tableId, slug }: CartPanelProps) {
       </div>
     </>
   );
-}
+});

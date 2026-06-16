@@ -1,25 +1,28 @@
 import { useEffect, useState } from 'react';
-import { getDB } from '../../../lib/db';
-import type { Order } from '../../../lib/db/schema';
+import { orderApi } from '../../../lib/api';
+import { useAuth } from '../../../contexts/AuthContext';
+import type { Order } from '../../../lib/api/types';
 import { Clock } from 'lucide-react';
 import { Skeleton } from '../../ui/Skeleton';
 
 export function OrdersTimeline() {
+  const { state } = useAuth();
+  const slug = state.tenant?.slug;
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!slug) return;
     loadOrders();
-    const interval = setInterval(loadOrders, 60000); // Refresh every minute
+    const interval = setInterval(loadOrders, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [slug]);
 
   async function loadOrders() {
     try {
-      const db = await getDB();
-      const allOrders = await db.getAll('orders');
+      if (!slug) return;
+      const allOrders = await orderApi.list(slug);
       
-      // Get today's orders
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       

@@ -12,6 +12,7 @@ export function NotificationsBell() {
       <button
         onClick={() => setIsOpen(true)}
         className="relative p-2 text-gray-400 hover:text-gray-500"
+        aria-label="Open notifications"
       >
         <Bell className="w-6 h-6" />
         {state.unreadCount > 0 && (

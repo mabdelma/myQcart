@@ -22,6 +22,9 @@ dist-ssr
 *.db-wal
 server/data/
 
+# Local mail dump (dev fallback when no SMTP configured)
+server/maildump/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

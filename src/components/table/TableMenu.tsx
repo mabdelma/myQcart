@@ -1,40 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
-import { getDB } from '../../lib/db';
+import { tableApi } from '../../lib/api';
 import { Outlet } from 'react-router';
 import { CartProvider } from '../../contexts/CartContext';
 import { TableHeader } from './TableHeader';
-import type { Table } from '../../lib/db/schema';
+import type { TableData } from '../../lib/api/types';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 
 export function TableMenu() {
-  const { tableId } = useParams();
-  const [table, setTable] = useState<Table | null>(null);
+  const { slug, tableId } = useParams();
+  const [table, setTable] = useState<TableData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadTable();
-  }, [tableId, loadTable]);
+  }, [slug, tableId]);
 
   async function loadTable() {
-    if (!tableId) {
-      setError('Invalid table ID');
+    if (!slug || !tableId) {
+      setError('Invalid table');
       setLoading(false);
       return;
     }
 
     try {
-      const db = await getDB();
-      const tableData = await db.get('tables', tableId);
-      
-      if (!tableData) {
-        setError('Table not found');
-      } else {
-        setTable(tableData);
-        setError(null);
-      }
+      const tableData = await tableApi.getByQr(slug, tableId);
+      setTable(tableData);
+      setError(null);
     } catch (err) {
       console.error('Failed to load table:', err);
       setError('Failed to load table information');
@@ -62,7 +56,7 @@ export function TableMenu() {
   return (
     <CartProvider>
       <div className="min-h-screen bg-gray-50">
-        <TableHeader table={table} />
+        <TableHeader />
         <main>
           <Outlet />
         </main>

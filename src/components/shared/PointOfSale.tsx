@@ -12,12 +12,7 @@ interface CartItem {
   notes?: string;
 }
 
-interface PointOfSaleProps {
-  role: 'waiter' | 'cashier';
-}
-
-export function PointOfSale(props: PointOfSaleProps) {
-  void props;
+export function PointOfSale() {
   const { state: authState } = useAuth();
   const slug = authState.tenant?.slug;
   const [loading, setLoading] = useState(true);
@@ -171,7 +166,7 @@ export function PointOfSale(props: PointOfSaleProps) {
                 }`} disabled={!item.available}>
                 <div className="aspect-square mb-2 rounded-md overflow-hidden bg-gray-100">
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.imageUrl} alt={item.name} width="128" height="128" loading="lazy" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
                   )}

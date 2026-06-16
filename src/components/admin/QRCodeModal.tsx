@@ -1,16 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { X, Download } from 'lucide-react';
-import type { Table } from '../../lib/db/schema';
+import type { TableData } from '../../lib/api/types';
 
 interface QRCodeModalProps {
-  table: Table;
+  table: TableData;
   onClose: () => void;
 }
 
 export function QRCodeModal({ table, onClose }: QRCodeModalProps) {
   const downloadQRCode = async () => {
     try {
-      const response = await fetch(table.qrCode);
+      const response = await fetch(table.qrToken);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -43,8 +43,11 @@ export function QRCodeModal({ table, onClose }: QRCodeModalProps) {
         <div className="flex flex-col items-center space-y-4">
           <div className="bg-white p-4 rounded-lg shadow-inner">
             <img
-              src={table.qrCode}
+              src={table.qrToken}
               alt={`QR Code for Table ${table.number}`}
+              width="256"
+              height="256"
+              loading="lazy"
               className="w-64 h-64"
             />
           </div>

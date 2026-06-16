@@ -1,95 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { getDB } from '../../../lib/db';
+import { useState, useEffect } from 'react';
+import { analyticsApi } from '../../../lib/api';
+import { useAuth } from '../../../contexts/AuthContext';
+import type { FinancialAnalytics } from '../../../lib/api/types';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
 import { ErrorMessage } from '../../ui/ErrorMessage';
 import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
 
 export function RevenueBreakdown() {
+  const { state } = useAuth();
+  const slug = state.tenant?.slug;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState({
+  const [data, setData] = useState<FinancialAnalytics & { revenueByCategory: { name: string; amount: number }[] }>({
     dailyRevenue: 0,
     weeklyRevenue: 0,
     monthlyRevenue: 0,
-    paymentMethods: { card: 0, cash: 0, wallet: 0 },
-    revenueByCategory: [] as { name: string; amount: number }[]
+    paymentMethods: {},
+    revenueByCategory: []
   });
 
   useEffect(() => {
+    if (!slug) return;
     loadData();
-    const interval = setInterval(loadData, 300000); // Refresh every 5 minutes
+    const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
-  }, []);
+  }, [slug]);
 
   async function loadData() {
     try {
-      const db = await getDB();
-      const [orders, payments, categories, menuItems] = await Promise.all([
-        db.getAll('orders'),
-        db.getAll('payments'),
-        db.getAll('menu_categories'),
-        db.getAll('menu_items')
-      ]);
-
-      // Calculate time ranges
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-
-      // Create menu items lookup
-      const menuItemsMap = Object.fromEntries(menuItems.map(item => [item.id, item]));
-
-      // Filter completed payments
-      const completedPayments = payments.filter(p => p.status === 'completed');
-
-      // Calculate revenues
-      const dailyRevenue = completedPayments
-        .filter(p => new Date(p.createdAt) >= today)
-        .reduce((sum, p) => sum + p.amount, 0);
-
-      const weeklyRevenue = completedPayments
-        .filter(p => new Date(p.createdAt) >= weekAgo)
-        .reduce((sum, p) => sum + p.amount, 0);
-
-      const monthlyRevenue = completedPayments
-        .filter(p => new Date(p.createdAt) >= monthAgo)
-        .reduce((sum, p) => sum + p.amount, 0);
-
-      // Calculate payment methods distribution
-      const paymentMethods = completedPayments.reduce((acc, payment) => ({
-        ...acc,
-        [payment.method]: acc[payment.method as keyof typeof acc] + 1
-      }), { card: 0, cash: 0, wallet: 0 });
-
-      // Calculate revenue by category
-      const mainCategories = categories.filter(cat => cat.type === 'main');
-      const revenueByCategory = mainCategories.map(category => {
-        const amount = orders
-          .filter(order => order.paymentStatus === 'paid')
-          .reduce((sum, order) => {
-            const categoryTotal = order.items.reduce((itemSum, item) => {
-              const menuItem = menuItemsMap[item.menuItemId];
-              if (menuItem && menuItem.mainCategoryId === category.id) {
-                return itemSum + (menuItem.price * item.quantity);
-              }
-              return itemSum;
-            }, 0);
-            return sum + categoryTotal;
-          }, 0);
-
-        return {
-          name: category.name,
-          amount
-        };
-      }).sort((a, b) => b.amount - a.amount);
+      if (!slug) return;
+      const financial = await analyticsApi.financial(slug);
 
       setData({
-        dailyRevenue,
-        weeklyRevenue,
-        monthlyRevenue,
-        paymentMethods,
-        revenueByCategory
+        ...financial,
+        revenueByCategory: []
       });
       setError(null);
     } catch (err) {

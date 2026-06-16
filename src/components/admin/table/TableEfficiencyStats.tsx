@@ -1,28 +1,28 @@
 import React from 'react';
 import { Clock, Users, RotateCcw } from 'lucide-react';
-import type { Table } from '../../../lib/db/schema';
+import type { TableData } from '../../../lib/api/types';
 import { StatsCard } from '../StatsCard';
 
 interface TableEfficiencyProps {
-  tables: Table[];
+  tables: TableData[];
   averageTurnoverTime: number;
   occupancyRate: number;
   totalTurnovers: number;
 }
 
 export function TableEfficiencyStats({ 
-  tables, 
+  tables: tableData, 
   averageTurnoverTime,
   occupancyRate,
   totalTurnovers 
 }: TableEfficiencyProps) {
-  const availableTables = tables.filter(t => t.status === 'available').length;
+  const availableTables = tableData.filter(t => t.status === 'available').length;
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatsCard
         title="Available Tables"
-        value={`${availableTables}/${tables.length}`}
+        value={`${availableTables}/${tableData.length}`}
         icon={Users}
         iconColor="text-blue-500"
         iconBgColor="bg-blue-100"

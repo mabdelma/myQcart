@@ -1,16 +1,18 @@
 import { Link } from 'react-router';
 import { UtensilsCrossed, Menu, X } from 'lucide-react';
 import { useState } from 'react';
-
-const navLinks = [
-  { to: '/features', label: 'Features' },
-  { to: '/pricing', label: 'Pricing' },
-  { to: '/contact', label: 'Contact' },
-  { to: '/demo', label: 'Get a Demo' },
-];
+import { useI18n } from '../../contexts/I18nContext';
 
 export function MarketingHeader() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
+
+  const navLinks = [
+    { to: '/features', label: t('nav.features') },
+    { to: '/pricing', label: t('nav.pricing') },
+    { to: '/contact', label: t('nav.contact') },
+    { to: '/demo', label: t('cta.bookDemo') },
+  ];
 
   return (
     <header className="bg-white/95 backdrop-blur border-b border-gray-100 sticky top-0 z-50">
@@ -18,7 +20,7 @@ export function MarketingHeader() {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
             <UtensilsCrossed className="h-7 w-7 text-[#8B4513]" />
-            <span className="text-xl font-bold text-gray-900">QCart</span>
+            <span className="text-xl font-bold text-gray-900">{t('app.name')}</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
@@ -35,17 +37,17 @@ export function MarketingHeader() {
               to="/signin"
               className="text-sm font-medium text-gray-600 hover:text-[#8B4513] transition-colors"
             >
-              Sign in
+              {t('cta.signIn')}
             </Link>
             <Link
               to="/demo"
               className="px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-lg hover:bg-[#5C4033] transition-colors"
             >
-              Start Free Trial
+              {t('cta.startTrial')}
             </Link>
           </nav>
 
-          <button className="md:hidden p-2" onClick={() => setOpen(!open)} aria-label="Toggle menu" aria-expanded={open}>
+          <button className="md:hidden p-2" onClick={() => setOpen(!open)} aria-label={t('nav.menu')} aria-expanded={open}>
             {open ? <X className="h-6 w-6" aria-hidden /> : <Menu className="h-6 w-6" aria-hidden />}
           </button>
         </div>
@@ -69,14 +71,14 @@ export function MarketingHeader() {
               onClick={() => setOpen(false)}
               className="block text-sm font-medium text-gray-600 hover:text-[#8B4513] py-2"
             >
-              Sign in
+              {t('cta.signIn')}
             </Link>
             <Link
               to="/demo"
               onClick={() => setOpen(false)}
               className="block text-center px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-lg"
             >
-              Start Free Trial
+              {t('cta.startTrial')}
             </Link>
           </div>
         </div>

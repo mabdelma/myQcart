@@ -4,6 +4,7 @@ import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface WaiterHeaderProps {
   activeView: 'tables' | 'orders' | 'pos';
@@ -12,6 +13,7 @@ interface WaiterHeaderProps {
 }
 
 export function WaiterHeader({ activeView, onViewChange, onProfileClick }: WaiterHeaderProps) {
+  const { t } = useI18n();
   const { state, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-white">Waiter Panel</h1>
+            <h1 className="text-2xl font-bold text-white">{t('staff.waiterPanel')}</h1>
             <nav className="ml-6 flex space-x-2">
               <button
                 onClick={() => onViewChange('tables')}
@@ -37,7 +39,7 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
                 }`}
               >
                 <LayoutGrid className="w-5 h-5 mr-2" />
-                Tables
+                {t('staff.tables')}
               </button>
               <button
                 onClick={() => onViewChange('orders')}
@@ -48,7 +50,7 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
                 }`}
               >
                 <ClipboardList className="w-5 h-5 mr-2" />
-                Orders
+                {t('staff.orders')}
               </button>
               <button
                 onClick={() => onViewChange('pos')}
@@ -59,7 +61,7 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
                 }`}
               >
                 <Store className="w-5 h-5 mr-2" />
-                Point of Sale
+                {t('staff.pos')}
               </button>
             </nav>
           </div>
@@ -77,6 +79,9 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
                     <img
                       src={state.user.profileImage}
                       alt={state.user.name}
+                      width="40"
+                      height="40"
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -94,14 +99,14 @@ export function WaiterHeader({ activeView, onViewChange, onProfileClick }: Waite
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Profile Settings
+                    {t('staff.profileSettings')}
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
+                    {t('staff.signOut')}
                   </button>
                 </div>
               )}

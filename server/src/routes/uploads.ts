@@ -5,6 +5,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
+import { uploadFile, isS3Configured } from '../lib/storage.js';
 
 const uploads = new Hono();
 
@@ -37,14 +38,20 @@ uploads.post('/:slug/upload', authMiddleware, requireRole('admin', 'manager'), r
 
   const ext = extname(file.name) || '.jpg';
   const filename = `${tenantId}-${uuid()}${ext}`;
-  const filepath = join(UPLOAD_DIR, filename);
-
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filepath, buffer);
 
+  if (isS3Configured()) {
+    const url = await uploadFile(filename, buffer, file.type);
+    if (url) {
+      return c.json({ url, filename, storage: 's3' }, 201);
+    }
+  }
+
+  const filepath = join(UPLOAD_DIR, filename);
+  await writeFile(filepath, buffer);
   const url = `/uploads/${filename}`;
 
-  return c.json({ url, filename }, 201);
+  return c.json({ url, filename, storage: 'local' }, 201);
 });
 
 export default uploads;

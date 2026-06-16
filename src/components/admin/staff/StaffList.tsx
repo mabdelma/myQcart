@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Star, Clock, ShoppingBag, DollarSign } from 'lucide-react';
-import type { User } from '../../../lib/db/schema';
+import type { User } from '../../../lib/api/types';
 import { calculateSpeedScore, calculateEfficiencyScore } from '../../../lib/utils/performanceMetrics';
 
 interface StaffListProps {
@@ -13,17 +13,18 @@ interface StaffListProps {
   }>;
 }
 
-export function StaffList({ staff, metrics }: StaffListProps) {
-  // Sort staff by role first, then rating
-  const sortedStaff = [...staff].sort((a, b) => {
-    if (a.role !== b.role) {
-      const roleOrder = { waiter: 0, kitchen: 1, cashier: 2 } as const;
-      return roleOrder[a.role as keyof typeof roleOrder] - roleOrder[b.role as keyof typeof roleOrder];
-    }
-    const ratingA = metrics[a.id]?.rating || 0;
-    const ratingB = metrics[b.id]?.rating || 0;
-    return ratingB - ratingA;
-  });
+export const StaffList = React.memo(function StaffList({ staff, metrics }: StaffListProps) {
+  const sortedStaff = useMemo(() => {
+    return [...staff].sort((a, b) => {
+      if (a.role !== b.role) {
+        const roleOrder = { waiter: 0, kitchen: 1, cashier: 2 } as const;
+        return roleOrder[a.role as keyof typeof roleOrder] - roleOrder[b.role as keyof typeof roleOrder];
+      }
+      const ratingA = metrics[a.id]?.rating || 0;
+      const ratingB = metrics[b.id]?.rating || 0;
+      return ratingB - ratingA;
+    });
+  }, [staff, metrics]);
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -44,10 +45,13 @@ export function StaffList({ staff, metrics }: StaffListProps) {
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
                   <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    {member.profileImage ? (
+                    {member.avatar ? (
                       <img
-                        src={member.profileImage}
+                        src={member.avatar}
                         alt={member.name}
+                        width="48"
+                        height="48"
+                        loading="lazy"
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
@@ -160,4 +164,4 @@ export function StaffList({ staff, metrics }: StaffListProps) {
       </div>
     </div>
   );
-}
+});

@@ -1,15 +1,17 @@
+import { useMemo } from 'react';
+
 export function StaffList({ staff, metrics }: StaffListProps) {
-  // Sort staff by rating
-  const sortedStaff = [...staff].sort((a, b) => {
-    // Sort by role first, then rating
-    if (a.role !== b.role) {
-      const roleOrder = { waiter: 0, kitchen: 1, cashier: 2 };
-      return roleOrder[a.role as keyof typeof roleOrder] - roleOrder[b.role as keyof typeof roleOrder];
-    }
-    const ratingA = (metrics[a.id]?.rating || 0) * 10;
-    const ratingB = (metrics[b.id]?.rating || 0) * 10;
-    return ratingB - ratingA;
-  });
+  const sortedStaff = useMemo(() => {
+    return [...staff].sort((a, b) => {
+      if (a.role !== b.role) {
+        const roleOrder = { waiter: 0, kitchen: 1, cashier: 2 };
+        return roleOrder[a.role as keyof typeof roleOrder] - roleOrder[b.role as keyof typeof roleOrder];
+      }
+      const ratingA = (metrics[a.id]?.rating || 0) * 10;
+      const ratingB = (metrics[b.id]?.rating || 0) * 10;
+      return ratingB - ratingA;
+    });
+  }, [staff, metrics]);
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">

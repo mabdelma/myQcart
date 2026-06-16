@@ -5,6 +5,7 @@ import { parsePagination } from '../lib/pagination.js';
 import {
   createPaymentIntent,
   recordCashPayment,
+  splitPayment,
   listPayments,
   createPaymentLink,
   handleStripeWebhook,
@@ -28,7 +29,16 @@ payments.post('/:slug/payments/cash', authMiddleware, requireRole('admin', 'cash
   const tenantId = c.get('tenantId');
   const { orderId, amount, tip } = await c.req.json<{ orderId: string; amount: number; tip?: number }>();
   const result = await recordCashPayment(tenantId, orderId, amount, tip);
-  return c.json(result, 201);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data, 201);
+});
+
+payments.post('/:slug/payments/split', authMiddleware, requireRole('admin', 'cashier'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const { orderId, splits } = await c.req.json<{ orderId: string; splits: Array<{ method: 'card' | 'cash' | 'wallet'; amount: number; tip?: number }> }>();
+  const result = await splitPayment(tenantId, orderId, splits);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data, 201);
 });
 
 payments.get('/:slug/payments', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { Shield } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Shield } from 'lucide-react';
 export function AdminSignIn() {
   const navigate = useNavigate();
   const { login, state } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -18,7 +20,7 @@ export function AdminSignIn() {
       if (user?.role === 'admin') {
         navigate('/admin');
       } else {
-        throw new Error('Unauthorized access');
+        throw new Error(t('error.unauthorized'));
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -26,13 +28,13 @@ export function AdminSignIn() {
   };
 
   return (
-    <AuthLayout title="Admin Sign In">
+    <AuthLayout title={t('auth.signin')}>
       <div className="flex justify-center mb-8">
         <div className="text-center">
           <div className="p-3 bg-purple-100 rounded-full inline-flex mb-2">
             <Shield className="w-6 h-6 text-purple-600" />
           </div>
-          <p className="text-sm font-medium text-gray-600">Administrator Access</p>
+          <p className="text-sm font-medium text-gray-600">{t('staff.admin')}</p>
         </div>
       </div>
 
@@ -45,7 +47,7 @@ export function AdminSignIn() {
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
+            {t('auth.email')}
           </label>
           <div className="mt-1">
             <input
@@ -63,7 +65,7 @@ export function AdminSignIn() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
+            {t('auth.password')}
           </label>
           <div className="mt-1">
             <input
@@ -85,7 +87,7 @@ export function AdminSignIn() {
             disabled={state.loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
           >
-            {state.loading ? <LoadingSpinner /> : 'Sign in'}
+            {state.loading ? <LoadingSpinner /> : t('auth.signin')}
           </button>
         </div>
         <div className="mt-4 text-center">

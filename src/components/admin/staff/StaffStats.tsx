@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users, Clock, DollarSign, Star } from 'lucide-react';
-import type { User } from '../../../lib/db/schema';
+import type { User } from '../../../lib/api/types';
 import { StatsCard } from '../StatsCard';
 
 interface StaffStatsProps {

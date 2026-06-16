@@ -4,12 +4,33 @@ import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { HTTPException } from 'hono/http-exception';
 import { sql } from 'drizzle-orm';
+import { createRequire } from 'module';
 import { db } from './db/index.js';
 import { logger } from './lib/logger.js';
 import { initSentry, captureError } from './lib/sentry.js';
-import { generalLimiter, authLimiter, publicLimiter } from './middleware/rateLimiter.js';
+import { generalLimiter, authLimiter, publicLimiter, paymentLimiter, pointsLimiter } from './middleware/rateLimiter.js';
+import { requestLogger } from './middleware/requestLogger.js';
 
+const _require = createRequire(import.meta.url);
+
+function validateEnv() {
+  const required = ['DATABASE_URL', 'JWT_SECRET', 'REDIS_URL'];
+  const missing = required.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    console.error(`FATAL: Missing required environment variables: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+}
+
+if (!process.env.VITEST) {
+  validateEnv();
+}
 initSentry();
+
+process.on('unhandledRejection', (reason) => {
+  logger.error({ err: reason }, 'Unhandled promise rejection');
+  captureError(reason instanceof Error ? reason : new Error(String(reason)), { type: 'unhandledRejection' });
+});
 import {
   authRoutes,
   tenantRoutes,
@@ -24,6 +45,20 @@ import {
   uploadRoutes,
   demoRoutes,
   analyticsRoutes,
+  docsRoutes,
+  printRoutes,
+  modifierRoutes,
+  promoRoutes,
+  exportRoutes,
+  inventoryRoutes,
+  groupRoutes,
+  onboardingRoutes,
+  customerRoutes,
+  integrationRoutes,
+  pushRoutes,
+  auditRoutes,
+  loyaltyRoutes,
+  promoValidateRoutes,
 } from './routes/index.js';
 
 const app = new Hono();
@@ -36,29 +71,79 @@ app.use('*', async (c, next) => {
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   c.header('X-Permitted-Cross-Domain-Policies', 'none');
   c.header('Cross-Origin-Resource-Policy', 'same-site');
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  c.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com; base-uri 'self'; form-action 'self'");
 });
 
 app.use('*', cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 86400,
 }));
+
+// Request logging (after security headers + CORS, before everything else)
+app.use('*', requestLogger);
 
 // Rate limiting
 app.use('/api/auth/*', authLimiter);
 app.use('/api/tenants/*', generalLimiter);
 app.use('/api/r/*', publicLimiter);
+app.use('/api/r/*/payments/create-intent', paymentLimiter);
+app.use('/api/r/*/loyalty/earn', pointsLimiter);
+app.use('/api/r/*/loyalty/redeem', pointsLimiter);
+app.use('/api/webhooks/*', generalLimiter);
 app.use('/api/admin/*', generalLimiter);
 app.use('/api/demo', publicLimiter);
-app.use('/api/health', publicLimiter);
+app.use('/api/health*', publicLimiter);
 
-// Health check — verifies the PostgreSQL connection, not just process liveness.
-app.get('/api/health', async (c) => {
+// Liveness probe — process is alive
+app.get('/api/health/liveness', (c) => {
+  return c.json({ status: 'alive', timestamp: new Date().toISOString() });
+});
+
+// Readiness probe — all dependencies are reachable
+app.get('/api/health/readiness', async (c) => {
+  const checks: Record<string, string> = {};
+
   try {
     await db.execute(sql`select 1`);
-    return c.json({ status: 'ok', db: 'up', timestamp: new Date().toISOString() });
+    checks.db = 'up';
+  } catch {
+    checks.db = 'down';
+  }
+
+  try {
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      checks.redis = 'not_configured';
+    } else {
+      const IORedis = _require('ioredis') as new (url: string, opts: Record<string, unknown>) => { connect(): Promise<void>; ping(): Promise<string>; disconnect(): void };
+      const client = new IORedis(redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1 });
+      await client.connect();
+      await client.ping();
+      checks.redis = 'up';
+      client.disconnect();
+    }
+  } catch {
+    checks.redis = 'down';
+  }
+
+  const allUp = Object.values(checks).every((v) => v === 'up' || v === 'not_configured');
+  return c.json({ status: allUp ? 'ready' : 'degraded', checks, timestamp: new Date().toISOString() },
+    allUp ? 200 : 503);
+});
+
+// Legacy health check — aggregate status
+app.get('/api/health', async (c) => {
+  const uptime = process.uptime();
+  try {
+    await db.execute(sql`select 1`);
+    return c.json({ status: 'ok', db: 'up', uptime, timestamp: new Date().toISOString() });
   } catch (err) {
     logger.error({ err: (err as Error).message }, 'Health check DB ping failed');
-    return c.json({ status: 'degraded', db: 'down', timestamp: new Date().toISOString() }, 503);
+    return c.json({ status: 'degraded', db: 'down', uptime, timestamp: new Date().toISOString() }, 503);
   }
 });
 
@@ -80,6 +165,22 @@ app.route('/api/demo', demoRoutes);
 app.use('/uploads/*', serveStatic({ root: './' }));
 
 app.route('/api', adminRoutes);
+app.route('/api', groupRoutes);
+app.route('/api', onboardingRoutes);
+
+// OpenAPI docs
+app.route('/api', docsRoutes);
+app.route('/api/r', printRoutes);
+app.route('/api/r', modifierRoutes);
+app.route('/api/r', promoRoutes);
+app.route('/api/r', exportRoutes);
+app.route('/api/r', inventoryRoutes);
+app.route('/api/r', customerRoutes);
+app.route('/api/r', integrationRoutes);
+app.route('/api/r', pushRoutes);
+app.route('/api/r', auditRoutes);
+app.route('/api/r', loyaltyRoutes);
+app.route('/api/r', promoValidateRoutes);
 
 // Error handling
 app.onError((err, c) => {

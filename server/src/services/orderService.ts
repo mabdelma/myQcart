@@ -3,6 +3,9 @@ import { eq, and, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { logger } from '../lib/logger.js';
 import { emitOrderEvent } from '../lib/events.js';
+import { sendPushNotification } from '../lib/push.js';
+import { sendEmail } from '../lib/mail.js';
+import { createKotPrintJob } from './printService.js';
 import type { PaginationParams, PaginatedResult } from '../lib/pagination.js';
 import { buildPagination } from '../lib/pagination.js';
 
@@ -83,6 +86,22 @@ export async function createOrder(tenantId: string, input: CreateOrderInput) {
   logger.info({ tenantId, orderId, tableId: input.tableId }, 'Order created');
   emitOrderEvent({ type: 'order_created', tenantId, orderId });
 
+  await createKotPrintJob(tenantId, orderId).catch(() => {});
+
+  if (process.env.RESEND_API_KEY && tenantSettings?.email) {
+    sendOrderConfirmationEmail(tenantSettings.email, {
+      orderId,
+      tableNumber: table.number,
+      items: orderItems,
+      subtotal,
+      tax,
+      serviceCharge,
+      total,
+      customerName: input.customerName,
+      tenantName: tenantSettings.name,
+    }).catch(() => {});
+  }
+
   return {
     data: { id: orderId, items: orderItems, subtotal, tax, serviceCharge, total },
     status: 201 as const,
@@ -135,6 +154,73 @@ export async function getAllOrders(tenantId: string, statusFilter?: string, para
   return buildPagination(data, Number(count), { page, limit });
 }
 
+export async function updateOrderItems(tenantId: string, orderId: string, input: { addItems?: OrderItemInput[]; removeItemIds?: string[] }) {
+  const [order] = await db
+    .select()
+    .from(schema.orders)
+    .where(and(eq(schema.orders.id, orderId), eq(schema.orders.tenantId, tenantId)))
+    .limit(1);
+
+  if (!order) {
+    return { error: 'Order not found', status: 404 as const };
+  }
+
+  if (order.status === 'cancelled' || order.status === 'delivered') {
+    return { error: 'Cannot modify a cancelled or delivered order', status: 400 as const };
+  }
+
+  if (input.removeItemIds && input.removeItemIds.length > 0) {
+    for (const itemId of input.removeItemIds) {
+      await db.delete(schema.orderItems)
+        .where(and(eq(schema.orderItems.id, itemId), eq(schema.orderItems.orderId, orderId)));
+    }
+  }
+
+  if (input.addItems && input.addItems.length > 0) {
+    const newItems = input.addItems.map((item) => ({
+      id: uuid(),
+      orderId,
+      menuItemId: item.menuItemId,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      notes: item.notes,
+      modifiers: item.modifiers,
+    }));
+    await db.insert(schema.orderItems).values(newItems);
+  }
+
+  const remaining = await db
+    .select()
+    .from(schema.orderItems)
+    .where(eq(schema.orderItems.orderId, orderId));
+
+  const itemCount = remaining.reduce((s, i) => s + i.quantity, 0);
+  const subtotal = remaining.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+
+  const [tenantSettings] = await db
+    .select()
+    .from(schema.tenants)
+    .where(eq(schema.tenants.id, tenantId))
+    .limit(1);
+
+  const taxRate = tenantSettings?.taxRate || 0;
+  const serviceChargeRate = tenantSettings?.serviceCharge || 0;
+  const tax = subtotal * taxRate;
+  const serviceCharge = subtotal * serviceChargeRate;
+  const total = subtotal + tax + serviceCharge;
+
+  await db.update(schema.orders)
+    .set({ itemCount, subtotal, tax, serviceCharge, total, updatedAt: new Date().toISOString() })
+    .where(eq(schema.orders.id, orderId));
+
+  emitOrderEvent({ type: 'order_updated', tenantId, orderId, data: { itemCount, subtotal, total } });
+
+  logger.info({ tenantId, orderId, itemCount, subtotal }, 'Order items updated');
+
+  return { data: { items: remaining, itemCount, subtotal, tax, serviceCharge, total }, status: 200 as const };
+}
+
 export async function getOrderDetail(tenantId: string, orderId: string) {
   const [order] = await db
     .select()
@@ -167,6 +253,54 @@ export async function updateOrderStatus(tenantId: string, orderId: string, statu
   logger.info({ tenantId, orderId, status }, 'Order status updated');
   emitOrderEvent({ type: 'order_updated', tenantId, orderId, data: { status } });
   emitOrderEvent({ type: 'order_status_changed', tenantId, orderId, data: { status } });
+
+  if (status === 'ready') {
+    sendPushNotification(tenantId, '🍽️ Order Ready!', `Order #${orderId.slice(0, 8)} is ready for pickup.`);
+  }
+}
+
+export async function sendOrderConfirmationEmail(
+  to: string,
+  data: {
+    orderId: string;
+    tableNumber: number;
+    items: { name: string; quantity: number; unitPrice: number; notes?: string }[];
+    subtotal: number;
+    tax: number;
+    serviceCharge: number;
+    total: number;
+    customerName?: string;
+    tenantName: string;
+  },
+) {
+  const itemsHtml = data.items
+    .map(
+      (i) =>
+        `<tr><td style="padding:6px 12px">${i.name}${i.notes ? `<br/><small>${i.notes}</small>` : ''}</td><td style="padding:6px 12px;text-align:center">${i.quantity}</td><td style="padding:6px 12px;text-align:right">$${i.unitPrice.toFixed(2)}</td><td style="padding:6px 12px;text-align:right">$${(i.quantity * i.unitPrice).toFixed(2)}</td></tr>`,
+    )
+    .join('');
+
+  await sendEmail({
+    to,
+    subject: `Order #${data.orderId.slice(0, 8)} — ${data.tenantName}`,
+    html: `
+      <h2>New Order</h2>
+      <p><strong>Table:</strong> ${data.tableNumber}${data.customerName ? ` &middot; <strong>Customer:</strong> ${data.customerName}` : ''}</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px">
+        <thead><tr style="background:#f3f4f6"><th style="padding:8px 12px;text-align:left">Item</th><th style="padding:8px 12px;text-align:center">Qty</th><th style="padding:8px 12px;text-align:right">Price</th><th style="padding:8px 12px;text-align:right">Total</th></tr></thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <hr style="margin:12px 0" />
+      <table style="width:100%">
+        <tr><td>Subtotal</td><td style="text-align:right">$${data.subtotal.toFixed(2)}</td></tr>
+        <tr><td>Tax</td><td style="text-align:right">$${data.tax.toFixed(2)}</td></tr>
+        <tr><td>Service Charge</td><td style="text-align:right">$${data.serviceCharge.toFixed(2)}</td></tr>
+        <tr style="font-weight:700"><td>Total</td><td style="text-align:right">$${data.total.toFixed(2)}</td></tr>
+      </table>
+      <hr style="margin:12px 0" />
+      <p style="color:#666;font-size:12px">QCart &middot; ${data.tenantName}</p>
+    `,
+  });
 }
 
 export async function getServerOrders(tenantId: string, serverId: string, params: PaginationParams = {}): Promise<PaginatedResult<typeof schema.orders.$inferSelect>> {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { User, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { userApi } from '../../lib/api';
@@ -53,7 +53,7 @@ export function AdminProfile() {
             <div className="relative">
               <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden">
                 {state.user.avatar ? (
-                  <img src={state.user.avatar} alt={state.user.name} className="w-full h-full object-cover" />
+                  <img src={state.user.avatar} alt={state.user.name} width="128" height="128" loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-full h-full p-4 text-gray-400" />
                 )}
@@ -133,3 +133,4 @@ export function AdminProfile() {
     </div>
   );
 }
+

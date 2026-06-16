@@ -1,5 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { ChefHat, Users, ClipboardList, Store, Clock, Settings } from 'lucide-react';
+import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 
 interface SidebarProps {
   role: 'kitchen' | 'waiter' | 'cashier';
@@ -7,45 +8,61 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
 }
 
-const tabsByRole = {
+const tabsByRole: Record<string, Array<{ id: string; icon: React.ComponentType }>> = {
   kitchen: [
-    { id: 'orders', name: 'Active Orders', icon: ClipboardList },
-    { id: 'history', name: 'Order History', icon: Clock },
-    { id: 'profile', name: 'Profile', icon: Settings }
+    { id: 'orders', icon: ClipboardList },
+    { id: 'history', icon: Clock },
+    { id: 'profile', icon: Settings }
   ],
   waiter: [
-    { id: 'tables', name: 'Tables', icon: Users },
-    { id: 'pos', name: 'Point of Sale', icon: Store },
-    { id: 'orders', name: 'Orders', icon: ClipboardList },
-    { id: 'history', name: 'History', icon: Clock },
-    { id: 'profile', name: 'Profile', icon: Settings }
+    { id: 'tables', icon: Users },
+    { id: 'pos', icon: Store },
+    { id: 'orders', icon: ClipboardList },
+    { id: 'history', icon: Clock },
+    { id: 'profile', icon: Settings }
   ],
   cashier: [
-    { id: 'pos', name: 'Point of Sale', icon: Store },
-    { id: 'payments', name: 'Payments', icon: ClipboardList },
-    { id: 'history', name: 'History', icon: Clock },
-    { id: 'profile', name: 'Profile', icon: Settings }
+    { id: 'pos', icon: Store },
+    { id: 'payments', icon: ClipboardList },
+    { id: 'history', icon: Clock },
+    { id: 'profile', icon: Settings }
   ]
 };
 
+const tabKeyMap: Record<string, string> = {
+  orders: 'staff.orders',
+  history: 'staff.orderHistory',
+  profile: 'staff.profileSettings',
+  tables: 'staff.tables',
+  pos: 'staff.pos',
+  payments: 'staff.payments',
+};
+
 export function StaffSidebar({ role, activeTab, onTabChange }: SidebarProps) {
+  const { t } = useI18n();
   const [collapsed, setCollapsed] = React.useState(true);
   const tabs = tabsByRole[role];
 
   return (
     <div 
-      className={`${collapsed ? 'w-20' : 'w-64'} bg-[#5C4033] min-h-screen text-white p-4 transition-all duration-300 relative group hover:w-64`}
+      className={`${collapsed ? 'w-20' : 'w-64'} bg-[#5C4033] min-h-screen text-white p-4 transition-[width] duration-300 relative group hover:w-64`}
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
+      onFocus={() => setCollapsed(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setCollapsed(true);
+        }
+      }}
     >
       <div className={`flex items-center mb-8 px-2 ${collapsed ? 'justify-center' : ''}`}>
         <ChefHat className="w-8 h-8 mr-2" />
         <span className={`text-xl font-bold transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-          {role.charAt(0).toUpperCase() + role.slice(1)} Panel
+          {{ kitchen: t('staff.kitchenDisplay'), waiter: t('staff.waiterPanel'), cashier: t('staff.cashierPanel') }[role]}
         </span>
       </div>
       
-      <nav className="space-y-1">
+      <nav className="space-y-1" aria-label="Staff navigation">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -60,7 +77,7 @@ export function StaffSidebar({ role, activeTab, onTabChange }: SidebarProps) {
             >
               <Icon className={`w-5 h-5 ${collapsed ? '' : 'mr-3'}`} />
               <span className={`transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0 group-hover:opacity-100 group-hover:w-auto group-hover:ml-3' : 'opacity-100'}`}>
-                {tab.name}
+                {t(tabKeyMap[tab.id] as TranslationKey)}
               </span>
             </button>
           );

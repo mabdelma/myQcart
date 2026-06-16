@@ -5,6 +5,51 @@ class ApiClient {
     return localStorage.getItem('token');
   }
 
+  private setToken(token: string) {
+    localStorage.setItem('token', token);
+  }
+
+  private getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
+  private setRefreshToken(token: string) {
+    localStorage.setItem('refreshToken', token);
+  }
+
+  private clearTokens() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+  }
+
+  private refreshing: Promise<boolean> | null = null;
+
+  private async refreshAccessToken(): Promise<boolean> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) return false;
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!res.ok) {
+        this.clearTokens();
+        return false;
+      }
+
+      const data = await res.json() as { token: string; refreshToken: string };
+      this.setToken(data.token);
+      this.setRefreshToken(data.refreshToken);
+      return true;
+    } catch {
+      this.clearTokens();
+      return false;
+    }
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -19,11 +64,28 @@ class ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
+    let res = await fetch(`${API_BASE}${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
+
+    if (res.status === 401 && !opts?.skipAuth) {
+      if (!this.refreshing) {
+        this.refreshing = this.refreshAccessToken();
+      }
+      const refreshed = await this.refreshing;
+      this.refreshing = null;
+
+      if (refreshed) {
+        headers['Authorization'] = `Bearer ${this.getToken()}`;
+        res = await fetch(`${API_BASE}${path}`, {
+          method,
+          headers,
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+      }
+    }
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({ error: res.statusText }));
@@ -59,11 +121,28 @@ class ApiClient {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}${path}`, {
+    let res = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
       headers,
       body: formData,
     });
+
+    if (res.status === 401) {
+      if (!this.refreshing) {
+        this.refreshing = this.refreshAccessToken();
+      }
+      const refreshed = await this.refreshing;
+      this.refreshing = null;
+
+      if (refreshed) {
+        headers['Authorization'] = `Bearer ${this.getToken()}`;
+        res = await fetch(`${API_BASE}${path}`, {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
+      }
+    }
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({ error: res.statusText }));

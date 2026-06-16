@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock, Check, AlertCircle } from 'lucide-react';
-import type { Payment, Order } from '../../../lib/db/schema';
+import type { Payment, Order } from '../../../lib/api/types';
 
 interface PaymentsListProps {
   payments: Payment[];
@@ -27,12 +27,12 @@ export function PaymentsList({ payments, orders }: PaymentsListProps) {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       payment.status === 'paid'
                         ? 'bg-green-100 text-green-800'
-                        : payment.status === 'unpaid'
+                        : payment.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
                       {payment.status === 'paid' && <Check className="w-3 h-3 mr-1" />}
-                      {payment.status === 'unpaid' && <Clock className="w-3 h-3 mr-1" />}
+                      {payment.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
                       {payment.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
                       {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                     </span>

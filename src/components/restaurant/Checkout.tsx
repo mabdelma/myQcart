@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useCart } from '../../contexts/CartContext';
-import { generateOrderId } from '../../lib/utils/orderUtils';
-import { useParams } from 'react-router';
-import { getDB } from '../../lib/db';
+import { orderApi } from '../../lib/api';
 
 export function Checkout() {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
-  const { tableId } = useParams();
+  const { slug, tableId } = useParams();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,36 +15,20 @@ export function Checkout() {
     setError(null);
 
     try {
-      const db = await getDB();
-
-      // Create the order
-      const order = {
-        id: generateOrderId(),
+      await orderApi.create(slug || '', {
         tableId: tableId || '1',
-        kitchenStaffId: null,
-        waiterStaffId: null,
-        cashierId: null,
-        status: 'pending',
-        paymentStatus: 'unpaid',
         items: state.items.map(item => ({
-          id: crypto.randomUUID(),
           menuItemId: item.menuItem.id,
+          name: item.menuItem.name,
           quantity: item.quantity,
+          unitPrice: item.menuItem.price,
           notes: item.comment || undefined
         })),
-        total: state.total,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      });
 
-      // Save order
-      await db.add('orders', order);
-
-      // Clear the cart
       dispatch({ type: 'CLEAR_CART' });
 
-      // Redirect to orders page
-      navigate(tableId ? `/table/${tableId}/orders` : '/orders');
+      navigate(slug ? `/r/${slug}/table/${tableId}/orders` : `/table/${tableId}/orders`);
     } catch (err) {
       console.error('Failed to place order:', err);
       setError('Failed to place order. Please try again.');
@@ -102,7 +84,7 @@ export function Checkout() {
 
           <div className="mt-6 flex justify-end space-x-3">
             <button
-              onClick={() => navigate('/menu')}
+              onClick={() => navigate(slug ? `/r/${slug}/table/${tableId}/menu` : '/menu')}
               className="text-[#8B4513] hover:text-[#5C4033]"
             >
               Continue Shopping

@@ -13,6 +13,17 @@ services:
       test: ["CMD-SHELL", "pg_isready -U qcart -d qcart"]
       interval: 3s
       retries: 10
+    restart: unless-stopped
+ 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 10
+    restart: unless-stopped
 
   migrate:
     build:
@@ -24,7 +35,7 @@ services:
     environment:
       DATABASE_URL: postgresql://qcart:qcart@postgres:5432/qcart
     command: >
-      sh -c "npx drizzle-kit push --config=drizzle.config.ts 2>&1 && node dist/db/seed.js"
+      sh -c "npx drizzle-kit migrate --config=drizzle.config.ts 2>&1 && node dist/db/seed.js"
     restart: no
 
   api:
@@ -34,15 +45,27 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://qcart:qcart@postgres:5432/qcart
       JWT_SECRET: qcart-dev-secret-change-in-prod
       PORT: 3001
       CORS_ORIGIN: http://localhost:80
+      # Use redis://redis:6379 for direct; or redis-sentinel://redis-sentinel:26379?sentinelMasterId=qcart-redis for HA
+      REDIS_URL: redis://redis:6379
+      # Swap DATABASE_URL to postgresql://qcart:qcart@pgbouncer:6432/qcart for connection pooling via PgBouncer
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
     ports:
       - "3001:3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health/liveness', r => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   # Service name is intentionally unique (NOT "frontend"): on the shared `edge`
   # network in production this name becomes a DNS alias, and a generic name like
@@ -55,6 +78,7 @@ services:
       - api
     ports:
       - "80:80"
+    restart: unless-stopped
 
 volumes:
   pgdata:

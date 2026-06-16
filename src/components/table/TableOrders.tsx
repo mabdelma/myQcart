@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { Package, Clock, DollarSign, CreditCard, Wallet } from 'lucide-react';
-import { getDB } from '../../lib/db';
-import type { Order, MenuItem } from '../../lib/db/schema';
+import { orderApi } from '../../lib/api';
+import type { Order, OrderWithItems } from '../../lib/api/types';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 const PAYMENT_METHODS = [
@@ -12,11 +12,10 @@ const PAYMENT_METHODS = [
 ] as const;
 
 export function TableOrders() {
-  const { tableId } = useParams();
+  const { slug, tableId } = useParams();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [menuItems, setMenuItems] = useState<Record<string, MenuItem>>({});
+  const [orderDetails, setOrderDetails] = useState<Record<string, OrderWithItems>>({});
   const [loading, setLoading] = useState(true);
-  const [table, setTable] = useState<Table | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
@@ -25,35 +24,20 @@ export function TableOrders() {
     loadOrders();
     const interval = setInterval(loadOrders, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, [tableId, loadOrders]);
+  }, [slug, tableId]);
 
   async function loadOrders() {
-    if (!tableId) return;
+    if (!slug || !tableId) return;
 
     try {
-      const db = await getDB();
-      const [allOrders, allMenuItems, tableData] = await Promise.all([
-        db.getAll('orders'),
-        db.getAll('menu_items'),
-        db.get('tables', tableId)
-      ]);
-
-      setTable(tableData);
-      // Create a lookup map for menu items
-      const menuItemsMap = Object.fromEntries(
-        allMenuItems.map(item => [item.id, item])
+      const tableOrders = await orderApi.getForTable(slug, tableId);
+      setOrders(
+        tableOrders
+          .filter(order => order.paymentStatus !== 'paid')
+          .sort((a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
       );
-
-      // Filter orders for this table
-      const tableOrders = allOrders
-        .filter(order => order.tableId === tableId)
-        .filter(order => order.paymentStatus !== 'paid') // Keep delivered orders that aren't paid
-        .sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-      setOrders(tableOrders);
-      setMenuItems(menuItemsMap);
     } catch (error) {
       console.error('Failed to load orders:', error);
     } finally {
@@ -61,59 +45,32 @@ export function TableOrders() {
     }
   }
 
+  async function loadOrderDetail(orderId: string) {
+    if (!slug || orderDetails[orderId]) return;
+    try {
+      const detail = await orderApi.getDetail(slug, orderId);
+      setOrderDetails(prev => ({ ...prev, [orderId]: detail }));
+    } catch (error) {
+      console.error('Failed to load order detail:', error);
+    }
+  }
+
   async function handlePayment(order: Order, method: string) {
     setProcessingPayment(true);
     try {
-      const db = await getDB();
-      
-      // Create payment record
-      const payment = {
-        id: crypto.randomUUID(),
-        orderId: order.id,
-        amount: order.total,
-        method: method as 'cash' | 'card' | 'wallet', 
-        status: 'paid',
-        createdAt: new Date()
-      };
-
-      // Update order status
-      const updatedOrder = {
-        ...order,
-        status: 'delivered',
-        paymentStatus: 'paid',
-        updatedAt: new Date()
-      };
-
-      // Save both records
-      const tx = db.transaction(['orders', 'payments'], 'readwrite');
-      await Promise.all([
-        tx.objectStore('orders').put(updatedOrder),
-        tx.objectStore('payments').add(payment)
-      ]);
-      await tx.done;
-
+      await orderApi.updateStatus(slug!, order.id, 'delivered');
       loadOrders();
       setPayingOrder(null);
       setSelectedPaymentMethod(null);
     } catch (error) {
       console.error('Payment failed:', error);
-      throw error; // Re-throw to trigger error handling
+      throw error;
     } finally {
       setProcessingPayment(false);
     }
   }
 
   if (loading) return <LoadingSpinner />;
-  if (table && table.status !== 'occupied') {
-    return (
-      <div className="max-w-2xl mx-auto p-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Table Not Available</h2>
-        <p className="text-gray-600">
-          Please wait for a staff member to seat you at this table before viewing orders.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -173,23 +130,27 @@ export function TableOrders() {
                     ${order.total.toFixed(2)}
                   </span>
                 </div>
-                <div className="space-y-2">
-                  {order.items.map((item) => {
-                    const menuItem = menuItems[item.menuItemId];
-                    return menuItem ? (
-                      <div key={item.id} className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <span className="text-gray-600">{menuItem.name}</span>
-                          <span className="text-sm text-gray-400 mx-2">×</span>
-                          <span className="text-gray-900">{item.quantity}</span>
-                        </div>
-                        <span className="text-gray-600">
-                          ${(menuItem.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    ) : null;
-                  })}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {order.itemCount} item{order.itemCount !== 1 ? 's' : ''}
+                  </span>
+                  <button
+                    onClick={() => loadOrderDetail(order.id)}
+                    className="text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    View Details
+                  </button>
                 </div>
+                {orderDetails[order.id] && (
+                  <div className="mt-2 space-y-1 border-t pt-2">
+                    {orderDetails[order.id].items.map((item) => (
+                      <div key={item.id} className="flex justify-between text-sm">
+                        <span className="text-gray-600">{item.name} × {item.quantity}</span>
+                        <span className="text-gray-600">${(item.unitPrice * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

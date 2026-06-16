@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Clock } from 'lucide-react';
-import { getDB } from '../../lib/db';
-import type { Order, MenuItem } from '../../lib/db/schema';
+import { orderApi } from '../../lib/api';
+import type { Order } from '../../lib/api/types';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
+import { useParams } from 'react-router';
 
 export function Orders() {
+  const { slug, tableId } = useParams();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [menuItems, setMenuItems] = useState<Record<string, MenuItem>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,21 +20,11 @@ export function Orders() {
 
   async function loadOrders() {
     try {
-      const db = await getDB();
-      const [allOrders, allMenuItems] = await Promise.all([
-        db.getAll('orders'),
-        db.getAll('menu_items')
-      ]);
-
-      // Create a lookup map for menu items
-      const menuItemsMap = Object.fromEntries(
-        allMenuItems.map(item => [item.id, item])
-      );
+      const allOrders = await orderApi.getForTable(slug || '', tableId || '');
 
       setOrders(allOrders.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ));
-      setMenuItems(menuItemsMap);
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
       setError(null);
     } catch (error) {
       console.error('Failed to load orders:', error);
@@ -97,31 +88,9 @@ export function Orders() {
                     ${order.total.toFixed(2)}
                   </span>
                 </div>
-                <div className="space-y-2">
-                  {order.items.map((item) => {
-                    const menuItem = menuItems[item.menuItemId];
-                    return menuItem ? (
-                      <div key={item.id} className="py-2">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <div className="flex items-center">
-                              <span className="text-gray-600">{menuItem.name}</span>
-                              <span className="text-sm text-gray-400 mx-2">×</span>
-                              <span className="text-gray-900">{item.quantity}</span>
-                            </div>
-                            {item.notes && (
-                              <div className="mt-1 text-sm text-gray-600 italic">
-                                "{item.notes}"
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-gray-600">
-                            ${(menuItem.price * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    ) : null;
-                  })}
+                <div className="flex items-center text-sm text-gray-600">
+                  <Package className="w-4 h-4 mr-1" />
+                  <span>{order.itemCount} item{order.itemCount !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             ))}

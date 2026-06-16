@@ -3,8 +3,10 @@ import { NavLink, useParams } from 'react-router';
 import { ShoppingCart, ClipboardList, ChefHat } from 'lucide-react';
 import { CartPanel } from '../restaurant/CartPanel';
 import { useCart } from '../../contexts/CartContext';
+import { useI18n } from '../../contexts/I18nContext';
 
 export function TableHeader() {
+  const { t } = useI18n();
   const { tableId } = useParams();
   const [isCartOpen, setIsCartOpen] = React.useState(false);
   const { state } = useCart();
@@ -17,7 +19,7 @@ export function TableHeader() {
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
                 <ChefHat className="h-8 w-8 text-[#8B4513]" />
-                <span className="ml-2 text-xl font-bold text-gray-900">QCart</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">{t('app.name')}</span>
               </div>
               
               <NavLink
@@ -30,7 +32,7 @@ export function TableHeader() {
                   }`
                 }
               >
-                Menu
+                {t('nav.menu')}
               </NavLink>
             </div>
             
@@ -40,7 +42,7 @@ export function TableHeader() {
                 className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50 relative transition-colors"
               >
                 <ShoppingCart className="h-5 w-5 mr-1" />
-                Cart
+                {t('nav.cart')}
                 {state.items.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#8B4513] text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                     {state.items.length}
@@ -58,7 +60,7 @@ export function TableHeader() {
                 }
               >
                 <ClipboardList className="h-5 w-5 mr-1" />
-                Orders
+                {t('nav.orders')}
               </NavLink>
             </div>
           </div>

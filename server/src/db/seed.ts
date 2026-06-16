@@ -18,8 +18,22 @@ async function seedSuperAdmin() {
     return;
   }
 
-  const email = process.env.SUPER_ADMIN_EMAIL || 'superadmin@qcart.local';
-  const password = process.env.SUPER_ADMIN_PASSWORD || 'change-me-now';
+  const email = process.env.SUPER_ADMIN_EMAIL;
+  const password = process.env.SUPER_ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    console.error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD must be set in production. Seed aborted.');
+    process.exit(1);
+  }
+  if (password === 'change-me-now' || password === 'pass123' || password === 'password') {
+    console.error('SUPER_ADMIN_PASSWORD is too weak. Choose a strong password.');
+    process.exit(1);
+  }
+  if (password.length < 12) {
+    console.error('SUPER_ADMIN_PASSWORD must be at least 12 characters.');
+    process.exit(1);
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
   await db.insert(schema.users).values({
     id: uuid(),

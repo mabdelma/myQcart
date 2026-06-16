@@ -3,6 +3,7 @@ import { ChefHat, LogOut, Settings, User, ClipboardList, Clock } from 'lucide-re
 import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface KitchenHeaderProps {
   onProfileClick: () => void;
@@ -11,13 +12,14 @@ interface KitchenHeaderProps {
 }
 
 export function KitchenHeader({ onProfileClick, onViewChange, activeView }: KitchenHeaderProps) {
+  const { t } = useI18n();
   const { state, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const navigate = useNavigate();
 
   const tabs = [
-    { id: 'orders' as const, name: 'Active Orders', icon: ClipboardList },
-    { id: 'history' as const, name: 'Order History', icon: Clock }
+    { id: 'orders' as const, name: t('staff.activeOrders'), icon: ClipboardList },
+    { id: 'history' as const, name: t('staff.orderHistory'), icon: Clock }
   ];
 
   const handleLogout = () => {
@@ -32,7 +34,7 @@ export function KitchenHeader({ onProfileClick, onViewChange, activeView }: Kitc
           <div className="flex items-center">
             <ChefHat className="h-8 w-8 text-[#F5DEB3]" />
             <h1 className="ml-3 text-2xl font-bold text-white">
-              Kitchen Display
+              {t('staff.kitchenDisplay')}
             </h1>
             <nav className="ml-6 flex space-x-2">
               {tabs.map(tab => (
@@ -65,6 +67,9 @@ export function KitchenHeader({ onProfileClick, onViewChange, activeView }: Kitc
                     <img
                       src={state.user.profileImage}
                       alt={state.user.name}
+                      width="40"
+                      height="40"
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -83,14 +88,14 @@ export function KitchenHeader({ onProfileClick, onViewChange, activeView }: Kitc
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Profile Settings
+                    {t('staff.profileSettings')}
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
+                    {t('staff.signOut')}
                   </button>
                 </div>
               )}

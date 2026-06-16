@@ -10,6 +10,9 @@ export interface Tenant {
   logoUrl?: string;
   coverImage?: string;
   primaryColor?: string;
+  accentColor?: string;
+  faviconUrl?: string;
+  customDomain?: string;
   taxRate: number;
   serviceCharge: number;
   isActive: boolean;
@@ -160,6 +163,25 @@ export interface ApiError {
   error: string;
 }
 
+export interface ModifierGroup {
+  id: string;
+  tenantId: string;
+  name: string;
+  selectionType: 'single' | 'multiple';
+  isRequired: boolean;
+  sortOrder: number;
+  options: ModifierOption[];
+}
+
+export interface ModifierOption {
+  id: string;
+  groupId: string;
+  name: string;
+  priceAdjustment: number;
+  maxSelectable: number;
+  sortOrder: number;
+}
+
 // ── Super-admin / platform ──────────────────────────────────────────────────
 export interface PlatformAnalytics {
   tenants: number;
@@ -167,6 +189,20 @@ export interface PlatformAnalytics {
   users: number;
   orders: number;
   revenue: number;
+  customers: number;
+  tables: number;
+  menuItems: number;
+  monthlyGrowth: number;
+}
+
+export interface TenantUsage {
+  users: number;
+  orders: number;
+  revenue: number;
+  customers: number;
+  tables: number;
+  menuItems: number;
+  storageEstimate: string;
 }
 
 export interface TenantSummary {
@@ -180,5 +216,38 @@ export interface TenantSummary {
 }
 
 export interface TenantWithStats extends Tenant {
-  stats: { users: number; orders: number; revenue: number };
+  stats: { users: number; orders: number; revenue: number; customers: number; tables: number; menuItems: number; storageEstimate: string };
+}
+
+export interface HourlyTrafficPoint {
+  hour: number;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface PeakHour {
+  dayOfWeek: number;
+  hour: number;
+  orderCount: number;
+}
+
+export interface CategoryPerformanceItem {
+  categoryId: string;
+  categoryName: string;
+  totalSold: number;
+  totalRevenue: number;
+}
+
+export interface TrendingItem {
+  id: string;
+  name: string;
+  price: number;
+  recentOrders: number;
+}
+
+export interface RecommendationItem {
+  id: string;
+  name: string;
+  price: number;
+  orderCount: number;
 }

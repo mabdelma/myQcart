@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PlusCircle, Trash2, QrCode } from 'lucide-react';
 import { tableApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { QrCodeModal } from '../../components/ui/QrCodeModal';
 import type { TableData } from '../../lib/api/types';
 
 export function TableManagement() {
@@ -11,6 +12,7 @@ export function TableManagement() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ number: 1, capacity: 2 });
+  const [qrModal, setQrModal] = useState<TableData | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -111,7 +113,7 @@ export function TableManagement() {
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={() => window.open(getQRUrl(table), '_blank')}
+                onClick={() => setQrModal(table)}
                 className="flex-1 flex items-center justify-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
               >
                 <QrCode className="w-4 h-4 mr-1" /> QR
@@ -129,6 +131,14 @@ export function TableManagement() {
 
       {tables.length === 0 && (
         <p className="text-center text-gray-500 py-12">No tables yet. Click "Add Table" to create one.</p>
+      )}
+
+      {qrModal && (
+        <QrCodeModal
+          url={getQRUrl(qrModal)}
+          label={`Table ${qrModal.number}`}
+          onClose={() => setQrModal(null)}
+        />
       )}
     </div>
   );

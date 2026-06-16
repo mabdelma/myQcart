@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useReducer } from 'react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { menuApi, tableApi, orderApi, paymentApi } from '../../lib/api';
+import { useI18n } from '../../contexts/I18nContext';
 import type { MenuItem, MenuCategory, TableData, OrderWithItems } from '../../lib/api/types';
 import { StripePaymentForm } from './StripePaymentForm';
 
@@ -58,6 +59,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 const CartCtx = createContext<{ state: CartState; dispatch: React.Dispatch<CartAction> } | null>(null);
 
 export function CustomerMenuPage() {
+  const { t } = useI18n();
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   const [table, setTable] = useState<TableData | null>(null);
@@ -131,12 +133,12 @@ export function CustomerMenuPage() {
     <CartCtx.Provider value={{ state: cartState, dispatch }}>
       <div className="min-h-screen bg-gray-50 max-w-lg mx-auto">
         <div className="bg-white shadow-sm p-4 sticky top-0 z-10">
-          <h1 className="text-xl font-bold">Table {table?.number}</h1>
+          <h1 className="text-xl font-bold">{t('table.tableNumber')} {table?.number}</h1>
           <div className="flex space-x-4 mt-2">
-            {(['menu', 'cart', 'orders', 'checkout'] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`text-sm font-medium pb-1 border-b-2 ${tab === t ? 'border-[#8B4513] text-[#8B4513]' : 'border-transparent text-gray-500'}`}>
-                {t === 'menu' ? 'Menu' : t === 'cart' ? `Cart (${cartState.items.length})` : t === 'orders' ? 'Orders' : 'Checkout'}
+            {(['menu', 'cart', 'orders', 'checkout'] as const).map((tabName) => (
+              <button key={tabName} onClick={() => setTab(tabName)}
+                className={`text-sm font-medium pb-1 border-b-2 ${tab === tabName ? 'border-[#8B4513] text-[#8B4513]' : 'border-transparent text-gray-500'}`}>
+                {tabName === 'menu' ? t('nav.menu') : tabName === 'cart' ? `${t('nav.cart')} (${cartState.items.length})` : tabName === 'orders' ? t('nav.orders') : t('nav.checkout')}
               </button>
             ))}
           </div>
@@ -167,7 +169,7 @@ export function CustomerMenuPage() {
                     <button
                       onClick={() => { dispatch({ type: 'ADD', payload: { item } }); setAddingId(item.id); setTimeout(() => setAddingId(null), 1000); }}
                       className="px-3 py-1.5 bg-[#8B4513] text-white rounded-full text-sm hover:bg-[#5C4033] flex-shrink-0">
-                      {addingId === item.id ? '✓' : '+ Add'}
+                      {addingId === item.id ? t('common.done') : `+ ${t('menu.addToCart')}`}
                     </button>
                   </div>
                 ))}
@@ -177,12 +179,12 @@ export function CustomerMenuPage() {
 
           {tab === 'cart' && (
             <div className="space-y-4">
-              {cartState.items.length === 0 && <p className="text-center text-gray-500 py-8">Cart is empty</p>}
+              {cartState.items.length === 0 && <p className="text-center text-gray-500 py-8">{t('order.emptyCart')}</p>}
               {cartState.items.map((c) => (
                 <div key={c.item.id} className="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center">
                   <div className="flex-1">
                     <h3 className="font-semibold">{c.item.name}</h3>
-                    <p className="text-sm text-gray-500">${c.item.price.toFixed(2)} each</p>
+                    <p className="text-sm text-gray-500">${c.item.price.toFixed(2)} {t('common.item')}</p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <button onClick={() => dispatch({ type: 'UPDATE_QTY', payload: { id: c.item.id, quantity: Math.max(1, c.quantity - 1) } })}
@@ -191,19 +193,19 @@ export function CustomerMenuPage() {
                     <button onClick={() => dispatch({ type: 'UPDATE_QTY', payload: { id: c.item.id, quantity: c.quantity + 1 } })}
                       className="w-8 h-8 rounded-full bg-[#8B4513] text-white flex items-center justify-center hover:bg-[#5C4033]">+</button>
                     <button onClick={() => dispatch({ type: 'REMOVE', payload: c.item.id })}
-                      className="text-red-500 text-sm ml-2">Remove</button>
+                      className="text-red-500 text-sm ml-2">{t('common.remove')}</button>
                   </div>
                 </div>
               ))}
               {cartState.items.length > 0 && (
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
+                    <span>{t('common.total')}</span>
                     <span>${cartState.total.toFixed(2)}</span>
                   </div>
                   <button onClick={() => setTab('checkout')}
                     className="w-full mt-4 py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033]">
-                    Proceed to Checkout
+                    {t('nav.checkout')}
                   </button>
                 </div>
               )}
@@ -213,7 +215,7 @@ export function CustomerMenuPage() {
           {tab === 'checkout' && (
             <div className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm p-4">
-                <h3 className="font-semibold mb-3">Order Summary</h3>
+                <h3 className="font-semibold mb-3">{t('payment.orderSummary')}</h3>
                 {cartState.items.map((c) => (
                   <div key={c.item.id} className="flex justify-between text-sm py-1">
                     <span>{c.item.name} x{c.quantity}</span>
@@ -221,15 +223,15 @@ export function CustomerMenuPage() {
                   </div>
                 ))}
                 <div className="border-t mt-3 pt-3 flex justify-between font-bold text-lg">
-                  <span>Total</span>
+                  <span>{t('common.total')}</span>
                   <span>${cartState.total.toFixed(2)}</span>
                 </div>
               </div>
               <button onClick={placeOrder} disabled={placing || cartState.items.length === 0}
                 className="w-full py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033] disabled:opacity-50">
-                {placing ? 'Placing Order...' : 'Place Order'}
+                {placing ? t('order.processOrder') + '...' : t('order.processOrder')}
               </button>
-              <p className="text-xs text-gray-500 text-center">Pay with cash at the counter when your order is ready</p>
+              <p className="text-xs text-gray-500 text-center">{t('payment.cash')}</p>
             </div>
           )}
 
@@ -237,8 +239,8 @@ export function CustomerMenuPage() {
             <div className="space-y-4">
               {orderResult && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-green-800">Order Placed!</h3>
-                  <p className="text-sm text-green-700">Your order has been sent to the kitchen.</p>
+                  <h3 className="font-semibold text-green-800">{t('order.newOrder')}</h3>
+                  <p className="text-sm text-green-700">{t('order.orderReady')}</p>
                 </div>
               )}
               {tableOrders.length === 0 && <p className="text-center text-gray-500 py-8">No orders yet</p>}

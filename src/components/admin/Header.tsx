@@ -3,12 +3,14 @@ import { User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { NotificationsBell } from '../ui/NotificationsBell';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface HeaderProps {
   username?: string;
 }
 
 export function Header({ username = 'Admin User' }: HeaderProps) {
+  const { t } = useI18n();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const { state, logout } = useAuth();
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
         <div className="relative w-96">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={t('common.search')}
             className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8B4513]"
           />
           <svg
@@ -59,6 +61,9 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
                   <img
                     src={state.user.profileImage}
                     alt={state.user.name}
+                    width="32"
+                    height="32"
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -78,14 +83,14 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings className="w-4 h-4 mr-2" aria-hidden />
-                    Profile Settings
+                    {t('staff.profileSettings')}
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     <LogOut className="w-4 h-4 mr-2" aria-hidden />
-                    Sign Out
+                    {t('staff.signOut')}
                   </button>
                 </div>
 

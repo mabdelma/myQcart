@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
-import { getDB } from '../../lib/db';
-import type { MenuItem, MenuCategory } from '../../lib/db/schema';
+import { menuApi } from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import type { MenuItem, MenuCategory } from '../../lib/api/types';
 import { uploadImage } from '../../lib/utils/imageUpload';
 import { CategoryManagement } from './CategoryManagement';
 
 export function MenuManagement() {
+  const { state: { tenant } } = useAuth();
+  const slug = tenant?.slug;
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -14,50 +17,77 @@ export function MenuManagement() {
   const [availableSubCategories, setAvailableSubCategories] = useState<MenuCategory[]>([]);
 
   const loadMenuItems = useCallback(async () => {
-    const db = await getDB();
-    const [items, cats] = await Promise.all([
-      db.getAll('menu_items'),
-      db.getAll('menu_categories')
-    ]);
-    
-    const sortedCategories = cats.sort((a, b) => a.order - b.order);
+    if (!slug) return;
+    const data = await menuApi.getFullMenu(slug);
+    const sortedCategories = data.categories.sort((a, b) => a.sortOrder - b.sortOrder);
     const mainCategories = sortedCategories.filter(c => c.type === 'main');
-    
-    setMenuItems(items);
+    setMenuItems(data.items);
     setCategories(sortedCategories);
-    
-    if (mainCategories.length > 0 && !selectedMainCategory) {
-      setSelectedMainCategory(mainCategories[0].id);
+    if (mainCategories.length > 0) {
+      setSelectedMainCategory((prev) => prev || mainCategories[0].id);
     }
-  }, [selectedMainCategory]);
+  }, [slug]);
 
   useEffect(() => {
-    loadMenuItems();
-  }, [loadMenuItems]);
+    if (slug) loadMenuItems();
+  }, [slug, loadMenuItems]);
 
   useEffect(() => {
     if (editingItem) {
       const subs = categories.filter(
-        c => c.type === 'sub' && c.parentId === editingItem.mainCategoryId
+        c => c.type === 'sub' && c.parentId === editingItem.categoryId
       );
       setAvailableSubCategories(subs);
     }
   }, [editingItem, categories]);
 
   async function saveMenuItem(item: MenuItem) {
-    const db = await getDB();
-    await db.put('menu_items', item);
+    if (!slug) return;
+    const isNew = !menuItems.find(i => i.id === item.id);
+    if (isNew) {
+      await menuApi.createItem(slug, {
+        categoryId: item.categoryId,
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        available: item.available,
+        subCategoryId: item.subCategoryId || undefined,
+      });
+    } else {
+      await menuApi.updateItem(slug, item.id, {
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        available: item.available,
+        subCategoryId: item.subCategoryId || undefined,
+      });
+    }
     setEditingItem(null);
-    loadMenuItems();
+    const data = await menuApi.getFullMenu(slug);
+    setMenuItems(data.items);
+    setCategories(data.categories.sort((a, b) => a.sortOrder - b.sortOrder));
   }
 
   async function deleteMenuItem(id: string) {
-    const db = await getDB();
-    await db.delete('menu_items', id);
-    loadMenuItems();
+    if (!slug) return;
+    await menuApi.deleteItem(slug, id);
+    const data = await menuApi.getFullMenu(slug);
+    setMenuItems(data.items);
   }
 
-  const mainCategories = categories.filter(c => c.type === 'main');
+  const mainCategories = useMemo(() => categories.filter(c => c.type === 'main'), [categories]);
+
+  const filteredMenuItems = useMemo(() => {
+    return menuItems
+      .filter(item => item.categoryId === selectedMainCategory)
+      .sort((a, b) => {
+        const subCatA = categories.find(c => c.id === a.subCategoryId);
+        const subCatB = categories.find(c => c.id === b.subCategoryId);
+        return (subCatA?.sortOrder || 0) - (subCatB?.sortOrder || 0);
+      });
+  }, [menuItems, selectedMainCategory, categories]);
 
   return (
     <div className="space-y-6">
@@ -66,23 +96,23 @@ export function MenuManagement() {
         <div className="flex items-center">
           <button
             onClick={() => {
-              loadMenuItems().then(() => {
+              if (slug) loadMenuItems().then(() => {
                 const firstMainCategory = mainCategories[0]?.id || '';
                 const firstSubCategory = categories.find(
                   c => c.type === 'sub' && c.parentId === firstMainCategory
                 )?.id || '';
-                // Reset the form completely including the image
                 setEditingItem({
                   id: crypto.randomUUID(),
                   name: '',
                   description: '',
                   price: 0,
-                  mainCategoryId: firstMainCategory,
+                  categoryId: firstMainCategory,
                   subCategoryId: firstSubCategory,
-                  image: '',
-                  available: true
+                  imageUrl: '',
+                  available: true,
+                  tenantId: '',
+                  sortOrder: 0,
                 });
-                // Reset any file input by clearing its value
                 const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
                 if (fileInput) {
                   fileInput.value = '';
@@ -112,7 +142,7 @@ export function MenuManagement() {
                 onClick={() => setShowCategories(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                ×
+                Ã—
               </button>
             </div>
             <CategoryManagement />
@@ -131,7 +161,7 @@ export function MenuManagement() {
               onClick={() => setEditingItem(null)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ×
+              Ã—
             </button>
             </div>
             <form onSubmit={(e) => {
@@ -180,15 +210,15 @@ export function MenuManagement() {
                   <label htmlFor="menu-main-category" className="block text-sm font-medium text-gray-700">Main Category</label>
                   <select
                     id="menu-main-category"
-                    value={editingItem.mainCategoryId}
+                    value={editingItem.categoryId}
                     onChange={(e) => {
-                      const mainCategoryId = e.target.value;
+                      const categoryId = e.target.value;
                       const firstSubCategory = categories.find(
-                        c => c.type === 'sub' && c.parentId === mainCategoryId
+                        c => c.type === 'sub' && c.parentId === categoryId
                       );
                       setEditingItem({
                         ...editingItem,
-                        mainCategoryId,
+                        categoryId,
                         subCategoryId: firstSubCategory?.id || ''
                       });
                     }}
@@ -221,10 +251,13 @@ export function MenuManagement() {
                 <label htmlFor="menu-image" className="block text-sm font-medium text-gray-700">Image</label>
                 <div className="mt-1 flex items-center space-x-4">
                   <div className="relative h-20 w-20 bg-gray-100 rounded-md overflow-hidden">
-                    {editingItem.image ? (
+                    {editingItem.imageUrl ? (
                       <img
-                        src={editingItem.image}
+                        src={editingItem.imageUrl}
                         alt="Preview"
+                        width="80"
+                        height="80"
+                        loading="lazy"
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -240,13 +273,13 @@ export function MenuManagement() {
                       type="file"
                       className="sr-only"
                       accept="image/*"
-                      key={editingItem.id} // Force input recreation
+                      key={editingItem.id}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           try {
                             const imageUrl = await uploadImage(file);
-                            setEditingItem({ ...editingItem, image: imageUrl });
+                            setEditingItem({ ...editingItem, imageUrl: imageUrl });
                           } catch (error) {
                             console.error('Failed to upload image:', error);
                           }
@@ -254,10 +287,10 @@ export function MenuManagement() {
                       }}
                     />
                   </label>
-                  {editingItem.image && (
+                  {editingItem.imageUrl && (
                     <button
                       type="button"
-                      onClick={() => setEditingItem({ ...editingItem, image: '' })}
+                      onClick={() => setEditingItem({ ...editingItem, imageUrl: '' })}
                       className="text-sm text-red-600 hover:text-red-700"
                     >
                       Remove
@@ -294,7 +327,7 @@ export function MenuManagement() {
           </div>
         </div>
       )}
-      
+
       <div className="mb-6">
         <div className="flex space-x-4 overflow-x-auto pb-4">
           {mainCategories.map((category) => (
@@ -314,20 +347,16 @@ export function MenuManagement() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {menuItems
-          .filter(item => item.mainCategoryId === selectedMainCategory)
-          .sort((a, b) => {
-            const subCatA = categories.find(c => c.id === a.subCategoryId);
-            const subCatB = categories.find(c => c.id === b.subCategoryId);
-            return (subCatA?.order || 0) - (subCatB?.order || 0);
-          })
-          .map((item) => (
+        {filteredMenuItems.map((item) => (
           <article key={item.id} className="bg-white rounded-lg shadow p-6">
             <div className="relative aspect-video mb-4 bg-gray-100 rounded-md overflow-hidden">
-              {item.image ? (
+              {item.imageUrl ? (
                 <img
-                  src={item.image}
+                  src={item.imageUrl}
                   alt={item.name}
+                  width="320"
+                  height="180"
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -377,3 +406,4 @@ export function MenuManagement() {
     </div>
   );
 }
+

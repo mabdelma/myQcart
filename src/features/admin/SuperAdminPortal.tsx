@@ -1,12 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
-import { ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut } from 'lucide-react';
+import { ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut, TrendingUp, Table, Coffee, BookOpen } from 'lucide-react';
 import { adminApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { PlatformAnalytics, TenantSummary } from '../../lib/api/types';
 
 interface Row extends TenantSummary {
+  users?: number;
   orders?: number;
   revenue?: number;
+  customers?: number;
+  tables?: number;
+  menuItems?: number;
+  storageEstimate?: string;
 }
 
 export function SuperAdminPortal() {
@@ -31,7 +36,7 @@ export function SuperAdminPortal() {
         tenants.map(async (t): Promise<Row> => {
           try {
             const d = await adminApi.getTenant(t.id);
-            return { ...t, orders: d.stats.orders, revenue: d.stats.revenue };
+            return { ...t, users: d.stats.users, orders: d.stats.orders, revenue: d.stats.revenue, customers: d.stats.customers, tables: d.stats.tables, menuItems: d.stats.menuItems, storageEstimate: d.stats.storageEstimate };
           } catch {
             return { ...t };
           }
@@ -63,6 +68,8 @@ export function SuperAdminPortal() {
   }
 
   const money = (n?: number) => `$${(n ?? 0).toFixed(2)}`;
+  const growthColor = analytics && analytics.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600';
+  const growthIcon = analytics && analytics.monthlyGrowth >= 0 ? '▲' : '▼';
 
   const cards = [
     { label: 'Restaurants', value: analytics?.tenants ?? 0, icon: Store },
@@ -70,6 +77,10 @@ export function SuperAdminPortal() {
     { label: 'Users', value: analytics?.users ?? 0, icon: Users },
     { label: 'Orders', value: analytics?.orders ?? 0, icon: ShoppingBag },
     { label: 'Revenue', value: money(analytics?.revenue), icon: DollarSign },
+    { label: 'Customers', value: analytics?.customers ?? 0, icon: BookOpen },
+    { label: 'Tables', value: analytics?.tables ?? 0, icon: Table },
+    { label: 'Menu Items', value: analytics?.menuItems ?? 0, icon: Coffee },
+    { label: 'Growth', value: analytics ? `${growthIcon} ${Math.abs(analytics.monthlyGrowth)}%` : '—', icon: TrendingUp, valueClass: growthColor },
   ];
 
   return (
@@ -89,11 +100,11 @@ export function SuperAdminPortal() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         {error && <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 text-sm text-red-700">{error}</div>}
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {cards.map(({ label, value, icon: Icon }) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {cards.map(({ label, value, icon: Icon, valueClass }) => (
             <div key={label} className="bg-white rounded-lg shadow-sm p-4">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-1"><Icon className="w-4 h-4" />{label}</div>
-              <div className="text-2xl font-bold text-gray-900">{value}</div>
+              <div className={`text-2xl font-bold text-gray-900 ${valueClass || ''}`}>{value}</div>
             </div>
           ))}
         </div>
@@ -114,6 +125,8 @@ export function SuperAdminPortal() {
                   <th className="px-6 py-3 font-medium">Slug</th>
                   <th className="px-6 py-3 font-medium text-right">Orders</th>
                   <th className="px-6 py-3 font-medium text-right">Revenue</th>
+                  <th className="px-6 py-3 font-medium text-right">Users</th>
+                  <th className="px-6 py-3 font-medium text-right">Tables</th>
                   <th className="px-6 py-3 font-medium">Status</th>
                   <th className="px-6 py-3 font-medium text-right">Action</th>
                 </tr>
@@ -130,6 +143,8 @@ export function SuperAdminPortal() {
                     </td>
                     <td className="px-6 py-3 text-right">{t.orders ?? '—'}</td>
                     <td className="px-6 py-3 text-right">{t.revenue != null ? money(t.revenue) : '—'}</td>
+                    <td className="px-6 py-3 text-right">{t.users ?? '—'}</td>
+                    <td className="px-6 py-3 text-right">{t.tables ?? '—'}</td>
                     <td className="px-6 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs ${t.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
                         {t.isActive ? 'Active' : 'Disabled'}

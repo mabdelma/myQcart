@@ -1,11 +1,11 @@
 import React from 'react';
 import { Clock, AlertTriangle, Check, Ban, ChefHat, Truck } from 'lucide-react';
-import type { Order, MenuItem, Table } from '../../../lib/db/schema';
+import type { Order, MenuItem, TableData } from '../../../lib/api/types';
 
 interface OrderListProps {
   orders: Order[];
   menuItems: Record<string, MenuItem>;
-  tables: Record<string, Table>;
+  tables: Record<string, TableData>;
   onViewDetails: (order: Order) => void;
   onStatusChange: (orderId: string, status: Order['status']) => void;
   onCancelOrder: (orderId: string) => void;

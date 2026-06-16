@@ -13,6 +13,20 @@ vi.mock('../db/index.js', () => {
     payments: 'payments',
     paymentLinks: 'paymentLinks',
     demoRequests: 'demoRequests',
+    modifierGroups: 'modifierGroups',
+    modifierOptions: 'modifierOptions',
+    menuItemModifiers: 'menuItemModifiers',
+    promoCampaigns: 'promoCampaigns',
+    promoCodeUsages: 'promoCodeUsages',
+    stockItems: 'stockItems',
+    stockMovements: 'stockMovements',
+    menuItemIngredients: 'menuItemIngredients',
+    customers: 'customers',
+    webhookIntegrations: 'webhookIntegrations',
+    subscriptionPlans: 'subscriptionPlans',
+    tenantSubscriptions: 'tenantSubscriptions',
+    printers: 'printers',
+    printJobs: 'printJobs',
   };
 
   let queryQueue: unknown[] = [];
@@ -23,6 +37,12 @@ vi.mock('../db/index.js', () => {
     }
     return [];
   }
+
+  const simpleQueryResult = {
+    then: (resolve: (v: unknown) => void) => resolve(nextData()),
+    catch: () => {},
+    finally: () => {},
+  };
 
   const queryResult = {
     then: (resolve: (v: unknown) => void) => resolve(nextData()),
@@ -36,6 +56,8 @@ vi.mock('../db/index.js', () => {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockImplementation(() => queryResult),
+    leftJoin: vi.fn().mockReturnThis(),
+    innerJoin: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     values: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockReturnThis(),
@@ -45,6 +67,8 @@ vi.mock('../db/index.js', () => {
     $inferSelect: {},
     __setQueryData: (data: unknown) => { queryQueue = [data]; },
     __setQueryQueue: (queue: unknown[]) => { queryQueue = [...queue]; },
+    limit: vi.fn().mockReturnValue(simpleQueryResult),
+    orderBy: vi.fn().mockReturnValue(simpleQueryResult),
   };
 
   return { db, schema };

@@ -1,32 +1,27 @@
 import { useEffect, useState } from 'react';
-import { getDB } from '../../../lib/db';
+import { analyticsApi } from '../../../lib/api';
+import { useAuth } from '../../../contexts/AuthContext';
+import type { RevenueDataPoint } from '../../../lib/api/types';
 import { Skeleton } from '../../ui/Skeleton';
 
 export function RevenueChart() {
-  const [data, setData] = useState<{ date: string; revenue: number }[]>([]);
+  const { state } = useAuth();
+  const slug = state.tenant?.slug;
+  const [data, setData] = useState<RevenueDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!slug) return;
     loadData();
-  }, []);
+  }, [slug]);
 
   async function loadData() {
     try {
-      const db = await getDB();
-      const orders = await db.getAll('orders');
-      
-      // Group orders by date and calculate revenue
-      const revenueByDate = orders.reduce((acc, order) => {
-        const date = new Date(order.createdAt).toLocaleDateString();
-        acc[date] = (acc[date] || 0) + order.total;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Convert to array and sort by date
-      const chartData = Object.entries(revenueByDate)
-        .map(([date, revenue]) => ({ date, revenue }))
+      if (!slug) return;
+      const result = await analyticsApi.revenue(slug);
+      const chartData = result.daily
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .slice(-7); // Last 7 days
+        .slice(-7);
 
       setData(chartData);
     } catch (error) {

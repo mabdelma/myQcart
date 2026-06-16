@@ -11,16 +11,24 @@ import { MenuManagement } from '../../features/admin/MenuManagement';
 import { TableManagement } from '../../features/admin/TableManagement';
 import { OrderManagement } from '../../features/admin/OrderManagement';
 import { SettingsPage } from '../../features/admin/SettingsPage';
+import { ModifierManagement } from '../../features/admin/ModifierManagement';
+import { SubscriptionManagement } from '../../features/admin/SubscriptionManagement';
+import { WhiteLabelSettings } from '../../features/admin/WhiteLabelSettings';
+import { AnalyticsDashboard } from '../../features/analytics/AnalyticsDashboard';
+import { SalesDashboard } from '../../features/analytics/SalesDashboard';
+import { ScheduledExports } from '../../features/admin/ScheduledExports';
 
 const routes = [
-  { path: 'analytics', element: <Analytics /> },
   { path: 'orders', element: <OrderManagement /> },
   { path: 'staff', element: <StaffPerformance /> },
   { path: 'menu', element: <MenuManagement /> },
+  { path: 'modifiers', element: <ModifierManagement /> },
   { path: 'tables', element: <TableManagement /> },
   { path: 'profile', element: <AdminProfile /> },
   { path: 'users', element: <UserManagement /> },
-  { path: 'settings', element: <SettingsPage /> }
+  { path: 'settings', element: <SettingsPage /> },
+  { path: 'subscription', element: <SubscriptionManagement /> },
+  { path: 'branding', element: <WhiteLabelSettings /> }
 ];
 
 export function AdminPortal() {
@@ -43,6 +51,11 @@ export function AdminPortal() {
           <main className="p-8">
             <Routes>
               <Route index element={<Navigate to="analytics" replace />} />
+              <Route path="analytics" element={<Analytics />}>
+                <Route index element={<AnalyticsDashboard />} />
+                <Route path="sales" element={<SalesDashboard />} />
+                <Route path="exports" element={<ScheduledExports />} />
+              </Route>
               {routes.map(({ path, element }) => (
                 <Route key={path} path={path} element={element} />
               ))}

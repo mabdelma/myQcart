@@ -1,66 +1,69 @@
+import { useI18n } from '../../contexts/I18nContext';
 import { Link } from 'react-router';
 import { Check } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
 
-const plans = [
-  {
-    name: 'Starter',
-    price: '$29',
-    period: '/month',
-    desc: 'Perfect for small cafes and bistros getting started with digital ordering.',
-    features: [
-      'Up to 3 staff accounts',
-      'Single restaurant location',
-      'Basic sales analytics',
-      'Email support (48h response)',
-      'Standard QR code generation',
-      'Up to 50 menu items',
-    ],
-  },
-  {
-    name: 'Growth',
-    price: '$79',
-    period: '/month',
-    desc: 'Ideal for busy restaurants that need more flexibility and control.',
-    features: [
-      'Up to 20 staff accounts',
-      'Up to 3 locations',
-      'Advanced analytics & reports',
-      'Priority email & chat support',
-      'Custom branding (logo, colors)',
-      'Unlimited menu items',
-      'Payment link generation',
-      'Staff performance metrics',
-    ],
-    popular: true,
-  },
-  {
-    name: 'Enterprise',
-    price: '$199',
-    period: '/month',
-    desc: 'For multi-location chains and high-volume operations.',
-    features: [
-      'Unlimited staff accounts',
-      'Unlimited locations',
-      'White-label (your domain, your brand)',
-      'Dedicated account manager',
-      'API access for custom integrations',
-      'On-premise deployment option',
-      'Custom reporting & exports',
-      'SLA guarantee (99.9% uptime)',
-    ],
-  },
-];
-
-const faqs = [
-  { q: 'Is there a setup fee?', a: 'No. All plans include free setup and onboarding assistance.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. No long-term contracts. Cancel with 30 days notice.' },
-  { q: 'Do you offer a free trial?', a: 'Yes. All plans include a 14-day free trial with full features.' },
-  { q: 'What payment methods are supported?', a: 'We integrate with Stripe, supporting credit cards, digital wallets, and bank transfers.' },
-];
-
 export function PricingPage() {
+  const { t } = useI18n();
+
+  const plans = [
+    {
+      name: t('marketing.planStarterName'),
+      price: '$29',
+      period: '/month',
+      desc: t('pricing.planStarterDesc'),
+      features: [
+        t('pricing.planStarterFeature0'),
+        t('pricing.planStarterFeature1'),
+        t('pricing.planStarterFeature2'),
+        t('pricing.planStarterFeature3'),
+        t('pricing.planStarterFeature4'),
+        t('pricing.planStarterFeature5'),
+      ],
+    },
+    {
+      name: t('marketing.planGrowthName'),
+      price: '$79',
+      period: '/month',
+      desc: t('pricing.planGrowthDesc'),
+      features: [
+        t('pricing.planGrowthFeature0'),
+        t('pricing.planGrowthFeature1'),
+        t('pricing.planGrowthFeature2'),
+        t('pricing.planGrowthFeature3'),
+        t('pricing.planGrowthFeature4'),
+        t('pricing.planGrowthFeature5'),
+        t('pricing.planGrowthFeature6'),
+        t('pricing.planGrowthFeature7'),
+      ],
+      popular: true,
+    },
+    {
+      name: t('marketing.planEnterpriseName'),
+      price: '$199',
+      period: '/month',
+      desc: t('pricing.planEnterpriseDesc'),
+      features: [
+        t('pricing.planEnterpriseFeature0'),
+        t('pricing.planEnterpriseFeature1'),
+        t('pricing.planEnterpriseFeature2'),
+        t('pricing.planEnterpriseFeature3'),
+        t('pricing.planEnterpriseFeature4'),
+        t('pricing.planEnterpriseFeature5'),
+        t('pricing.planEnterpriseFeature6'),
+        t('pricing.planEnterpriseFeature7'),
+      ],
+    },
+  ];
+
+  const faqs = [
+    { q: t('pricing.faq1Q'), a: t('pricing.faq1A') },
+    { q: t('pricing.faq2Q'), a: t('pricing.faq2A') },
+    { q: t('pricing.faq3Q'), a: t('pricing.faq3A') },
+    { q: t('pricing.faq4Q'), a: t('pricing.faq4A') },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       <MarketingHeader />
@@ -68,11 +71,11 @@ export function PricingPage() {
       <section className="bg-gradient-to-b from-amber-50 to-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#8B4513]/10 text-[#8B4513] mb-6">
-            Pricing
+            {t('nav.pricing')}
           </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t('pricing.pageTitle')}</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            No hidden fees. No long-term contracts. Cancel anytime.
+            {t('pricing.pageDesc')}
           </p>
         </div>
       </section>
@@ -91,7 +94,7 @@ export function PricingPage() {
               >
                 {plan.popular && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#8B4513] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                    Most Popular
+                    {t('marketing.mostPopular')}
                   </span>
                 )}
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{plan.name}</h3>
@@ -116,7 +119,7 @@ export function PricingPage() {
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
                 >
-                  Start Free Trial
+                  {t('cta.startTrial')}
                 </Link>
               </div>
             ))}
@@ -126,7 +129,7 @@ export function PricingPage() {
 
       <section className="py-16 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Frequently asked questions</h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">{t('pricing.faqTitle')}</h2>
           <div className="space-y-6">
             {faqs.map((faq) => (
               <div key={faq.q} className="bg-white rounded-lg p-6 border border-gray-100">

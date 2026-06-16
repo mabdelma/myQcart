@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -7,15 +7,15 @@ import { menuApi, uploadApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { MenuItem, MenuCategory } from '../../lib/api/types';
 
-function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (item: MenuItem) => void; onDelete: (id: string) => void }) {
+const SortableItem = React.memo(function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (item: MenuItem) => void; onDelete: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
-  const style = {
+  const style = useMemo(() => ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : 'auto' as const,
-  };
+  }), [transform, transition, isDragging]);
 
   return (
     <article ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6">
@@ -26,7 +26,7 @@ function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (ite
       </div>
       <div className="aspect-video mb-4 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+          <img src={item.imageUrl} alt={item.name} width="160" height="160" loading="lazy" className="w-full h-full object-cover" />
         ) : (
           <ImageIcon className="w-12 h-12 text-gray-400" aria-hidden />
         )}
@@ -55,7 +55,7 @@ function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (ite
       </div>
     </article>
   );
-}
+});
 
 export function MenuManagement() {
   const { state: { tenant } } = useAuth();
@@ -111,6 +111,12 @@ export function MenuManagement() {
     }
   }
 
+  const filteredItems = useMemo(() => {
+    return selectedCategory
+      ? items.filter((i) => i.categoryId === selectedCategory).sort((a, b) => a.sortOrder - b.sortOrder)
+      : [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [items, selectedCategory]);
+
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id || !slug) return;
@@ -138,10 +144,6 @@ export function MenuManagement() {
 
   if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
   if (loading) return <div className="p-4 text-gray-500">Loading menu...</div>;
-
-  const filteredItems = selectedCategory
-    ? items.filter((i) => i.categoryId === selectedCategory).sort((a, b) => a.sortOrder - b.sortOrder)
-    : items.sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <div className="space-y-6">
@@ -183,7 +185,7 @@ export function MenuManagement() {
                 <label htmlFor="menu-image-upload" className="block text-sm font-medium text-gray-700 mb-1">Image</label>
                 <div className="flex items-center gap-3">
                   {editing.imageUrl && (
-                    <img src={editing.imageUrl} alt="" className="w-16 h-16 rounded object-cover border" />
+                    <img src={editing.imageUrl} alt="" width="64" height="64" loading="lazy" className="w-16 h-16 rounded object-cover border" />
                   )}
                   <button type="button" id="menu-image-upload" onClick={async () => {
                     const input = document.createElement('input');

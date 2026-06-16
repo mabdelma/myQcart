@@ -1,0 +1,75 @@
+# ─── QCart Infrastructure Services ────────────────────────────────────────
+# PgBouncer connection pooling, read replica, Redis Sentinel HA, and a CDN
+# proxy for static assets. Layered on top of the base docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.infra.yml up -d
+# ──────────────────────────────────────────────────────────────────────────
+name: qcart-infra
+
+services:
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    ports:
+      - "6432:6432"
+    environment:
+      DATABASE_URL: postgresql://qcart:qcart@postgres:5432/qcart
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: "25"
+      MAX_CLIENT_CONN: "100"
+      AUTH_TYPE: md5
+    volumes:
+      - ./infra/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./infra/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres-replica:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: qcart
+      POSTGRES_PASSWORD: qcart
+      POSTGRES_DB: qcart
+    volumes:
+      - pgdata_replica:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=5
+      - -c
+      - hot_standby=on
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis-sentinel:
+    image: redis:7-alpine
+    ports:
+      - "26379:26379"
+    volumes:
+      - ./infra/redis/sentinel.conf:/etc/redis/sentinel.conf
+    command:
+      - redis-sentinel
+      - /etc/redis/sentinel.conf
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  cdn-proxy:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./infra/nginx/cdn.conf:/etc/nginx/conf.d/cdn.conf:ro
+    depends_on:
+      - qcart-frontend
+    restart: unless-stopped
+
+volumes:
+  pgdata_replica:

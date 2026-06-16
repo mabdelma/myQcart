@@ -5,6 +5,7 @@ import { db, schema } from '../db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
+import { auditLog } from '../middleware/auditLog.js';
 import { resolveTenant } from '../middleware/tenant.js';
 import { logger } from '../lib/logger.js';
 
@@ -49,7 +50,7 @@ menu.get('/:slug/menu', resolveTenant, async (c) => {
 });
 
 // Protected: manage categories
-menu.post('/:slug/menu/categories', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', categorySchema), async (c) => {
+menu.post('/:slug/menu/categories', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', categorySchema), auditLog('create', 'menu_category'), async (c) => {
   const tenantId = c.get('tenantId');
   const input = c.req.valid('json');
   const id = uuid();
@@ -60,7 +61,7 @@ menu.post('/:slug/menu/categories', authMiddleware, requireRole('admin', 'manage
   return c.json({ id, ...input }, 201);
 });
 
-menu.put('/:slug/menu/categories/:categoryId', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', categorySchema), async (c) => {
+menu.put('/:slug/menu/categories/:categoryId', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', categorySchema), auditLog('update', 'menu_category'), async (c) => {
   const tenantId = c.get('tenantId');
   const categoryId = c.req.param('categoryId')!;
   const input = c.req.valid('json');
@@ -72,7 +73,7 @@ menu.put('/:slug/menu/categories/:categoryId', authMiddleware, requireRole('admi
   return c.json({ success: true });
 });
 
-menu.delete('/:slug/menu/categories/:categoryId', authMiddleware, requireRole('admin'), resolveTenant, async (c) => {
+menu.delete('/:slug/menu/categories/:categoryId', authMiddleware, requireRole('admin'), resolveTenant, auditLog('delete', 'menu_category'), async (c) => {
   const tenantId = c.get('tenantId');
   const categoryId = c.req.param('categoryId')!;
 
@@ -83,7 +84,7 @@ menu.delete('/:slug/menu/categories/:categoryId', authMiddleware, requireRole('a
 });
 
 // Protected: manage items
-menu.post('/:slug/menu/items', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', itemSchema), async (c) => {
+menu.post('/:slug/menu/items', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', itemSchema), auditLog('create', 'menu_item'), async (c) => {
   const tenantId = c.get('tenantId');
   const input = c.req.valid('json');
   const id = uuid();
@@ -94,25 +95,28 @@ menu.post('/:slug/menu/items', authMiddleware, requireRole('admin', 'manager'), 
   return c.json({ id, ...input }, 201);
 });
 
-menu.put('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+const updateMenuItemSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).optional(),
+  price: z.number().positive().optional(),
+  categoryId: z.string().uuid().optional(),
+  available: z.boolean().optional(),
+  imageUrl: z.string().url().max(500).optional().nullable(),
+});
+
+menu.put('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', updateMenuItemSchema), auditLog('update', 'menu_item'), async (c) => {
   const tenantId = c.get('tenantId');
   const itemId = c.req.param('itemId')!;
-  const body = await c.req.json();
-
-  const allowed = ['categoryId', 'subCategoryId', 'name', 'description', 'price', 'imageUrl', 'available', 'sortOrder', 'modifiers'];
-  const updates: Record<string, unknown> = {};
-  for (const key of allowed) {
-    if (body[key] !== undefined) updates[key] = body[key];
-  }
+  const input = c.req.valid('json');
 
   await db.update(schema.menuItems)
-    .set(updates)
+    .set(input)
     .where(and(eq(schema.menuItems.id, itemId), eq(schema.menuItems.tenantId, tenantId)));
 
   return c.json({ success: true });
 });
 
-menu.delete('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin'), resolveTenant, async (c) => {
+menu.delete('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin'), resolveTenant, auditLog('delete', 'menu_item'), async (c) => {
   const tenantId = c.get('tenantId');
   const itemId = c.req.param('itemId')!;
 
@@ -120,6 +124,78 @@ menu.delete('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin'), r
     .where(and(eq(schema.menuItems.id, itemId), eq(schema.menuItems.tenantId, tenantId)));
 
   return c.json({ success: true });
+});
+
+// Bulk menu import
+const menuImportSchema = z.object({
+  categories: z.array(z.object({
+    name: z.string().min(1).max(100),
+    type: z.enum(['main', 'sub']).default('main'),
+    sortOrder: z.number().int().default(0),
+  })).optional(),
+  items: z.array(z.object({
+    name: z.string().min(1).max(200),
+    description: z.string().max(1000).optional(),
+    price: z.number().positive(),
+    categoryName: z.string().min(1),
+    available: z.boolean().default(true),
+    sortOrder: z.number().int().default(0),
+    imageUrl: z.string().url().max(500).optional().nullable(),
+  })),
+});
+
+menu.post('/:slug/menu/import', authMiddleware, requireRole('admin', 'manager'), zValidator('json', menuImportSchema), auditLog('import', 'menu'), async (c) => {
+  const tenantId = c.get('tenantId');
+  const { categories, items } = c.req.valid('json');
+  const results = { categoriesCreated: 0, itemsCreated: 0, errors: [] as string[] };
+
+  const categoryMap = new Map<string, string>();
+
+  const existingCats = await db.select().from(schema.menuCategories).where(eq(schema.menuCategories.tenantId, tenantId));
+  for (const cat of existingCats) {
+    categoryMap.set(cat.name.toLowerCase(), cat.id);
+  }
+
+  if (categories) {
+    for (const cat of categories) {
+      const key = cat.name.toLowerCase();
+      if (categoryMap.has(key)) continue;
+      const id = uuid();
+      await db.insert(schema.menuCategories).values({
+        id,
+        tenantId,
+        name: cat.name,
+        type: cat.type,
+        sortOrder: cat.sortOrder,
+      });
+      categoryMap.set(key, id);
+      results.categoriesCreated++;
+    }
+  }
+
+  for (const item of items) {
+    const catKey = item.categoryName.toLowerCase();
+    const categoryId = categoryMap.get(catKey);
+    if (!categoryId) {
+      results.errors.push(`Category "${item.categoryName}" not found for item "${item.name}"`);
+      continue;
+    }
+    await db.insert(schema.menuItems).values({
+      id: uuid(),
+      tenantId,
+      categoryId,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      available: item.available,
+      sortOrder: item.sortOrder,
+      imageUrl: item.imageUrl,
+    });
+    results.itemsCreated++;
+  }
+
+  logger.info({ tenantId, results }, 'Menu import completed');
+  return c.json(results, 201);
 });
 
 // Batch reorder items

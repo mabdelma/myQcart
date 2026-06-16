@@ -5,6 +5,7 @@ import {
   ShieldCheck, Store, Activity,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { homePathForRole } from '../../lib/roleRoutes';
 
@@ -17,6 +18,7 @@ const panelPoints = [
 export function SignIn() {
   const navigate = useNavigate();
   const { login, state } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -76,7 +78,7 @@ export function SignIn() {
           </Link>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
+            <h2 className="text-3xl font-bold text-gray-900">{t('auth.signin')}</h2>
             <p className="mt-2 text-sm text-gray-500">
               Super admins, restaurant admins, and staff all sign in here.
             </p>
@@ -90,7 +92,7 @@ export function SignIn() {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">{t('auth.email')}</label>
               <div className="relative mt-1.5">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden />
                 <input
@@ -104,8 +106,8 @@ export function SignIn() {
 
             <div>
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                <Link to="/contact" className="text-xs font-medium text-[#8B4513] hover:text-[#5C4033]">Trouble signing in?</Link>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('auth.password')}</label>
+                <Link to="/forgot-password" className="text-xs font-medium text-[#8B4513] hover:text-[#5C4033]">{t('auth.troubleSigningIn')}</Link>
               </div>
               <div className="relative mt-1.5">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden />
@@ -129,15 +131,15 @@ export function SignIn() {
               type="submit" disabled={state.loading}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#8B4513] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#5C4033] focus:outline-none focus:ring-2 focus:ring-[#8B4513] focus:ring-offset-2 disabled:opacity-50"
             >
-              {state.loading ? <LoadingSpinner /> : <>Sign in <ArrowRight className="h-4 w-4" /></>}
+              {state.loading ? <LoadingSpinner /> : <>{t('auth.signin')} <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
 
           <div className="mt-8 flex items-center justify-between text-sm">
             <Link to="/" className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700">
-              <ArrowLeft className="h-4 w-4" /> Back to site
+              <ArrowLeft className="h-4 w-4" /> {t('common.back')}
             </Link>
-            <Link to="/demo" className="font-medium text-[#8B4513] hover:text-[#5C4033]">Get a demo</Link>
+            <Link to="/demo" className="font-medium text-[#8B4513] hover:text-[#5C4033]">{t('cta.requestDemo')}</Link>
           </div>
         </div>
       </div>

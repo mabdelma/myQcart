@@ -194,4 +194,159 @@ analytics.get('/:slug/analytics/financial', authMiddleware, requireRole('admin',
   });
 });
 
+analytics.get('/:slug/analytics/hourly-traffic', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+
+  const hourly = await db
+    .select({
+      hour: sql`EXTRACT(HOUR FROM ${schema.orders.createdAt}::timestamp)::int`,
+      orderCount: sql`COUNT(*)`,
+      revenue: sql`COALESCE(SUM(${schema.orders.total}), 0)`,
+    })
+    .from(schema.orders)
+    .where(
+      and(
+        eq(schema.orders.tenantId, tenantId),
+        eq(schema.orders.paymentStatus, 'paid'),
+      )
+    )
+    .groupBy(sql`EXTRACT(HOUR FROM ${schema.orders.createdAt}::timestamp)`)
+    .orderBy(sql`EXTRACT(HOUR FROM ${schema.orders.createdAt}::timestamp)`);
+
+  return c.json({ data: hourly });
+});
+
+analytics.get('/:slug/analytics/category-performance', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+
+  const data = await db
+    .select({
+      categoryId: schema.menuCategories.id,
+      categoryName: schema.menuCategories.name,
+      totalSold: sql`COALESCE(SUM(${schema.orderItems.quantity}), 0)`,
+      totalRevenue: sql`COALESCE(SUM(${schema.orderItems.unitPrice} * ${schema.orderItems.quantity}), 0)`,
+    })
+    .from(schema.menuCategories)
+    .leftJoin(schema.menuItems, eq(schema.menuCategories.id, schema.menuItems.categoryId))
+    .leftJoin(schema.orderItems, eq(schema.menuItems.id, schema.orderItems.menuItemId))
+    .leftJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+    .where(
+      and(
+        eq(schema.menuCategories.tenantId, tenantId),
+        eq(schema.orders.paymentStatus, 'paid'),
+      )
+    )
+    .groupBy(schema.menuCategories.id, schema.menuCategories.name)
+    .orderBy(desc(sql`COALESCE(SUM(${schema.orderItems.unitPrice} * ${schema.orderItems.quantity}), 0)`));
+
+  return c.json({ data });
+});
+
+analytics.get('/:slug/analytics/peak-hours', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+
+  const dayHour = await db
+    .select({
+      dayOfWeek: sql`EXTRACT(DOW FROM ${schema.orders.createdAt}::timestamp)::int`,
+      hour: sql`EXTRACT(HOUR FROM ${schema.orders.createdAt}::timestamp)::int`,
+      orderCount: sql`COUNT(*)`,
+    })
+    .from(schema.orders)
+    .where(
+      and(
+        eq(schema.orders.tenantId, tenantId),
+        eq(schema.orders.paymentStatus, 'paid'),
+      )
+    )
+    .groupBy(
+      sql`EXTRACT(DOW FROM ${schema.orders.createdAt}::timestamp)`,
+      sql`EXTRACT(HOUR FROM ${schema.orders.createdAt}::timestamp)`,
+    )
+    .orderBy(
+      sql`EXTRACT(DOW FROM ${schema.orders.createdAt}::timestamp)`,
+      sql`EXTRACT(HOUR FROM ${schema.orders.createdAt}::timestamp)`,
+    );
+
+  return c.json({ data: dayHour });
+});
+
+analytics.get('/:slug/analytics/item-pairings', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+
+  const items = await db
+    .select({
+      id: schema.orderItems.menuItemId,
+      name: schema.orderItems.name,
+    })
+    .from(schema.orderItems)
+    .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+    .where(
+      and(
+        eq(schema.orders.tenantId, tenantId),
+        eq(schema.orders.paymentStatus, 'paid'),
+      )
+    )
+    .groupBy(schema.orderItems.menuItemId, schema.orderItems.name)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(20);
+
+  return c.json({ data: items });
+});
+
+analytics.get('/:slug/analytics/recommendations', async (c) => {
+  const tenantId = c.get('tenantId');
+  const { menuItemId } = c.req.query();
+
+  const items = await db
+    .select({
+      id: schema.menuItems.id,
+      name: schema.menuItems.name,
+      price: schema.menuItems.price,
+      orderCount: sql`COUNT(DISTINCT ${schema.orders.id})`,
+    })
+    .from(schema.menuItems)
+    .innerJoin(schema.orderItems, eq(schema.menuItems.id, schema.orderItems.menuItemId))
+    .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+    .where(
+      and(
+        eq(schema.menuItems.tenantId, tenantId),
+        eq(schema.menuItems.available, true),
+        eq(schema.orders.paymentStatus, 'paid'),
+        menuItemId ? sql`${schema.menuItems.id} != ${menuItemId}` : sql`1=1`,
+      )
+    )
+    .groupBy(schema.menuItems.id, schema.menuItems.name, schema.menuItems.price)
+    .orderBy(desc(sql`COUNT(DISTINCT ${schema.orders.id})`))
+    .limit(6);
+
+  return c.json({ data: items });
+});
+
+analytics.get('/:slug/analytics/trending', async (c) => {
+  const tenantId = c.get('tenantId');
+
+  const items = await db
+    .select({
+      id: schema.menuItems.id,
+      name: schema.menuItems.name,
+      price: schema.menuItems.price,
+      recentOrders: sql`COUNT(*)`,
+    })
+    .from(schema.menuItems)
+    .innerJoin(schema.orderItems, eq(schema.menuItems.id, schema.orderItems.menuItemId))
+    .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+    .where(
+      and(
+        eq(schema.menuItems.tenantId, tenantId),
+        eq(schema.menuItems.available, true),
+        sql`${schema.orders.createdAt}::timestamp > NOW() - INTERVAL '7 days'`,
+      )
+    )
+    .groupBy(schema.menuItems.id, schema.menuItems.name, schema.menuItems.price)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(5);
+
+  return c.json({ data: items });
+});
+
 export default analytics;

@@ -3,6 +3,7 @@ import { User, DollarSign, LogOut, Store, Settings, Clock } from 'lucide-react';
 import { NotificationsBell } from '../ui/NotificationsBell';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface CashierHeaderProps {
   activeView: 'pos' | 'payments' | 'history';
@@ -11,6 +12,7 @@ interface CashierHeaderProps {
 }
 
 export function CashierHeader({ activeView, onViewChange, onProfileClick }: CashierHeaderProps) {
+  const { t } = useI18n();
   const { state, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-white">Cashier Panel</h1>
+            <h1 className="text-2xl font-bold text-white">{t('staff.cashierPanel')}</h1>
             <nav className="ml-6 flex space-x-2">
               <button
                 onClick={() => onViewChange('pos')}
@@ -36,7 +38,7 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
                 }`}
               >
                 <Store className="w-5 h-5 mr-2" />
-                Point of Sale
+                {t('staff.pos')}
               </button>
               <button
                 onClick={() => onViewChange('payments')}
@@ -47,7 +49,7 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
                 }`}
               >
                 <DollarSign className="w-5 h-5 mr-2" />
-                Payments
+                {t('staff.payments')}
               </button>
               <button
                 onClick={() => onViewChange('history')}
@@ -58,7 +60,7 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
                 }`}
               >
                 <Clock className="w-5 h-5 mr-2" />
-                History
+                {t('staff.history')}
               </button>
             </nav>
           </div>
@@ -68,7 +70,7 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-3 focus:outline-none"
+                className="flex items-center space-x-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5DEB3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#5C4033]"
               >
                 <span className="text-[#F5DEB3]">{state.user?.name}</span>
                 <div className="w-10 h-10 rounded-full bg-[#8B4513] flex items-center justify-center overflow-hidden">
@@ -76,6 +78,9 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
                     <img
                       src={state.user.profileImage}
                       alt={state.user.name}
+                      width="40"
+                      height="40"
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -93,14 +98,14 @@ export function CashierHeader({ activeView, onViewChange, onProfileClick }: Cash
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Profile Settings
+                    {t('staff.profileSettings')}
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
+                    {t('staff.signOut')}
                   </button>
                 </div>
               )}

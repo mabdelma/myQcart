@@ -11,8 +11,16 @@ COPY src/ ./src/
 # the client uses the relative "/api" path (same-origin behind Caddy).
 ARG VITE_STRIPE_KEY=""
 ARG VITE_API_URL=""
+ARG VITE_SENTRY_DSN=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ARG SENTRY_AUTH_TOKEN=""
 ENV VITE_STRIPE_KEY=$VITE_STRIPE_KEY
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+ENV SENTRY_ORG=$SENTRY_ORG
+ENV SENTRY_PROJECT=$SENTRY_PROJECT
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
 RUN npm run build
 
 FROM nginx:1.27-alpine AS runner
@@ -58,7 +66,10 @@ server {
         try_files $uri =404;
     }
 
+    # CSP on the SPA HTML page — the API also sets it on /api/ as defence-in-depth.
+    # Not at server level to avoid duplicating the API's own CSP on proxied responses.
     location / {
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com; base-uri 'self'; form-action 'self'";
         try_files $uri $uri/ /index.html;
     }
 }

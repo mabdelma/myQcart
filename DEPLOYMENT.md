@@ -20,6 +20,7 @@ Internet ──HTTPS──▶ Caddy (qarrito stack, :443)
                       │ (qcart internal network)
                       ▼
                    api:3001 ──▶ postgres:5432
+                               redis:6379
 ```
 
 ## Files
@@ -47,7 +48,8 @@ Internet ──HTTPS──▶ Caddy (qarrito stack, :443)
    git clone <qcart-repo> qcart && cd qcart
    cp .env.prod.example .env.prod
    # edit .env.prod: strong POSTGRES_PASSWORD, JWT_SECRET (openssl rand -hex 32),
-   # STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET (sk_live/whsec), VITE_STRIPE_KEY (pk_live)
+   # STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET (sk_live/whsec), VITE_STRIPE_KEY (pk_live),
+   # SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD, REDIS_URL=redis://redis:6379
    ```
 
 4. **Caddy block** — already added to qarrito's `infrastructure/caddy/Caddyfile`
@@ -55,6 +57,18 @@ Internet ──HTTPS──▶ Caddy (qarrito stack, :443)
    that change, paste `infrastructure/caddy/qcart.Caddyfile` into it.
 
 ## Deploy / redeploy
+
+### Automatic (CI/CD)
+
+Push to `main` on GitHub → CI runs → Deploy workflow:
+
+1. Builds API + frontend images on GitHub Actions
+2. Pushes to `ghcr.io/anomalyco/qcart/api:sha` and `ghcr.io/anomalyco/qcart/frontend:sha`
+3. SSHes into the VPS, updates image tags in `docker-compose.vps.yml`, pulls, runs migrations, restarts
+
+Full pipeline: `git push origin main` → wait for CI → deploy runs automatically.
+
+### Manual (from the VPS)
 
 ```bash
 ./scripts/deploy-vps.sh
@@ -68,7 +82,7 @@ cd /path/to/qarrito
 docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
 ```
 
-Equivalent manual deploy:
+Equivalent manual deploy with local build:
 ```bash
 docker compose --env-file .env.prod \
   -f docker-compose.yml -f docker-compose.vps.yml up -d --build
@@ -84,8 +98,12 @@ and set the resulting signing secret as `STRIPE_WEBHOOK_SECRET` in `.env.prod`.
 
 ## Notes / gotchas
 
+- **Redis is required.** The API fails at startup if `REDIS_URL` is missing — it
+  powers SSE pub/sub for cross-instance order notifications. Both the base
+  `docker-compose.yml` and the VPS overlay include a `redis` service.
 - **No published ports.** The overlay uses `ports: !reset []` so the base file's
-  `80/3001/5434` don't leak — only Caddy faces the internet. Postgres is private.
+  `80/3001/5434` don't leak — only Caddy faces the internet. Postgres and Redis
+  are private to the internal network.
 - **`VITE_STRIPE_KEY` is build-time.** Changing it requires `--build` (the deploy
   script always rebuilds). The publishable key is safe to expose; never put the
   secret key in `VITE_*`.

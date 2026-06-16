@@ -2,12 +2,12 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { getDB } from '../../lib/db';
-import type { MenuItem } from '../../lib/db/schema';
+import { menuApi } from '../../lib/api';
+import type { MenuItem } from '../../lib/api/types';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function MenuItemDetail() {
-  const { tableId, itemId } = useParams();
+  const { slug, tableId, itemId } = useParams();
   const navigate = useNavigate();
   const { dispatch } = useCart();
   const [item, setItem] = React.useState<MenuItem | null>(null);
@@ -17,13 +17,13 @@ export function MenuItemDetail() {
 
   React.useEffect(() => {
     loadItem();
-  }, [itemId, loadItem]);
+  }, [itemId]);
 
   async function loadItem() {
     if (!itemId) return;
     try {
-      const db = await getDB();
-      const menuItem = await db.get('menu_items', itemId);
+      const data = await menuApi.getFullMenu(slug || '');
+      const menuItem = data.items.find(i => i.id === itemId) || null;
       setItem(menuItem);
     } catch (error) {
       console.error('Failed to load menu item:', error);
@@ -71,10 +71,13 @@ export function MenuItemDetail() {
           </button>
           
           <div className="h-96 w-full overflow-hidden">
-            {item.image ? (
+            {item.imageUrl ? (
               <img
-                src={item.image}
+                src={item.imageUrl}
                 alt={item.name}
+                width="640"
+                height="320"
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             ) : (

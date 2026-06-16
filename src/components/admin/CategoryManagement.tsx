@@ -1,53 +1,77 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { PlusCircle, Edit2, Trash2, MoveUp, MoveDown } from 'lucide-react';
-import { getDB } from '../../lib/db';
-import type { MenuCategory } from '../../lib/db/schema';
+import { menuApi } from '../../lib/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
+import type { MenuCategory } from '../../lib/api/types';
 
 export function CategoryManagement() {
+  const { t } = useI18n();
+  const { state: { tenant } } = useAuth();
+  const slug = tenant?.slug;
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
 
   useEffect(() => {
-    loadCategories();
-  }, []);
+    if (slug) loadCategories();
+  }, [slug]);
 
   async function loadCategories() {
-    const db = await getDB();
-    const allCategories = await db.getAll('menu_categories');
-    setCategories(allCategories.sort((a, b) => a.order - b.order));
+    if (!slug) return;
+    const data = await menuApi.getFullMenu(slug);
+    setCategories(data.categories.sort((a, b) => a.sortOrder - b.sortOrder));
   }
 
   async function saveCategory(category: MenuCategory) {
-    const db = await getDB();
-    await db.put('menu_categories', category);
+    if (!slug) return;
+    const isNew = !categories.find(c => c.id === category.id);
+    if (isNew) {
+      await menuApi.createCategory(slug, {
+        name: category.name,
+        type: category.type,
+        parentId: category.parentId,
+        sortOrder: category.sortOrder,
+      });
+    } else {
+      await menuApi.updateCategory(slug, category.id, {
+        name: category.name,
+        type: category.type,
+        parentId: category.parentId,
+        sortOrder: category.sortOrder,
+      });
+    }
     setEditingCategory(null);
     loadCategories();
   }
 
   async function deleteCategory(id: string) {
-    const db = await getDB();
-    await db.delete('menu_categories', id);
+    if (!slug) return;
+    await menuApi.deleteCategory(slug, id);
     loadCategories();
   }
 
   async function moveCategory(id: string, direction: 'up' | 'down') {
+    if (!slug) return;
     const currentIndex = categories.findIndex(c => c.id === id);
     if (currentIndex === -1) return;
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     if (newIndex < 0 || newIndex >= categories.length) return;
 
-    const db = await getDB();
-    const currentCategory = categories[currentIndex];
-    const swapCategory = categories[newIndex];
+    const updated = [...categories];
+    const temp = updated[currentIndex].sortOrder;
+    updated[currentIndex] = { ...updated[currentIndex], sortOrder: updated[newIndex].sortOrder };
+    updated[newIndex] = { ...updated[newIndex], sortOrder: temp };
+    setCategories(updated);
 
-    const currentOrder = currentCategory.order;
-    currentCategory.order = swapCategory.order;
-    swapCategory.order = currentOrder;
-
-    await db.put('menu_categories', currentCategory);
-    await db.put('menu_categories', swapCategory);
-    loadCategories();
+    try {
+      await menuApi.reorderCategories(slug, [
+        { id: updated[currentIndex].id, sortOrder: updated[currentIndex].sortOrder },
+        { id: updated[newIndex].id, sortOrder: updated[newIndex].sortOrder },
+      ]);
+    } catch {
+      loadCategories();
+    }
   }
 
   const mainCategories = categories.filter(c => c.type === 'main');
@@ -56,18 +80,19 @@ export function CategoryManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Category Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('menu.categories')}</h2>
         <button
           onClick={() => setEditingCategory({
             id: crypto.randomUUID(),
             name: '',
             type: 'main',
-            order: categories.length
+            tenantId: '',
+            sortOrder: categories.length
           })}
           className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
         >
           <PlusCircle className="w-5 h-5 mr-2" />
-          Add Category
+          {t('common.create')}
         </button>
       </div>
 
@@ -278,3 +303,5 @@ export function CategoryManagement() {
     </div>
   );
 }
+
+

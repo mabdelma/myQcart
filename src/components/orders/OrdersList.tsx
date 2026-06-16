@@ -1,4 +1,4 @@
-import type { Order, MenuItem } from '../../lib/db/schema';
+import type { Order, MenuItem } from '../../lib/api/types';
 import { OrderEditDialog } from './OrderEditDialog';
 
 type OrderWithDetails = Order & {

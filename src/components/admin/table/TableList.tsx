@@ -1,14 +1,14 @@
 import React from 'react';
 import { Users, Clock, QrCode, Settings, AlertTriangle, Trash2 } from 'lucide-react';
-import type { Table, Order } from '../../../lib/db/schema';
+import type { TableData, Order } from '../../../lib/api/types';
 
 interface TableListProps {
-  tables: Table[];
+  tables: TableData[];
   activeOrders: Record<string, Order>;
-  onViewQR: (table: Table) => void;
-  onEditTable: (table: Table) => void;
-  onDeleteTable: (table: Table) => void;
-  onStatusChange: (tableId: string, status: Table['status']) => void;
+  onViewQR: (table: TableData) => void;
+  onEditTable: (table: TableData) => void;
+  onDeleteTable: (table: TableData) => void;
+  onStatusChange: (tableId: string, status: TableData['status']) => void;
 }
 
 export function TableList({
@@ -19,7 +19,7 @@ export function TableList({
   onDeleteTable,
   onStatusChange
 }: TableListProps) {
-  function getTableOccupationTime(table: Table): number {
+  function getTableOccupationTime(table: TableData): number {
     if (table.status !== 'occupied') return 0;
     const order = activeOrders[table.id];
     if (!order) return 0;
@@ -63,7 +63,7 @@ export function TableList({
                 
                 <select
                   value={table.status}
-                  onChange={(e) => onStatusChange(table.id, e.target.value as Table['status'])}
+                  onChange={(e) => onStatusChange(table.id, e.target.value as TableData['status'])}
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
                     table.status === 'occupied'
                       ? 'bg-blue-100 text-blue-800'
