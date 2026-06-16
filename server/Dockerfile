@@ -14,6 +14,8 @@ RUN apk add --no-cache dumb-init
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/drizzle ./drizzle
+# drizzle.config.ts is required by the migrate service (drizzle-kit migrate --config).
+COPY --from=builder /app/drizzle.config.ts ./
 COPY --from=builder /app/package.json ./
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
