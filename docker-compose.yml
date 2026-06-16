@@ -35,7 +35,7 @@ services:
     environment:
       DATABASE_URL: postgresql://qcart:qcart@postgres:5432/qcart
     command: >
-      sh -c "npx drizzle-kit migrate --config=drizzle.config.ts 2>&1 && node dist/db/seed.js"
+      sh -c "npx drizzle-kit push --config=drizzle.config.ts --force 2>&1 && node dist/db/seed.js"
     restart: no
 
   api:
