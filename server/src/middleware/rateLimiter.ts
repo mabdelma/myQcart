@@ -1,39 +1,19 @@
-import { rateLimiter, MemoryStore } from 'hono-rate-limiter';
+import { rateLimiter } from 'hono-rate-limiter';
 import type { Context } from 'hono';
-import { createRequire } from 'module';
 
-const _require = createRequire(import.meta.url);
-let RedisStore: unknown = null;
-try {
-  RedisStore = _require('hono-rate-limiter').RedisStore;
-} catch {
-  // Redis store not available — use MemoryStore fallback
-}
-
-const redisUrl = process.env.REDIS_URL;
-
+// NOTE: In-memory rate limiting. hono-rate-limiter's RedisStore expects a
+// node-redis client (it calls client.scriptLoad); the ioredis client previously
+// wired here was incompatible and threw "this.client.scriptLoad is not a
+// function" on every rate-limited request — taking down /api/auth (login) with
+// 500s. MemoryStore is correct for a single API instance. To share limits across
+// instances later, pass a node-redis (`redis` package) client to RedisStore.
 function keyGenerator(c: Context): string {
   const forwarded = c.req.header('x-forwarded-for');
   return forwarded?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'unknown';
 }
 
-let store: unknown;
-if (redisUrl && RedisStore) {
-  try {
-    const IORedis = _require('ioredis');
-    const redis = new IORedis(redisUrl, {
-      maxRetriesPerRequest: 1,
-      lazyConnect: true,
-      enableOfflineQueue: false,
-    });
-    store = new (RedisStore as new (client: unknown) => unknown)(redis);
-  } catch {
-    store = new MemoryStore();
-  }
-} else {
-  store = new MemoryStore();
-}
-
+// Each limiter gets its own default MemoryStore (omit `store`), so the different
+// windows/limits don't share counters.
 export const generalLimiter = rateLimiter({
   windowMs: 60 * 1000,
   limit: 100,
@@ -41,7 +21,6 @@ export const generalLimiter = rateLimiter({
   keyGenerator,
   message: { error: 'Too many requests, please try again later' },
   statusCode: 429,
-  store: store as never,
 });
 
 export const authLimiter = rateLimiter({
@@ -51,7 +30,6 @@ export const authLimiter = rateLimiter({
   keyGenerator,
   message: { error: 'Too many login attempts, please try again later' },
   statusCode: 429,
-  store: store as never,
 });
 
 export const publicLimiter = rateLimiter({
@@ -61,7 +39,6 @@ export const publicLimiter = rateLimiter({
   keyGenerator,
   message: { error: 'Too many requests, please try again later' },
   statusCode: 429,
-  store: store as never,
 });
 
 export const paymentLimiter = rateLimiter({
@@ -71,7 +48,6 @@ export const paymentLimiter = rateLimiter({
   keyGenerator,
   message: { error: 'Too many payment requests, please try again later' },
   statusCode: 429,
-  store: store as never,
 });
 
 export const pointsLimiter = rateLimiter({
@@ -81,5 +57,4 @@ export const pointsLimiter = rateLimiter({
   keyGenerator,
   message: { error: 'Too many requests, please try again later' },
   statusCode: 429,
-  store: store as never,
 });
