@@ -55,7 +55,8 @@ export const users = pgTable('users', {
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id),
-  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  // Nullable: a platform-level super_admin session has no tenant.
+  tenantId: text('tenant_id').references(() => tenants.id),
   expiresAt: text('expires_at').notNull(),
   createdAt: text('created_at').notNull().default(sql`now()`),
 });
