@@ -38,6 +38,9 @@ export function Footer() {
             <Link to="/signin" className="text-sm text-gray-400 hover:text-white transition-colors">Login</Link>
           </div>
         </div>
+        <div className="border-t border-gray-800 mt-6 pt-6 text-center">
+          <p className="text-sm text-gray-500">Designed and owned by Grand Minds Technology</p>
+        </div>
       </div>
     </footer>
   );
