@@ -1,6 +1,14 @@
 import Fastify from "fastify";
 import pg from "pg";
+import { randomUUID } from "node:crypto";
 import { createLogger, ok, err, verifyToken, bearer } from "@qlisted/shared";
+
+interface OrderItemInput { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string | null; modifiers?: string | null }
+interface CreateOrderInput {
+  tableId?: string; customerName?: string; customerPhone?: string;
+  orderType?: "dine_in" | "takeout" | "delivery"; deliveryAddress?: string; deliveryFee?: number;
+  estimatedPickupTime?: string; estimatedDeliveryTime?: string; items: OrderItemInput[]; notes?: string;
+}
 
 /**
  * ORDERS service — owns carts, orders, kitchen/KDS status. The public
@@ -32,6 +40,60 @@ app.get<{ Params: { slug: string; orderId: string } }>("/compat/track/:slug/:ord
   if (!o.rows[0]) return reply.code(404).send({ error: "Order not found" });
   const items = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [req.params.orderId]);
   return reply.send({ ...toCamel(o.rows[0]), items: items.rows.map(toCamel) });
+});
+
+// Order placement — ported from createOrder (alongside; NOT cut over). Mirrors
+// totals/tax/service-charge + insert. NOTE before cutover: also emit the SSE
+// order_created event (Redis) + KOT print, which still live on the monolith.
+app.post<{ Params: { slug: string }; Body: CreateOrderInput }>("/compat/orders/:slug", async (req, reply) => {
+  const t = await pool.query("SELECT id, tax_rate, service_charge FROM tenants WHERE slug = $1 AND is_active = true LIMIT 1", [req.params.slug]);
+  const tenant = t.rows[0];
+  if (!tenant) return reply.code(404).send(err("Tenant not found"));
+
+  const input = req.body || ({} as CreateOrderInput);
+  const orderType = input.orderType || "dine_in";
+  if (!input.items?.length) return reply.code(400).send(err("items required"));
+  if (orderType === "dine_in") {
+    if (!input.tableId) return reply.code(400).send({ error: "Table ID is required for dine-in orders" });
+    const tbl = await pool.query("SELECT id FROM tables WHERE id = $1 AND tenant_id = $2 LIMIT 1", [input.tableId, tenant.id]);
+    if (!tbl.rows[0]) return reply.code(404).send({ error: "Table not found" });
+  }
+
+  const orderId = randomUUID();
+  const subtotal = input.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  const itemCount = input.items.reduce((s, i) => s + i.quantity, 0);
+  const taxRate = tenant.tax_rate || 0;
+  const serviceChargeRate = orderType === "dine_in" ? tenant.service_charge || 0 : 0;
+  const deliveryFee = input.deliveryFee || 0;
+  const tax = subtotal * taxRate;
+  const serviceCharge = subtotal * serviceChargeRate;
+  const total = subtotal + tax + serviceCharge + deliveryFee;
+
+  await pool.query(
+    `INSERT INTO orders (id, tenant_id, table_id, customer_name, customer_phone, order_type, delivery_address,
+       delivery_fee, estimated_pickup_time, estimated_delivery_time, status, item_count, subtotal,
+       discount_amount, tax, service_charge, total, notes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending',$11,$12,0,$13,$14,$15,$16)`,
+    [orderId, tenant.id, input.tableId || null, input.customerName || null, input.customerPhone || null, orderType,
+     input.deliveryAddress || null, deliveryFee, input.estimatedPickupTime || null, input.estimatedDeliveryTime || null,
+     itemCount, subtotal, tax, serviceCharge, total, input.notes || null],
+  );
+
+  const orderItems = input.items.map((i) => ({
+    id: randomUUID(), orderId, menuItemId: i.menuItemId, name: i.name,
+    quantity: i.quantity, unitPrice: i.unitPrice, notes: i.notes ?? null, modifiers: i.modifiers ?? null,
+  }));
+  for (const it of orderItems) {
+    await pool.query(
+      "INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, notes, modifiers) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+      [it.id, it.orderId, it.menuItemId, it.name, it.quantity, it.unitPrice, it.notes, it.modifiers],
+    );
+  }
+  if (orderType === "dine_in" && input.tableId) {
+    await pool.query("UPDATE tables SET status = 'occupied' WHERE id = $1", [input.tableId]);
+  }
+
+  return reply.code(201).send({ id: orderId, items: orderItems, subtotal, tax, serviceCharge, deliveryFee, total, orderType });
 });
 
 // Guest places an order (mirror monolith POST /api/r/:slug/orders).
