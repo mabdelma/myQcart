@@ -30,6 +30,8 @@ export const aiApi = {
     api.post<{ reply: string }>(`/r/${slug}/ai/admin`, { messages }),
   customerChat: (slug: string, messages: { role: 'user' | 'assistant'; content: string }[]) =>
     api.post<{ reply: string }>(`/r/${slug}/ai/customer`, { messages }, { skipAuth: true }),
+  voiceSession: (slug: string) =>
+    api.post<{ clientSecret: string; expiresAt?: number; model: string }>(`/r/${slug}/ai/voice-session`, {}, { skipAuth: true }),
 };
 
 // Reports (P&L)

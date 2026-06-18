@@ -146,3 +146,48 @@ export async function customerChat(tenantId: string, tenantName: string, currenc
   const resp = await client.chat.completions.create({ model: MODEL, messages, max_tokens: 600 });
   return { data: { reply: (resp.choices[0]?.message?.content || '').trim() || '(no response)' }, status: 200 as const };
 }
+
+async function buildMenuText(tenantId: string, currency: string): Promise<string> {
+  const cats = await db.select().from(schema.menuCategories).where(eq(schema.menuCategories.tenantId, tenantId));
+  const items = await db.select().from(schema.menuItems).where(eq(schema.menuItems.tenantId, tenantId));
+  const catName = new Map(cats.map((c) => [c.id, c.name]));
+  return items
+    .filter((i) => i.available)
+    .map((i) => `- ${i.name} (${catName.get(i.categoryId) || 'Other'}) — ${currency} ${Number(i.price).toFixed(2)}${i.description ? `: ${i.description}` : ''}`)
+    .join('\n');
+}
+
+// ── Voice ordering: mint a short-lived OpenAI Realtime session token ─────────
+// The browser connects to OpenAI's Realtime API over WebRTC using this
+// ephemeral token, so the real OPENAI_API_KEY never leaves the server.
+const REALTIME_MODEL = process.env.OPENAI_REALTIME_MODEL || 'gpt-realtime';
+
+export async function createRealtimeSession(tenantId: string, tenantName: string, currency: string) {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return { error: 'AI assistant not configured', status: 501 as const };
+
+  const menuText = await buildMenuText(tenantId, currency);
+  const instructions = `You are a friendly spoken ordering assistant for the restaurant "${tenantName}". `
+    + `Help the guest choose from the menu below: answer questions, suggest dishes, and note likely dietary considerations. `
+    + `Keep spoken replies short and natural. Only mention items that appear on this menu. `
+    + `You cannot place orders or take payment — tell the guest to use the on-screen menu to add items and check out.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/realtime/sessions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: REALTIME_MODEL, voice: 'alloy', modalities: ['audio', 'text'], instructions }),
+    });
+    if (!res.ok) {
+      logger.error({ status: res.status, body: await res.text() }, 'realtime session mint failed');
+      return { error: 'Could not start voice session', status: 502 as const };
+    }
+    const session = await res.json() as { client_secret?: { value?: string; expires_at?: number } };
+    const clientSecret = session.client_secret?.value;
+    if (!clientSecret) return { error: 'Could not start voice session', status: 502 as const };
+    return { data: { clientSecret, expiresAt: session.client_secret?.expires_at, model: REALTIME_MODEL }, status: 200 as const };
+  } catch (e) {
+    logger.error(e, 'realtime session error');
+    return { error: 'Could not start voice session', status: 502 as const };
+  }
+}

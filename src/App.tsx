@@ -33,6 +33,7 @@ const CartPage = lazy(() => import('./features/cart/CartPage').then(m => ({ defa
 const OrdersPage = lazy(() => import('./features/orders/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const CheckoutPage = lazy(() => import('./features/checkout/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const BillPage = lazy(() => import('./features/checkout/BillPage').then(m => ({ default: m.BillPage })));
+const PaymentReturn = lazy(() => import('./features/checkout/PaymentReturn').then(m => ({ default: m.PaymentReturn })));
 const PaymentLinkPage = lazy(() => import('./features/payment-links/PaymentLinkPage').then(m => ({ default: m.PaymentLinkPage })));
 const OrderTracking = lazy(() => import('./features/orders/OrderTracking').then(m => ({ default: m.OrderTracking })));
 
@@ -99,6 +100,7 @@ function App() {
             </ProtectedRoute>
             </RouteErrorBoundary>
           } />
+          <Route path="/payment/return" element={<RouteErrorBoundary name="payment-return"><PaymentReturn /></RouteErrorBoundary>} />
           <Route path="/" element={<RootRoute />} />
           <Route path="/pricing" element={<RouteErrorBoundary name="pricing"><PricingPage /></RouteErrorBoundary>} />
           <Route path="/features" element={<RouteErrorBoundary name="features"><FeaturesPage /></RouteErrorBoundary>} />

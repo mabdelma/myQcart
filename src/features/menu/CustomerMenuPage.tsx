@@ -1,11 +1,11 @@
 import { useState, useEffect, createContext, useReducer } from 'react';
-import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { menuApi, tableApi, orderApi, paymentApi } from '../../lib/api';
 import { useI18n } from '../../contexts/I18nContext';
 import type { MenuItem, MenuCategory, TableData, OrderWithItems } from '../../lib/api/types';
 import { StripePaymentForm } from './StripePaymentForm';
 import { CustomerAiWidget } from '../../components/ai/CustomerAiWidget';
+import { VoiceOrderWidget } from '../../components/ai/VoiceOrderWidget';
 
 // Lazy, memoized Stripe loader. App.tsx imports this module eagerly, so calling
 // loadStripe() at module scope would fire Stripe.js init on every page (incl. the
@@ -127,8 +127,6 @@ export function CustomerMenuPage() {
       console.error('Payment failed:', err);
     }
   }
-
-  const stripeOptions: StripeElementsOptions = {};
 
   const content = (
     <CartCtx.Provider value={{ state: cartState, dispatch }}>
@@ -260,15 +258,14 @@ export function CustomerMenuPage() {
                     <div className="space-y-2 mt-2">
                       {payingOrderId === order.id ? (
                         getStripe() ? (
-                          <Elements stripe={getStripe()!} options={stripeOptions}>
-                            <StripePaymentForm
-                              slug={slug}
-                              orderId={order.id}
-                              amount={order.total}
-                              onSuccess={() => setPayingOrderId(null)}
-                              onCancel={() => setPayingOrderId(null)}
-                            />
-                          </Elements>
+                          <StripePaymentForm
+                            stripePromise={getStripe()}
+                            slug={slug}
+                            orderId={order.id}
+                            amount={order.total}
+                            onSuccess={() => setPayingOrderId(null)}
+                            onCancel={() => setPayingOrderId(null)}
+                          />
                         ) : (
                           <p className="text-sm text-red-600">Stripe not configured</p>
                         )
@@ -303,6 +300,7 @@ export function CustomerMenuPage() {
         )}
       </div>
       {slug && <CustomerAiWidget slug={slug} />}
+      {slug && <VoiceOrderWidget slug={slug} />}
     </CartCtx.Provider>
   );
 

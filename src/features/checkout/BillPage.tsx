@@ -5,7 +5,6 @@ import { orderApi, paymentApi } from '../../lib/api';
 import { useI18n } from '../../contexts/I18nContext';
 import { useSSE } from '../../hooks/useSSE';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
 import { StripePaymentForm } from '../menu/StripePaymentForm';
 import { Receipt, Plus, Minus, Users, Check, ChevronDown, ChevronUp, X, AlertTriangle } from 'lucide-react';
 import { PromoCodeCheckout } from '../loyalty/PromoCodeCheckout';
@@ -487,15 +486,14 @@ export function BillPage() {
 
       {paidOrderId && paidOrderId !== 'all' && (
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <Elements stripe={getStripe()!}>
-            <StripePaymentForm
-              slug={slug}
-              orderId={paidOrderId}
-              amount={unpaidOrders.find((o) => o.id === paidOrderId)?.total || 0}
-              onSuccess={() => { handleStripeSuccess(); }}
-              onCancel={() => setPaidOrderId(null)}
-            />
-          </Elements>
+          <StripePaymentForm
+            stripePromise={getStripe()}
+            slug={slug}
+            orderId={paidOrderId}
+            amount={unpaidOrders.find((o) => o.id === paidOrderId)?.total || 0}
+            onSuccess={() => { handleStripeSuccess(); }}
+            onCancel={() => setPaidOrderId(null)}
+          />
         </div>
       )}
     </div>

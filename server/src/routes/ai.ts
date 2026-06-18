@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
-import { adminCopilot, customerChat, aiEnabled } from '../services/aiService.js';
+import { adminCopilot, customerChat, createRealtimeSession, aiEnabled } from '../services/aiService.js';
 
 const ai = new Hono();
 
@@ -31,6 +31,15 @@ ai.post('/:slug/ai/customer', resolveTenant, zValidator('json', chatSchema), asy
   const tenant = c.get('tenant');
   const { messages } = c.req.valid('json');
   const result = await customerChat(tenant.id, tenant.name, tenant.currency, messages);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data);
+});
+
+// Voice ordering — mint an ephemeral OpenAI Realtime token for the browser's
+// WebRTC connection (the real API key stays server-side).
+ai.post('/:slug/ai/voice-session', resolveTenant, async (c) => {
+  const tenant = c.get('tenant');
+  const result = await createRealtimeSession(tenant.id, tenant.name, tenant.currency);
   if ('error' in result) return c.json({ error: result.error }, result.status);
   return c.json(result.data);
 });
