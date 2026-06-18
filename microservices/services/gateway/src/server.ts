@@ -1,17 +1,23 @@
 import Fastify from "fastify";
+import replyFrom from "@fastify/reply-from";
 import { createLogger, ok, err } from "@qlisted/shared";
 
 /**
- * GATEWAY — the single public seam in front of the services. Routes a path
- * prefix to the matching upstream and forwards the request verbatim. This is
- * the strangler-fig boundary: paths not yet extracted can fall through to the
- * monolith (MONOLITH_URL) so cutover happens one prefix at a time.
+ * GATEWAY — the strangler-fig seam. Transparently proxies (streaming, raw body
+ * preserved) so it can safely carry SSE feeds and signature-verified webhooks:
+ * a path prefix → its service, else the monolith, with one rewrite for the live
+ * menu read. Built on @fastify/reply-from (pipes upstream responses + bodies).
  */
 const log = createLogger("gateway");
 const app = Fastify({ loggerInstance: log });
 const PORT = Number(process.env.PORT || 8080);
 
-// prefix → upstream base URL (container DNS on the edge network)
+app.register(replyFrom);
+// Forward request bodies verbatim (raw Buffer) — do NOT JSON-parse, or Stripe
+// webhook signatures (and multipart uploads) would break when re-serialized.
+app.addContentTypeParser("*", { parseAs: "buffer" }, (_req, body, done) => done(null, body));
+
+// prefix → upstream base URL
 const ROUTES: Record<string, string | undefined> = {
   "/api/auth": process.env.AUTH_URL,
   "/api/catalog": process.env.CATALOG_URL,
@@ -20,55 +26,27 @@ const ROUTES: Record<string, string | undefined> = {
   "/api/engagement": process.env.ENGAGEMENT_URL,
   "/api/notify": process.env.NOTIFICATIONS_URL,
 };
-// Anything not matched above falls through to the existing monolith.
 const MONOLITH_URL = process.env.MONOLITH_URL;
 
 app.get("/health", async () => ok({ service: "gateway", status: "up" }));
 
-// Matched service prefix → forward to that service with the prefix STRIPPED
-// (e.g. /api/catalog/v1/x → catalog /v1/x). No match → monolith, path unchanged.
-function resolve(path: string): { base?: string; strip: string } {
-  const hit = Object.keys(ROUTES).find((p) => path === p || path.startsWith(p + "/"));
-  if (hit) return { base: ROUTES[hit], strip: hit };
-  return { base: MONOLITH_URL, strip: "" };
+function target(method: string, url: string): { base?: string; path: string } {
+  const pathOnly = url.split("?")[0];
+  // Transparent cutover: monolith's GET /api/r/:slug/menu → catalog compat shim.
+  const menu = method === "GET" && /^\/api\/r\/([^/]+)\/menu$/.exec(pathOnly);
+  if (menu && ROUTES["/api/catalog"]) return { base: ROUTES["/api/catalog"], path: `/compat/menu/${menu[1]}` };
+  // Service prefix → strip prefix and forward to the service.
+  const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
+  if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };
+  // Otherwise fall through to the monolith, path unchanged.
+  return { base: MONOLITH_URL, path: url };
 }
 
-app.all("/*", async (req, reply) => {
-  const pathOnly = req.url.split("?")[0];
-  let base: string | undefined;
-  let forwardPath: string;
-
-  // Transparent cutover: the monolith's GET /api/r/:slug/menu is served by the
-  // catalog service (translated to its /compat/menu/:slug). Everything else
-  // resolves normally (service prefix or monolith fallthrough).
-  const menu = req.method === "GET" && /^\/api\/r\/([^/]+)\/menu$/.exec(pathOnly);
-  if (menu && ROUTES["/api/catalog"]) {
-    base = ROUTES["/api/catalog"];
-    forwardPath = `/compat/menu/${menu[1]}`;
-  } else {
-    const r = resolve(pathOnly);
-    base = r.base;
-    forwardPath = r.strip ? req.url.slice(r.strip.length) || "/" : req.url;
-  }
+app.all("/*", (req, reply) => {
+  const { base, path } = target(req.method, req.url);
   if (!base) return reply.code(502).send(err("no upstream configured for this path"));
-  try {
-    const target = base.replace(/\/$/, "") + forwardPath;
-    const headers: Record<string, string> = {};
-    for (const [k, v] of Object.entries(req.headers)) if (typeof v === "string") headers[k] = v;
-    const res = await fetch(target, {
-      method: req.method,
-      headers,
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : JSON.stringify(req.body ?? {}),
-    });
-    const text = await res.text();
-    reply.code(res.status);
-    const ct = res.headers.get("content-type");
-    if (ct) reply.header("content-type", ct);
-    return reply.send(text);
-  } catch (e) {
-    log.error(e);
-    return reply.code(502).send(err("upstream unreachable"));
-  }
+  // reply.from streams the upstream response (incl. SSE) and forwards the raw body.
+  return reply.from(base.replace(/\/$/, "") + path);
 });
 
 app.listen({ port: PORT, host: "0.0.0.0" }).then(() => log.info(`gateway on :${PORT}`));
