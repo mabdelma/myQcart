@@ -1,6 +1,12 @@
 import Fastify from "fastify";
 import pg from "pg";
+import Stripe from "stripe";
 import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
+
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY;
+  return key ? new Stripe(key, { apiVersion: "2025-02-24.acacia" }) : null;
+}
 
 /**
  * BILLING service — SaaS subscriptions + Stripe. The subscription READ is
@@ -59,6 +65,55 @@ app.get<{ Params: { tenantId: string } }>("/compat/subscription/:tenantId", asyn
     billingEnabled: !!priceIdFor(planId) && !!process.env.STRIPE_SECRET_KEY,
     usage: { users: Number(u.rows[0]?.c || 0), orders: Number(o.rows[0]?.c || 0) },
   });
+});
+
+// Subscription checkout — ported from createCheckoutSession (mirrors
+// POST /admin/subscriptions/:tenantId/checkout). Returns {url} or {error}.
+app.post<{ Params: { tenantId: string }; Body: { planId?: string } }>("/compat/subscription/:tenantId/checkout", async (req, reply) => {
+  const claims = verifyHs256(bearer(req.headers.authorization));
+  if (!claims) return reply.code(401).send({ error: "Authentication required" });
+  if (!["admin", "super_admin"].includes(String(claims.role))) return reply.code(403).send({ error: "Forbidden" });
+  const { tenantId } = req.params;
+  if (claims.role !== "super_admin" && claims.tenantId !== tenantId) return reply.code(403).send({ error: "Forbidden" });
+
+  const tr = await pool.query("SELECT id, email FROM tenants WHERE id = $1 LIMIT 1", [tenantId]);
+  const tenant = tr.rows[0];
+  if (!tenant) return reply.code(404).send({ error: "Tenant not found" });
+
+  const planId = String(req.body?.planId ?? "");
+  const stripe = getStripe();
+  if (!stripe) return reply.code(501).send({ error: "Billing not configured (no Stripe key)" });
+  const price = priceIdFor(planId);
+  if (!price) return reply.code(400).send({ error: `Plan "${planId}" has no Stripe price configured` });
+
+  const base = process.env.FRONTEND_URL || "http://localhost:5173";
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    line_items: [{ price, quantity: 1 }],
+    customer_email: tenant.email,
+    success_url: `${base}/admin/subscription?status=success`,
+    cancel_url: `${base}/admin/subscription?status=cancelled`,
+    metadata: { tenantId, planId },
+    subscription_data: { metadata: { tenantId, planId } },
+  });
+  return reply.send({ url: session.url });
+});
+
+// Subscription cancel — ported from cancelSubscription.
+app.post<{ Params: { tenantId: string } }>("/compat/subscription/:tenantId/cancel", async (req, reply) => {
+  const claims = verifyHs256(bearer(req.headers.authorization));
+  if (!claims) return reply.code(401).send({ error: "Authentication required" });
+  if (!["admin", "super_admin"].includes(String(claims.role))) return reply.code(403).send({ error: "Forbidden" });
+  const { tenantId } = req.params;
+  if (claims.role !== "super_admin" && claims.tenantId !== tenantId) return reply.code(403).send({ error: "Forbidden" });
+
+  const s = await pool.query("SELECT stripe_subscription_id FROM tenant_subscriptions WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT 1", [tenantId]);
+  const subId = s.rows[0]?.stripe_subscription_id;
+  if (!subId) return reply.code(400).send({ error: "No active subscription" });
+  const stripe = getStripe();
+  if (!stripe) return reply.code(501).send({ error: "Billing not configured" });
+  await stripe.subscriptions.update(subId, { cancel_at_period_end: true });
+  return reply.send({ success: true });
 });
 
 // Order payment intents (mirror monolith /api/r/:slug/payments).

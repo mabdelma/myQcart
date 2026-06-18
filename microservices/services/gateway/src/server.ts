@@ -44,6 +44,9 @@ function target(method: string, url: string): { base?: string; path: string } {
   // GET /api/admin/subscriptions/:tenantId → billing service compat shim.
   const sub = method === "GET" && /^\/api\/admin\/subscriptions\/([^/]+)$/.exec(pathOnly);
   if (sub && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/subscription/${sub[1]}` };
+  // POST /api/admin/subscriptions/:id/(checkout|cancel) → billing service.
+  const subw = method === "POST" && /^\/api\/admin\/subscriptions\/([^/]+)\/(checkout|cancel)$/.exec(pathOnly);
+  if (subw && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/subscription/${subw[1]}/${subw[2]}` };
   // POST /api/auth/login → auth service (issues monolith-compatible token + refresh).
   if (method === "POST" && pathOnly === "/api/auth/login" && ROUTES["/api/auth"]) return { base: ROUTES["/api/auth"], path: "/v1/auth/login" };
   // POST /api/r/:slug/orders → orders service order placement (exact path only).
