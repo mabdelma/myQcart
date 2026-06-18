@@ -38,6 +38,12 @@ function target(method: string, url: string): { base?: string; path: string } {
   // GET /api/r/:slug/orders/:id/track → orders service compat shim.
   const track = method === "GET" && /^\/api\/r\/([^/]+)\/orders\/([^/]+)\/track$/.exec(pathOnly);
   if (track && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/track/${track[1]}/${track[2]}` };
+  // GET /api/r/:slug/campaigns → engagement service compat shim.
+  const campaigns = method === "GET" && /^\/api\/r\/([^/]+)\/campaigns$/.exec(pathOnly);
+  if (campaigns && ROUTES["/api/engagement"]) return { base: ROUTES["/api/engagement"], path: `/compat/campaigns/${campaigns[1]}` };
+  // GET /api/admin/subscriptions/:tenantId → billing service compat shim.
+  const sub = method === "GET" && /^\/api\/admin\/subscriptions\/([^/]+)$/.exec(pathOnly);
+  if (sub && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/subscription/${sub[1]}` };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };
