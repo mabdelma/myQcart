@@ -30,7 +30,29 @@ if (smtpHost && smtpUser && smtpPass) {
 
 const MAIL_DIR = join(process.cwd(), 'maildump');
 
+// Delivery is owned by the notifications microservice when configured; the
+// monolith still renders the email and delegates only the SEND. Falls back to
+// the local transporter/maildump path if the service is unset or unreachable.
+const NOTIFICATIONS_URL = process.env.NOTIFICATIONS_URL;
+
 export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+  if (NOTIFICATIONS_URL) {
+    try {
+      const res = await fetch(`${NOTIFICATIONS_URL}/v1/notify/send`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ to, subject, html }),
+      });
+      if (res.ok) {
+        logger.info({ to, subject }, 'Email delegated to notifications service');
+        return;
+      }
+      logger.warn({ to, subject, status: res.status }, 'notifications service rejected; falling back locally');
+    } catch (error) {
+      logger.warn({ error, to, subject }, 'notifications service unreachable; falling back locally');
+    }
+  }
+
   if (transporter) {
     try {
       await transporter.sendMail({

@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import { createLogger, ok, err } from "@qlisted/shared";
 import type { EmailRequest } from "@qlisted/shared";
 import { renderEmail } from "./templates.js";
-import { sendEmail } from "./email.js";
+import { sendEmail, smtpConfigured } from "./email.js";
 
 /**
  * NOTIFICATIONS service — owns transactional email (and later SMS + web push).
@@ -13,8 +13,22 @@ const log = createLogger("notifications");
 const app = Fastify({ loggerInstance: log });
 const PORT = Number(process.env.PORT || 8080);
 
-app.get("/health", async () => ok({ service: "notifications", status: "up" }));
+app.get("/health", async () => ok({ service: "notifications", status: "up", smtp: smtpConfigured }));
 app.get("/ready", async () => ok({ ready: true }));
+
+// Raw delivery — the monolith renders the email and delegates SENDING here, so
+// this service is the single owner of delivery. { to, subject, html }.
+app.post("/v1/notify/send", async (req, reply) => {
+  const b = (req.body || {}) as { to?: string; subject?: string; html?: string };
+  if (!b.to || !b.subject || !b.html) return reply.code(400).send(err("to + subject + html required"));
+  try {
+    const sent = await sendEmail(b.to, b.subject, b.html);
+    return ok({ sent, skipped: !sent });
+  } catch (e) {
+    log.error(e);
+    return reply.code(502).send(err("email send failed"));
+  }
+});
 
 // Send a templated email. Body: EmailRequest.
 app.post("/v1/notify/email", async (req, reply) => {
