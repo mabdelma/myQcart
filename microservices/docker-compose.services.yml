@@ -1,0 +1,79 @@
+# ─── Qlisted microservices stack (strangler-fig scaffold) ────────────────────
+# Runs the gateway + services on their own network. NOT wired into production
+# yet — the live app is still the server/ monolith. Bring this up to develop
+# the services; cut traffic over one prefix at a time via the gateway's ROUTES.
+#
+#   docker compose -f docker-compose.services.yml --env-file .env up -d --build
+#
+# Each Dockerfile's build context is THIS directory (microservices/) so npm
+# workspaces can link @qlisted/shared.
+name: qlisted-services
+
+x-svc: &svc
+  restart: unless-stopped
+  environment:
+    AUTH_SECRET: "${AUTH_SECRET:?set AUTH_SECRET (= monolith JWT_SECRET) in .env}"
+    LOG_LEVEL: "${LOG_LEVEL:-info}"
+  networks: [qlisted-svc]
+
+services:
+  gateway:
+    <<: *svc
+    build: { context: ., dockerfile: services/gateway/Dockerfile }
+    container_name: qlisted-gateway
+    environment:
+      AUTH_SECRET: "${AUTH_SECRET:?}"
+      AUTH_URL: "http://qlisted-auth:8080"
+      CATALOG_URL: "http://qlisted-catalog:8080"
+      ORDERS_URL: "http://qlisted-orders:8080"
+      BILLING_URL: "http://qlisted-billing:8080"
+      ENGAGEMENT_URL: "http://qlisted-engagement:8080"
+      NOTIFICATIONS_URL: "http://qlisted-notifications:8080"
+      # Fall through to the existing monolith for not-yet-extracted paths.
+      MONOLITH_URL: "${MONOLITH_URL:-}"
+    networks: [qlisted-svc, edge]
+
+  auth:
+    <<: *svc
+    build: { context: ., dockerfile: services/auth/Dockerfile }
+    container_name: qlisted-auth
+
+  catalog:
+    <<: *svc
+    build: { context: ., dockerfile: services/catalog/Dockerfile }
+    container_name: qlisted-catalog
+
+  orders:
+    <<: *svc
+    build: { context: ., dockerfile: services/orders/Dockerfile }
+    container_name: qlisted-orders
+
+  billing:
+    <<: *svc
+    build: { context: ., dockerfile: services/billing/Dockerfile }
+    container_name: qlisted-billing
+
+  engagement:
+    <<: *svc
+    build: { context: ., dockerfile: services/engagement/Dockerfile }
+    container_name: qlisted-engagement
+
+  notifications:
+    <<: *svc
+    build: { context: ., dockerfile: services/notifications/Dockerfile }
+    container_name: qlisted-notifications
+    environment:
+      AUTH_SECRET: "${AUTH_SECRET:?}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      MAIL_FROM: "${MAIL_FROM:-Qlisted <noreply@qlisted.com>}"
+
+networks:
+  qlisted-svc:
+    driver: bridge
+  # Shared cross-stack network (Caddy lives here). Only needed if you expose the
+  # gateway publicly; created once on the host: docker network create edge
+  edge:
+    external: true

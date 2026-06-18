@@ -1,0 +1,21 @@
+{
+  "name": "qlisted-microservices",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Qlisted strangler-fig microservices (auth, catalog, orders, billing, engagement, notifications) behind a gateway. Logic is ported from the server/ monolith service-by-service.",
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "echo 'Run a single service: npm -w @qlisted/<svc> run dev'",
+    "dev:gateway": "npm -w @qlisted/gateway run dev",
+    "dev:auth": "npm -w @qlisted/auth run dev",
+    "dev:catalog": "npm -w @qlisted/catalog run dev",
+    "dev:orders": "npm -w @qlisted/orders run dev",
+    "dev:billing": "npm -w @qlisted/billing run dev",
+    "dev:engagement": "npm -w @qlisted/engagement run dev",
+    "dev:notifications": "npm -w @qlisted/notifications run dev"
+  }
+}
