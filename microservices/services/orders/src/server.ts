@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import pg from "pg";
 import Redis from "ioredis";
 import { randomUUID } from "node:crypto";
-import { createLogger, ok, err, verifyToken, bearer } from "@qlisted/shared";
+import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
 
 interface OrderItemInput { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string | null; modifiers?: string | null }
 interface CreateOrderInput {
@@ -140,7 +140,7 @@ app.get("/v1/tenants/:slug/orders/:id", async () => err("not_implemented: port f
 
 // Kitchen/staff status transitions require a staff JWT.
 app.patch("/v1/tenants/:slug/orders/:id/status", async (req, reply) => {
-  if (!verifyToken(bearer(req.headers.authorization))) return reply.code(401).send(err("Unauthorized"));
+  if (!verifyHs256(bearer(req.headers.authorization))) return reply.code(401).send(err("Unauthorized"));
   return err("not_implemented: port from updateOrderStatus (+ emit order.ready)");
 });
 
