@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { homePathForRole } from '../../lib/roleRoutes';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 const panelPoints = [
   { icon: ShieldCheck, title: 'Platform oversight', desc: 'Super admins manage every restaurant from one place.' },
@@ -134,6 +135,8 @@ export function SignIn() {
               {state.loading ? <LoadingSpinner /> : <>{t('auth.signin')} <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
+
+          <GoogleSignInButton />
 
           <div className="mt-8 flex items-center justify-between text-sm">
             <Link to="/" className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700">

@@ -8,6 +8,9 @@ export const authApi = {
   register: (data: { tenantSlug: string; name: string; email: string; password: string; role?: string }) =>
     api.post<{ token: string; user: User }>('/auth/register', data, { skipAuth: true }),
   me: () => api.get<{ user: User; tenant: Tenant | null }>('/auth/me'),
+  googleStatus: () => api.get<{ enabled: boolean; clientId: string | null }>('/auth/google/status', { skipAuth: true }),
+  google: (credential: string) =>
+    api.post<{ token: string; user: User }>('/auth/google', { credential }, { skipAuth: true }),
 };
 
 // Super-admin / platform (all require a super_admin token)

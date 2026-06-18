@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { registerUser, loginUser, loginWithRefresh, refreshAccessToken, revokeRefreshToken, verifyEmail, resendVerificationEmail, getCurrentUser, requestPasswordReset, resetPassword } from '../services/authService.js';
+import { registerUser, loginUser, loginWithRefresh, refreshAccessToken, revokeRefreshToken, verifyEmail, resendVerificationEmail, getCurrentUser, requestPasswordReset, resetPassword, googleLogin, googleEnabled } from '../services/authService.js';
 
 const auth = new Hono();
 
@@ -35,6 +35,18 @@ auth.post('/login', zValidator('json', loginSchema), async (c) => {
   if ('error' in result) {
     return c.json({ error: result.error }, result.status);
   }
+  return c.json(result.data, result.status);
+});
+
+// Google sign-in: client sends the Google ID-token credential; we verify it,
+// match an existing user by email, and issue the same token/refresh as /login.
+const googleSchema = z.object({ credential: z.string().min(1) });
+
+auth.get('/google/status', (c) => c.json({ enabled: googleEnabled(), clientId: process.env.GOOGLE_CLIENT_ID || null }));
+
+auth.post('/google', zValidator('json', googleSchema), async (c) => {
+  const result = await googleLogin(c.req.valid('json').credential);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
   return c.json(result.data, result.status);
 });
 

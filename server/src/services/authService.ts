@@ -170,6 +170,63 @@ export async function loginWithRefresh(input: LoginInput) {
   };
 }
 
+export function googleEnabled(): boolean {
+  return !!process.env.GOOGLE_CLIENT_ID;
+}
+
+/**
+ * Sign in with a Google ID token (from Google Identity Services on the client).
+ * Verifies the token against GOOGLE_CLIENT_ID via Google's tokeninfo endpoint
+ * (no extra dependency), then logs in the EXISTING user with that email. We do
+ * not auto-provision — a Google account with no matching Qlisted user is asked
+ * to be invited first (avoids assigning an ambiguous tenant/role).
+ */
+export async function googleLogin(idToken: string) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return { error: 'Google sign-in is not configured', status: 501 as const };
+
+  let payload: { aud?: string; email?: string; email_verified?: string | boolean };
+  try {
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+    if (!res.ok) return { error: 'Invalid Google token', status: 401 as const };
+    payload = await res.json();
+  } catch {
+    return { error: 'Could not verify Google token', status: 502 as const };
+  }
+
+  if (payload.aud !== clientId) return { error: 'Google token audience mismatch', status: 401 as const };
+  const verified = payload.email_verified === true || payload.email_verified === 'true';
+  if (!payload.email || !verified) return { error: 'Google email not verified', status: 401 as const };
+
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, payload.email)).limit(1);
+  if (!user) return { error: 'No Qlisted account for this Google email — ask an admin to invite you first.', status: 404 as const };
+  if (!user.isActive) return { error: 'Account is disabled', status: 403 as const };
+
+  const token = await createToken({ sub: user.id, userId: user.id, tenantId: user.tenantId, role: user.role });
+  await db.update(schema.users).set({ lastActive: new Date().toISOString() }).where(eq(schema.users.id, user.id));
+  await createSession(user.id, user.tenantId!);
+
+  const refreshToken = uuid();
+  const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+  await db.insert(schema.refreshTokens).values({
+    id: uuid(),
+    userId: user.id,
+    tenantId: user.tenantId,
+    tokenHash,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  });
+
+  logger.info({ userId: user.id, tenantId: user.tenantId }, 'User logged in via Google');
+  return {
+    data: {
+      token,
+      refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, tenantId: user.tenantId },
+    },
+    status: 200 as const,
+  };
+}
+
 export async function refreshAccessToken(refreshToken: string) {
   const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 

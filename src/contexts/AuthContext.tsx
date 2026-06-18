@@ -18,6 +18,7 @@ type AuthAction =
 const AuthContext = createContext<{
   state: AuthState;
   login: (email: string, password: string) => Promise<User | null>;
+  loginWithGoogle: (credential: string) => Promise<User | null>;
   logout: () => void;
 } | null>(null);
 
@@ -70,13 +71,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const loginWithGoogle = useCallback(async (credential: string): Promise<User | null> => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const res = await authApi.google(credential);
+      localStorage.setItem('token', res.token);
+      const me = await authApi.me();
+      dispatch({ type: 'AUTH_SUCCESS', payload: { user: me.user, tenant: me.tenant } });
+      return me.user;
+    } catch (err) {
+      const msg = (err as { message?: string }).message || 'Google sign-in failed';
+      dispatch({ type: 'AUTH_ERROR', payload: msg });
+      return null;
+    }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     dispatch({ type: 'LOGOUT' });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ state, login, logout }}>
+    <AuthContext.Provider value={{ state, login, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
