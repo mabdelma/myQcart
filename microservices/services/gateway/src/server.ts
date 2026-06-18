@@ -46,6 +46,9 @@ function target(method: string, url: string): { base?: string; path: string } {
   if (sub && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/subscription/${sub[1]}` };
   // POST /api/auth/login → auth service (issues monolith-compatible token + refresh).
   if (method === "POST" && pathOnly === "/api/auth/login" && ROUTES["/api/auth"]) return { base: ROUTES["/api/auth"], path: "/v1/auth/login" };
+  // POST /api/r/:slug/orders → orders service order placement (exact path only).
+  const place = method === "POST" && /^\/api\/r\/([^/]+)\/orders$/.exec(pathOnly);
+  if (place && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/orders/${place[1]}` };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };

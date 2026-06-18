@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import pg from "pg";
+import Redis from "ioredis";
 import { randomUUID } from "node:crypto";
 import { createLogger, ok, err, verifyToken, bearer } from "@qlisted/shared";
 
@@ -21,6 +22,15 @@ const app = Fastify({ loggerInstance: log });
 const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+
+// Same SSE event bus as the monolith: publish to order:<tenantId>; the monolith's
+// /events route subscribes and relays to the kitchen feed. Required for cutover.
+const pub = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 3 }) : null;
+pub?.on("error", (e) => log.error({ err: e }, "redis error"));
+function emitOrderCreated(tenantId: string, orderId: string) {
+  pub?.publish(`order:${tenantId}`, JSON.stringify({ type: "order_created", tenantId, orderId })).catch((e) => log.error({ err: e }, "redis publish failed"));
+}
+
 const toCamel = (row: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(row).map(([k, v]) => [k.replace(/_([a-z])/g, (_m, c) => c.toUpperCase()), v]));
 
@@ -81,18 +91,19 @@ app.post<{ Params: { slug: string }; Body: CreateOrderInput }>("/compat/orders/:
 
   const orderItems = input.items.map((i) => ({
     id: randomUUID(), orderId, menuItemId: i.menuItemId, name: i.name,
-    quantity: i.quantity, unitPrice: i.unitPrice, notes: i.notes ?? null, modifiers: i.modifiers ?? null,
+    quantity: i.quantity, unitPrice: i.unitPrice, notes: i.notes, modifiers: i.modifiers,
   }));
   for (const it of orderItems) {
     await pool.query(
       "INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, notes, modifiers) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [it.id, it.orderId, it.menuItemId, it.name, it.quantity, it.unitPrice, it.notes, it.modifiers],
+      [it.id, it.orderId, it.menuItemId, it.name, it.quantity, it.unitPrice, it.notes ?? null, it.modifiers ?? null],
     );
   }
   if (orderType === "dine_in" && input.tableId) {
     await pool.query("UPDATE tables SET status = 'occupied' WHERE id = $1", [input.tableId]);
   }
 
+  emitOrderCreated(tenant.id, orderId); // notify the kitchen feed (monolith /events relays it)
   return reply.code(201).send({ id: orderId, items: orderItems, subtotal, tax, serviceCharge, deliveryFee, total, orderType });
 });
 

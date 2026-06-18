@@ -10,6 +10,7 @@
   "dependencies": {
     "@qlisted/shared": "*",
     "fastify": "^5.1.0",
+    "ioredis": "^5.4.1",
     "pg": "^8.13.1"
   },
   "devDependencies": {
