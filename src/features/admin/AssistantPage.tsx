@@ -23,7 +23,7 @@ export function AssistantPage() {
 
       {enabled === false ? (
         <div className="bg-amber-50 border-l-4 border-amber-400 p-4 text-sm text-amber-800">
-          The AI assistant isn't configured yet. Add an <code>ANTHROPIC_API_KEY</code> to the server to enable it.
+          The AI assistant isn't configured yet. Add an <code>OPENAI_API_KEY</code> to the server to enable it.
         </div>
       ) : (
         <div className="flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm">

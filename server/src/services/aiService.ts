@@ -1,45 +1,56 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { eq, sql } from 'drizzle-orm';
 import { db, schema } from '../db/index.js';
 import { computePnL } from './reportService.js';
 import { logger } from '../lib/logger.js';
 
-// Default to the latest Claude; override with ANTHROPIC_MODEL if you want a
-// cheaper model for high-volume customer chat (e.g. claude-haiku-4-5).
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8';
+// OpenAI (same provider as the Escoutly app). Override the model with OPENAI_MODEL.
+const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
-function getClient(): Anthropic | null {
-  const key = process.env.ANTHROPIC_API_KEY;
-  return key ? new Anthropic({ apiKey: key }) : null;
+function getClient(): OpenAI | null {
+  const key = process.env.OPENAI_API_KEY;
+  return key ? new OpenAI({ apiKey: key }) : null;
 }
 
 export function aiEnabled(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!process.env.OPENAI_API_KEY;
 }
 
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
 
 // ── Admin copilot: tenant-scoped tools over the restaurant's own data ───────
-const adminTools: Anthropic.Tool[] = [
+const adminTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
-    name: 'get_pnl',
-    description: 'Profit & loss / sales summary for THIS restaurant over an optional ISO date range. Returns gross/net revenue, refunds, COGS, gross profit, tax, tips, service charge, order count, average order value, and revenue by payment method.',
-    input_schema: { type: 'object', properties: { start: { type: 'string', description: 'ISO start datetime (optional)' }, end: { type: 'string', description: 'ISO end datetime (optional)' } } },
+    type: 'function',
+    function: {
+      name: 'get_pnl',
+      description: 'Profit & loss / sales summary for THIS restaurant over an optional ISO date range. Returns gross/net revenue, refunds, COGS, gross profit, tax, tips, service charge, order count, average order value, and revenue by payment method.',
+      parameters: { type: 'object', properties: { start: { type: 'string', description: 'ISO start datetime (optional)' }, end: { type: 'string', description: 'ISO end datetime (optional)' } } },
+    },
   },
   {
-    name: 'get_popular_items',
-    description: 'Top-selling menu items by quantity for THIS restaurant.',
-    input_schema: { type: 'object', properties: { limit: { type: 'integer', description: 'Max rows (default 10)' } } },
+    type: 'function',
+    function: {
+      name: 'get_popular_items',
+      description: 'Top-selling menu items by quantity for THIS restaurant.',
+      parameters: { type: 'object', properties: { limit: { type: 'integer', description: 'Max rows (default 10)' } } },
+    },
   },
   {
-    name: 'get_menu',
-    description: "List THIS restaurant's menu categories and items with prices, availability, and descriptions.",
-    input_schema: { type: 'object', properties: {} },
+    type: 'function',
+    function: {
+      name: 'get_menu',
+      description: "List THIS restaurant's menu categories and items with prices, availability, and descriptions.",
+      parameters: { type: 'object', properties: {} },
+    },
   },
   {
-    name: 'get_recent_orders',
-    description: 'Recent orders for THIS restaurant with status, payment status, total, and item count.',
-    input_schema: { type: 'object', properties: { limit: { type: 'integer', description: 'Max rows (default 10)' } } },
+    type: 'function',
+    function: {
+      name: 'get_recent_orders',
+      description: 'Recent orders for THIS restaurant with status, payment status, total, and item count.',
+      parameters: { type: 'object', properties: { limit: { type: 'integer', description: 'Max rows (default 10)' } } },
+    },
   },
 ];
 
@@ -75,38 +86,39 @@ async function runAdminTool(tenantId: string, name: string, input: Record<string
   }
 }
 
-const textOf = (content: Anthropic.ContentBlock[]) =>
-  content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join('\n').trim();
-
 export async function adminCopilot(tenantId: string, tenantName: string, currency: string, history: ChatTurn[]) {
   const client = getClient();
-  if (!client) return { error: 'AI assistant not configured (set ANTHROPIC_API_KEY)', status: 501 as const };
+  if (!client) return { error: 'AI assistant not configured (set OPENAI_API_KEY)', status: 501 as const };
 
   const system = `You are the Qlisted assistant for the restaurant "${tenantName}" (currency: ${currency}). `
     + `Answer the owner/manager's questions about their business by calling the provided tools to fetch REAL data — never invent numbers. `
     + `Be concise and concrete; format money with the currency. You may also help draft menu item descriptions or short marketing copy when asked. `
     + `You only have access to this one restaurant's data.`;
 
-  const messages: Anthropic.MessageParam[] = history.map((m) => ({ role: m.role, content: m.content }));
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: 'system', content: system },
+    ...history.map((m) => ({ role: m.role, content: m.content }) as OpenAI.Chat.Completions.ChatCompletionMessageParam),
+  ];
 
   // Manual tool-use loop (bounded).
   for (let i = 0; i < 6; i++) {
-    const resp = await client.messages.create({ model: MODEL, max_tokens: 3072, system, tools: adminTools, messages });
-    if (resp.stop_reason === 'tool_use') {
-      messages.push({ role: 'assistant', content: resp.content });
-      const results: Anthropic.ToolResultBlockParam[] = [];
-      for (const block of resp.content) {
-        if (block.type === 'tool_use') {
-          let out: string;
-          try { out = await runAdminTool(tenantId, block.name, (block.input ?? {}) as Record<string, unknown>); }
-          catch (e) { out = JSON.stringify({ error: (e as Error).message }); }
-          results.push({ type: 'tool_result', tool_use_id: block.id, content: out });
-        }
+    const resp = await client.chat.completions.create({ model: MODEL, messages, tools: adminTools, max_tokens: 1024 });
+    const msg = resp.choices[0]?.message;
+    if (!msg) break;
+    if (msg.tool_calls && msg.tool_calls.length > 0) {
+      messages.push(msg);
+      for (const tc of msg.tool_calls) {
+        if (tc.type !== 'function') continue;
+        let args: Record<string, unknown> = {};
+        try { args = JSON.parse(tc.function.arguments || '{}'); } catch { /* ignore bad args */ }
+        let out: string;
+        try { out = await runAdminTool(tenantId, tc.function.name, args); }
+        catch (e) { out = JSON.stringify({ error: (e as Error).message }); }
+        messages.push({ role: 'tool', tool_call_id: tc.id, content: out });
       }
-      messages.push({ role: 'user', content: results });
       continue;
     }
-    return { data: { reply: textOf(resp.content) || '(no response)' }, status: 200 as const };
+    return { data: { reply: (msg.content || '').trim() || '(no response)' }, status: 200 as const };
   }
   logger.warn({ tenantId }, 'admin copilot hit tool-loop limit');
   return { data: { reply: 'Sorry — I could not complete that request.' }, status: 200 as const };
@@ -127,7 +139,10 @@ export async function customerChat(tenantId: string, tenantName: string, currenc
 
   const system = `You are a friendly ordering assistant for "${tenantName}". Help the guest choose from the menu below: answer questions, suggest dishes, and note likely dietary considerations. Keep replies short. Only recommend items that appear on this menu. You cannot place orders or take payment — direct the guest to use the on-screen menu to order.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
 
-  const messages: Anthropic.MessageParam[] = history.map((m) => ({ role: m.role, content: m.content }));
-  const resp = await client.messages.create({ model: MODEL, max_tokens: 1024, system, messages });
-  return { data: { reply: textOf(resp.content) || '(no response)' }, status: 200 as const };
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: 'system', content: system },
+    ...history.map((m) => ({ role: m.role, content: m.content }) as OpenAI.Chat.Completions.ChatCompletionMessageParam),
+  ];
+  const resp = await client.chat.completions.create({ model: MODEL, messages, max_tokens: 600 });
+  return { data: { reply: (resp.choices[0]?.message?.content || '').trim() || '(no response)' }, status: 200 as const };
 }
