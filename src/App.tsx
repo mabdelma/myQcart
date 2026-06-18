@@ -44,6 +44,22 @@ function RouteFallback() {
   return <LoadingSpinner />;
 }
 
+// Subdomain landing map — each Qlisted subdomain serves this same SPA and the
+// root path lands on its purpose-built route. Deep links work on every host
+// since this only affects "/". (auth-gated routes bounce to /signin as usual.)
+const HOST_LANDING: Record<string, string> = {
+  login: '/signin',         // login.qlisted.com
+  central: '/super-admin',  // central.qlisted.com — platform console
+  app: '/admin',            // app.qlisted.com — restaurant dashboard
+  ai: '/admin/assistant',   // ai.qlisted.com — AI copilot
+};
+
+function RootRoute() {
+  const sub = window.location.hostname.split('.')[0];
+  const target = HOST_LANDING[sub];
+  return target ? <Navigate to={target} replace /> : <MarketingLanding />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -83,7 +99,7 @@ function App() {
             </ProtectedRoute>
             </RouteErrorBoundary>
           } />
-          <Route path="/" element={<MarketingLanding />} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/pricing" element={<RouteErrorBoundary name="pricing"><PricingPage /></RouteErrorBoundary>} />
           <Route path="/features" element={<RouteErrorBoundary name="features"><FeaturesPage /></RouteErrorBoundary>} />
           <Route path="/contact" element={<RouteErrorBoundary name="contact"><ContactPage /></RouteErrorBoundary>} />
