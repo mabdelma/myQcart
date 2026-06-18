@@ -20,6 +20,15 @@ export const adminApi = {
   getTenantUsage: (tenantId: string) => api.get<TenantUsage>(`/admin/tenants/${tenantId}/usage`),
 };
 
+// AI assistant (admin copilot + customer chat)
+export const aiApi = {
+  status: (slug: string) => api.get<{ enabled: boolean }>(`/r/${slug}/ai/status`, { skipAuth: true }),
+  adminChat: (slug: string, messages: { role: 'user' | 'assistant'; content: string }[]) =>
+    api.post<{ reply: string }>(`/r/${slug}/ai/admin`, { messages }),
+  customerChat: (slug: string, messages: { role: 'user' | 'assistant'; content: string }[]) =>
+    api.post<{ reply: string }>(`/r/${slug}/ai/customer`, { messages }, { skipAuth: true }),
+};
+
 // Reports (P&L)
 export const reportApi = {
   getPnL: (slug: string, start?: string, end?: string) => {

@@ -4,7 +4,7 @@ export type TranslationKey =
   | 'nav.home' | 'nav.menu' | 'nav.cart' | 'nav.orders' | 'nav.checkout' | 'nav.bill'
   | 'nav.signin' | 'nav.signup' | 'nav.signout' | 'nav.profile' | 'nav.admin' | 'nav.staff'
   | 'nav.pricing' | 'nav.features' | 'nav.contact' | 'nav.demo' | 'nav.kitchen'
-  | 'nav.dashboard' | 'nav.reports' | 'nav.marketing' | 'nav.customers' | 'nav.inventory' | 'nav.modifiers' | 'nav.analytics' | 'nav.promotions' | 'nav.loyalty'
+  | 'nav.dashboard' | 'nav.reports' | 'nav.assistant' | 'nav.marketing' | 'nav.customers' | 'nav.inventory' | 'nav.modifiers' | 'nav.analytics' | 'nav.promotions' | 'nav.loyalty'
   | 'auth.email' | 'auth.password' | 'auth.signin' | 'auth.signup' | 'auth.name'
   | 'auth.confirmPassword' | 'auth.forgotPassword' | 'auth.resetPassword' | 'auth.newPassword'
   | 'auth.sendResetLink' | 'auth.resetYourPassword' | 'auth.troubleSigningIn'
@@ -210,6 +210,7 @@ export const translations: Record<TranslationKey, string> = {
   'nav.kitchen': 'Kitchen',
   'nav.dashboard': 'Dashboard',
   'nav.reports': 'Reports',
+  'nav.assistant': 'Assistant',
   'nav.marketing': 'Marketing',
   'nav.customers': 'Customers',
   'nav.inventory': 'Inventory',

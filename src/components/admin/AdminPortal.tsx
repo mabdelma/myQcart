@@ -26,10 +26,12 @@ import { TableLayoutEditor } from '../../features/admin/TableLayoutEditor';
 import GiftCards from '../../features/admin/GiftCards';
 import TimeTracking from '../../features/admin/TimeTracking';
 import { ReportsPage } from '../../features/admin/ReportsPage';
+import { AssistantPage } from '../../features/admin/AssistantPage';
 
 const routes = [
   { path: 'orders', element: <OrderManagement /> },
   { path: 'reports', element: <ReportsPage /> },
+  { path: 'assistant', element: <AssistantPage /> },
   { path: 'staff', element: <StaffPerformance /> },
   { path: 'menu', element: <MenuManagement /> },
   { path: 'modifiers', element: <ModifierManagement /> },

@@ -5,6 +5,7 @@ import { menuApi, tableApi, orderApi, paymentApi } from '../../lib/api';
 import { useI18n } from '../../contexts/I18nContext';
 import type { MenuItem, MenuCategory, TableData, OrderWithItems } from '../../lib/api/types';
 import { StripePaymentForm } from './StripePaymentForm';
+import { CustomerAiWidget } from '../../components/ai/CustomerAiWidget';
 
 // Lazy, memoized Stripe loader. App.tsx imports this module eagerly, so calling
 // loadStripe() at module scope would fire Stripe.js init on every page (incl. the
@@ -301,6 +302,7 @@ export function CustomerMenuPage() {
           </button>
         )}
       </div>
+      {slug && <CustomerAiWidget slug={slug} />}
     </CartCtx.Provider>
   );
 
