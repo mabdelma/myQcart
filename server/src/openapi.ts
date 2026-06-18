@@ -357,9 +357,9 @@ export function paginatedResponse<T extends z.ZodType>(itemSchema: T) {
 export const openApiSchema = {
   openapi: '3.1.0',
   info: {
-    title: 'QCart API',
+    title: 'Qlisted API',
     version: '1.0.0',
-    description: `RESTful API for QCart — a QR code restaurant ordering and payment platform.
+    description: `RESTful API for Qlisted — a QR code restaurant ordering and payment platform.
 
 ## Authentication
 Most endpoints require a Bearer JWT token in the \`Authorization\` header.

@@ -40,9 +40,9 @@ export async function triggerWebhooks(tenantId: string, event: string, payload: 
     if (!events.includes(event)) continue;
 
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json', 'X-QCart-Event': event };
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', 'X-Qlisted-Event': event };
       if (integration.secret) {
-        headers['X-QCart-Signature'] = createSignature(body, integration.secret);
+        headers['X-Qlisted-Signature'] = createSignature(body, integration.secret);
       }
 
       const response = await fetch(integration.url, { method: 'POST', headers, body });

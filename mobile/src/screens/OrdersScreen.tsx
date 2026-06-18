@@ -1,13 +1,14 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import type { NativeStackScreenProps } from '@react-navigation/native';
 
-type Props = NativeStackScreenProps<{ Orders: { slug?: string } }, 'Orders'>;
+interface OrdersScreenProps {
+  slug: string;
+  baseUrl: string;
+}
 
-const OrdersScreen: React.FC<Props> = ({ route }) => {
-  const slug = route.params?.slug ?? 'demo-cafe';
-  const uri = `https://qcart.gmtmall.com/r/${slug}/orders`;
+const OrdersScreen: React.FC<OrdersScreenProps> = ({ slug, baseUrl }) => {
+  const uri = `${baseUrl}/r/${slug}/orders`;
 
   return (
     <View style={styles.container}>
@@ -24,12 +25,8 @@ const OrdersScreen: React.FC<Props> = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  webview: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  webview: { flex: 1 },
 });
 
 export default OrdersScreen;

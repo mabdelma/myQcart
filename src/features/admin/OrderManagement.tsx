@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Clock, Check, ChefHat, Ban } from 'lucide-react';
-import { orderApi } from '../../lib/api';
+import { Clock, Check, ChefHat, Ban, FileDown } from 'lucide-react';
+import { orderApi, invoiceApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Order } from '../../lib/api/types';
 
@@ -84,7 +84,7 @@ export function OrderManagement() {
                     {order.customerName && <span className="text-gray-500 ml-2">- {order.customerName}</span>}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Table {order.tableId.slice(0, 8)} · {order.itemCount} items
+                    {order.orderType === 'dine_in' ? `Table ${order.tableId?.slice(0, 8) || '?'}` : order.orderType === 'takeout' ? 'Takeout' : 'Delivery'} · {order.itemCount} items
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -122,6 +122,11 @@ export function OrderManagement() {
                       Cancel
                     </button>
                   )}
+                  <button onClick={() => invoiceApi.download(slug!, order.id)}
+                    className="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 flex items-center gap-1"
+                    title="Download Invoice">
+                    <FileDown className="w-4 h-4" /> PDF
+                  </button>
                 </div>
               </div>
             </div>

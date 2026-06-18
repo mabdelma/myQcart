@@ -168,7 +168,7 @@ export function BillPage() {
           <p className="text-sm text-gray-400">{t('payment.tip')}: ${tipAmount.toFixed(2)}</p>
         )}
         <div className="flex gap-3 justify-center pt-4">
-          <Link to={`/r/${slug}/orders`} className="px-6 py-2 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033] transition-colors">
+          <Link to={`/r/${slug}/orders`} className="px-6 py-2 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover transition-colors">
             {t('order.orderHistory')}
           </Link>
           <Link to={`/r/${slug}`} className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
@@ -185,7 +185,7 @@ export function BillPage() {
         <Receipt className="mx-auto h-12 w-12 text-gray-400" />
         <h2 className="text-xl font-bold text-gray-900">{t('payment.paid')}</h2>
         <p className="text-gray-500">{t('common.noResults')}</p>
-        <button onClick={() => setShowAll(true)} className="text-[#8B4513] underline text-sm">
+        <button onClick={() => setShowAll(true)} className="text-brand underline text-sm">
           {t('order.allOrders')}
         </button>
       </div>
@@ -231,7 +231,7 @@ export function BillPage() {
             )}
             <div className="flex justify-between border-t pt-2 text-base">
               <span className="font-bold text-gray-900">{t('common.total')}</span>
-              <span className="font-bold text-[#8B4513]">${grandTotal.toFixed(2)}</span>
+              <span className="font-bold text-brand">${grandTotal.toFixed(2)}</span>
             </div>
           </div>
           <button
@@ -263,7 +263,7 @@ export function BillPage() {
         <button
           onClick={() => setShowAll(false)}
           className={`px-4 py-1.5 text-sm rounded-full transition-colors ${
-            !showAll ? 'bg-[#8B4513] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            !showAll ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           {t('payment.unpaid')}
@@ -271,7 +271,7 @@ export function BillPage() {
         <button
           onClick={() => setShowAll(true)}
           className={`px-4 py-1.5 text-sm rounded-full transition-colors ${
-            showAll ? 'bg-[#8B4513] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            showAll ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           {t('order.allOrders')}
@@ -279,7 +279,7 @@ export function BillPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="bg-[#8B4513] text-white px-4 py-3 flex items-center gap-2">
+        <div className="bg-brand text-white px-4 py-3 flex items-center gap-2">
           <Receipt className="w-5 h-5" />
           <span className="font-semibold">{tenant.name}</span>
         </div>
@@ -373,7 +373,7 @@ export function BillPage() {
               {[0, 10, 15, 20].map((pct) => (
                 <button key={pct} onClick={() => handleTipPercent(pct)}
                   className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                    tipPercent === pct && customTipAmount === null ? 'bg-[#8B4513] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    tipPercent === pct && customTipAmount === null ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}>
                   {pct > 0 ? `${pct}%` : t('common.no')}
                 </button>
@@ -389,11 +389,11 @@ export function BillPage() {
               placeholder={t('payment.tip')}
               value={customTipAmount !== null ? customTipAmount : ''}
               onChange={(e) => handleCustomTip(e.target.value)}
-              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8B4513]"
+              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
           {tipAmount > 0 && (
-            <p className="text-sm text-[#8B4513] font-medium text-right">
+            <p className="text-sm text-brand font-medium text-right">
               +${tipAmount.toFixed(2)}
             </p>
           )}
@@ -413,13 +413,13 @@ export function BillPage() {
               </span>
               <button onClick={() => setSplitCount(Math.min(20, splitCount + 1))}
                 aria-label="Increase split count"
-                className="w-7 h-7 rounded-full bg-[#8B4513] text-white flex items-center justify-center hover:bg-[#5C4033]">
+                className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center hover:bg-brand-hover">
                 <Plus className="w-3 h-3" />
               </button>
             </div>
           </div>
           {splitCount > 1 && (
-            <p className="text-sm text-[#8B4513] font-medium text-right">
+            <p className="text-sm text-brand font-medium text-right">
               ${perPerson.toFixed(2)} / {t('payment.split')}
             </p>
           )}
@@ -431,7 +431,7 @@ export function BillPage() {
             {(['cash', 'card', 'split'] as const).map((method) => (
               <button key={method} onClick={() => setPaymentMethod(method)}
                 className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                  paymentMethod === method ? 'bg-[#8B4513] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  paymentMethod === method ? 'bg-brand text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}>
                 {method === 'cash' ? t('payment.cash') : method === 'card' ? t('payment.card') : t('payment.split')}
               </button>
@@ -439,10 +439,10 @@ export function BillPage() {
           </div>
         </div>
 
-        <div className="border-t-2 border-[#8B4513] px-4 py-4">
+        <div className="border-t-2 border-brand px-4 py-4">
           <div className="flex justify-between items-center mb-4">
             <span className="text-lg font-bold text-gray-900">{t('common.total')}</span>
-            <span className="text-xl font-bold text-[#8B4513]">${grandTotal.toFixed(2)}</span>
+            <span className="text-xl font-bold text-brand">${grandTotal.toFixed(2)}</span>
           </div>
           {splitCount > 1 && (
             <p className="text-sm text-gray-500 text-right -mt-3 mb-3">
@@ -470,7 +470,7 @@ export function BillPage() {
               )}
               {paymentMethod === 'card' && getStripe() && unpaidOrders.length === 1 && (
                 <button onClick={openConfirmModal}
-                  className="w-full py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033] transition-colors">
+                  className="w-full py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover transition-colors">
                   {t('payment.payNow')} ${grandTotal.toFixed(2)}
                 </button>
               )}

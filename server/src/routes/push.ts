@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { resolveTenant } from '../middleware/tenant.js';
 import { addSubscription, removeSubscription, getVapidPublicKey } from '../lib/push.js';
+import { addExpoPushToken, removeExpoPushToken } from '../lib/expoPush.js';
 import { logger } from '../lib/logger.js';
 
 const pushRoutes = new Hono();
@@ -32,6 +33,26 @@ pushRoutes.post('/:slug/push/unsubscribe', resolveTenant, async (c) => {
   if (!body.endpoint) return c.json({ error: 'Missing endpoint' }, 400);
   await removeSubscription(body.endpoint);
   logger.info({ endpoint: body.endpoint.slice(0, 30) }, 'Push subscription removed');
+  return c.json({ status: 'ok' });
+});
+
+const expoSubscribeSchema = z.object({
+  token: z.string().min(1),
+  deviceInfo: z.string().optional(),
+});
+
+pushRoutes.post('/:slug/push/expo/register', resolveTenant, zValidator('json', expoSubscribeSchema), async (c) => {
+  const tenantId = c.get('tenantId') as string;
+  const { token, deviceInfo } = c.req.valid('json');
+  await addExpoPushToken(tenantId, token, deviceInfo);
+  logger.info({ tenantId }, 'Expo push token registered');
+  return c.json({ status: 'ok' });
+});
+
+pushRoutes.post('/:slug/push/expo/unregister', resolveTenant, async (c) => {
+  const body = await c.req.json();
+  if (!body.token) return c.json({ error: 'Missing token' }, 400);
+  await removeExpoPushToken(body.token);
   return c.json({ status: 'ok' });
 });
 

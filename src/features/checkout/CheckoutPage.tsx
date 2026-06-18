@@ -37,6 +37,7 @@ export function CheckoutPage() {
           quantity: c.quantity,
           unitPrice: c.menuItem.price,
           notes: c.comment,
+          modifiers: c.selectedModifiers ? JSON.stringify(c.selectedModifiers.map((m) => ({ name: m.optionName, groupName: m.groupName, priceAdjustment: m.priceAdjustment }))) : undefined,
         })),
         customerName: customerName || undefined,
         notes: notes || undefined,
@@ -69,11 +70,11 @@ export function CheckoutPage() {
         )}
         <div className="flex flex-col gap-2 pt-2">
           <button onClick={() => navigate(`/r/${slug}/table/${tableId}/orders`)}
-            className="px-6 py-2 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033] flex items-center justify-center gap-2">
+            className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover flex items-center justify-center gap-2">
             <ClipboardList className="w-4 h-4" /> {t('nav.orders')}
           </button>
           <button onClick={() => navigate(`/r/${slug}/table/${tableId}/menu`)}
-            className="px-6 py-2 border border-[#8B4513] text-[#8B4513] rounded-lg hover:bg-[#8B4513] hover:text-white flex items-center justify-center gap-2 transition-colors">
+            className="px-6 py-2 border border-brand text-brand rounded-lg hover:bg-brand hover:text-white flex items-center justify-center gap-2 transition-colors">
             <RotateCcw className="w-4 h-4" /> {t('order.newOrder')}
           </button>
         </div>
@@ -87,7 +88,7 @@ export function CheckoutPage() {
         <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
         <h2 className="text-xl font-bold text-gray-900">{t('order.emptyCart')}</h2>
         <button onClick={() => navigate(`/r/${slug}/table/${tableId}/menu`)}
-          className="px-6 py-2 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033]">
+          className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover">
           {t('nav.menu')}
         </button>
       </div>
@@ -97,7 +98,7 @@ export function CheckoutPage() {
   return (
     <div className="space-y-6">
       <button onClick={() => navigate(`/r/${slug}/table/${tableId}/cart`)}
-        className="flex items-center text-sm text-gray-500 hover:text-[#8B4513]">
+        className="flex items-center text-sm text-gray-500 hover:text-brand">
         <ArrowLeft className="w-4 h-4 mr-1" /> {t('common.back')}
       </button>
 
@@ -107,13 +108,13 @@ export function CheckoutPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.name')}</label>
           <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
             placeholder={t('auth.name')} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('order.addNotes')}</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#8B4513] focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
             placeholder={t('order.addNotes')} />
         </div>
       </div>
@@ -128,7 +129,7 @@ export function CheckoutPage() {
         ))}
         <div className="border-t pt-3 flex justify-between font-bold text-lg">
           <span>{t('common.total')}</span>
-          <span className="text-[#8B4513]">${state.total.toFixed(2)}</span>
+          <span className="text-brand">${state.total.toFixed(2)}</span>
         </div>
       </div>
 
@@ -137,7 +138,7 @@ export function CheckoutPage() {
       )}
 
       <button onClick={placeOrder} disabled={placing}
-        className="w-full py-3 bg-[#8B4513] text-white rounded-lg font-medium hover:bg-[#5C4033] disabled:opacity-50 transition-colors">
+        className="w-full py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors">
         {placing ? t('order.processOrder') + '...' : `${t('order.processOrder')} — $${state.total.toFixed(2)}`}
       </button>
 

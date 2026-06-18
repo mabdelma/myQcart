@@ -126,8 +126,8 @@ describe('integrationService', () => {
           method: 'POST',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'X-QCart-Event': 'order.created',
-            'X-QCart-Signature': 'mock-signature',
+            'X-Qlisted-Event': 'order.created',
+            'X-Qlisted-Signature': 'mock-signature',
           }),
           body: JSON.stringify({ id: 'order-1' }),
         }),
@@ -199,7 +199,7 @@ describe('integrationService', () => {
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
-            'X-QCart-Event': 'order.created',
+            'X-Qlisted-Event': 'order.created',
           },
         }),
       );

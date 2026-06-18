@@ -20,7 +20,10 @@ export function WhiteLabelSettings() {
     if (tenant) {
       setLogoUrl(tenant.logoUrl || '');
       setPrimaryColor(tenant.primaryColor || '#8B4513');
+      setAccentColor(tenant.accentColor || '#5C4033');
       setRestaurantName(tenant.name || '');
+      setFavicon(tenant.faviconUrl || '');
+      setCustomDomain(tenant.customDomain || '');
     }
   }, [tenant]);
 
@@ -52,7 +55,7 @@ export function WhiteLabelSettings() {
 
       <div className="bg-white rounded-lg shadow p-6 space-y-6">
         <div className="flex items-center gap-3 mb-2">
-          <Palette className="w-6 h-6 text-[#8B4513]" />
+          <Palette className="w-6 h-6 text-brand" />
           <h3 className="text-lg font-medium">Customize Your Brand</h3>
         </div>
 
@@ -62,7 +65,7 @@ export function WhiteLabelSettings() {
             type="text"
             value={restaurantName}
             onChange={(e) => setRestaurantName(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
           />
         </div>
 
@@ -73,7 +76,7 @@ export function WhiteLabelSettings() {
             value={logoUrl}
             onChange={(e) => setLogoUrl(e.target.value)}
             placeholder="https://example.com/logo.png"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
           />
           {logoUrl && (
             <div className="mt-2 flex items-center gap-2">
@@ -97,7 +100,7 @@ export function WhiteLabelSettings() {
                 type="text"
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
               />
             </div>
           </div>
@@ -114,7 +117,7 @@ export function WhiteLabelSettings() {
                 type="text"
                 value={accentColor}
                 onChange={(e) => setAccentColor(e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
               />
             </div>
           </div>
@@ -127,7 +130,7 @@ export function WhiteLabelSettings() {
             value={favicon}
             onChange={(e) => setFavicon(e.target.value)}
             placeholder="https://example.com/favicon.ico"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
           />
         </div>
 
@@ -138,9 +141,9 @@ export function WhiteLabelSettings() {
             value={customDomain}
             onChange={(e) => setCustomDomain(e.target.value)}
             placeholder="order.yourrestaurant.com"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
           />
-          <p className="text-xs text-gray-500 mt-1">Configure your DNS to point to QCart for a custom ordering domain.</p>
+          <p className="text-xs text-gray-500 mt-1">Configure your DNS to point to Qlisted for a custom ordering domain.</p>
         </div>
 
         {error && <div className="bg-red-50 border-l-4 border-red-400 p-3 text-sm text-red-700">{error}</div>}
@@ -148,11 +151,36 @@ export function WhiteLabelSettings() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 px-6 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-2 bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
           {saved ? 'Saved!' : saving ? 'Saving...' : 'Save Branding'}
         </button>
+      </div>
+
+      {/* Live Preview */}
+      <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <h3 className="text-lg font-medium">Customer Preview</h3>
+        <p className="text-sm text-gray-500">This is how your restaurant looks to customers.</p>
+        <div className="border rounded-lg overflow-hidden">
+          <div className="p-3 flex items-center gap-2" style={{ backgroundColor: primaryColor }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+            ) : (
+              <Palette className="h-6 w-6 text-white" />
+            )}
+            <span className="text-white font-semibold text-lg">{restaurantName || 'Your Restaurant'}</span>
+            <span className="ml-auto text-white/70 text-xs bg-white/20 px-2 py-1 rounded">Table 1</span>
+          </div>
+          <div className="p-4 bg-gray-50 flex gap-2 text-sm">
+            <span className="px-3 py-1.5 rounded-md font-medium" style={{ backgroundColor: '#F5DEB3', color: primaryColor }}>
+              Menu
+            </span>
+            <span className="px-3 py-1.5 text-gray-400">Cart</span>
+            <span className="px-3 py-1.5 text-gray-400">Orders</span>
+            <span className="px-3 py-1.5 text-gray-400">Bill</span>
+          </div>
+        </div>
       </div>
     </div>
   );

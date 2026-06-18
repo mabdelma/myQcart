@@ -4,7 +4,7 @@ export type TranslationKey =
   | 'nav.home' | 'nav.menu' | 'nav.cart' | 'nav.orders' | 'nav.checkout' | 'nav.bill'
   | 'nav.signin' | 'nav.signup' | 'nav.signout' | 'nav.profile' | 'nav.admin' | 'nav.staff'
   | 'nav.pricing' | 'nav.features' | 'nav.contact' | 'nav.demo' | 'nav.kitchen'
-  | 'nav.dashboard' | 'nav.reports' | 'nav.marketing' | 'nav.customers' | 'nav.inventory' | 'nav.modifiers' | 'nav.analytics'
+  | 'nav.dashboard' | 'nav.reports' | 'nav.marketing' | 'nav.customers' | 'nav.inventory' | 'nav.modifiers' | 'nav.analytics' | 'nav.promotions' | 'nav.loyalty'
   | 'auth.email' | 'auth.password' | 'auth.signin' | 'auth.signup' | 'auth.name'
   | 'auth.confirmPassword' | 'auth.forgotPassword' | 'auth.resetPassword' | 'auth.newPassword'
   | 'auth.sendResetLink' | 'auth.resetYourPassword' | 'auth.troubleSigningIn'
@@ -55,6 +55,16 @@ export type TranslationKey =
   | 'cta.startTrial' | 'cta.learnMore' | 'cta.getStarted' | 'cta.contactUs'
   | 'cta.bookDemo' | 'cta.subscribe' | 'cta.tryForFree' | 'cta.requestDemo'
   | 'cta.signIn' | 'cta.signUp' | 'cta.enableNotifications' | 'cta.notificationDesc' | 'cta.enable'
+  | 'promo.title' | 'promo.create' | 'promo.edit' | 'promo.name' | 'promo.type'
+  | 'promo.value' | 'promo.percentage' | 'promo.fixed' | 'promo.buyXGetY' | 'promo.happyHour'
+  | 'promo.minOrder' | 'promo.maxDiscount' | 'promo.startDate' | 'promo.endDate'
+  | 'promo.daysOfWeek' | 'promo.timeStart' | 'promo.timeEnd' | 'promo.usageLimit'
+  | 'promo.usageCount' | 'promo.isActive' | 'promo.noCampaigns' | 'promo.enterCode'
+  | 'promo.apply' | 'promo.applied' | 'promo.invalid' | 'promo.expired' | 'promo.reachedLimit'
+  | 'loyalty.title' | 'loyalty.points' | 'loyalty.availablePoints' | 'loyalty.lifetime'
+  | 'loyalty.tier' | 'loyalty.bronze' | 'loyalty.silver' | 'loyalty.gold' | 'loyalty.platinum'
+  | 'loyalty.rewards' | 'loyalty.redeem' | 'loyalty.transactions' | 'loyalty.earn'
+  | 'loyalty.welcome' | 'loyalty.noRewards' | 'loyalty.noTransactions' | 'loyalty.refresh'
   | 'footer.privacy' | 'footer.terms' | 'footer.copyright'
   | 'footer.company' | 'footer.support' | 'footer.legal'
   | 'marketing.trustedBy'
@@ -142,10 +152,44 @@ export type TranslationKey =
   | 'demo.errorMessage'
   | 'error.generic' | 'error.notFound' | 'error.forbidden' | 'error.serverError'
   | 'error.networkError' | 'error.tryAgain' | 'error.somethingWentWrong'
-  | 'error.pageNotFound' | 'error.sessionExpired' | 'error.unauthorized';
+  | 'error.pageNotFound' | 'error.sessionExpired'   | 'error.unauthorized'
+  | 'reservations.title' | 'reservations.create' | 'reservations.edit'
+  | 'reservations.customerName' | 'reservations.partySize' | 'reservations.date'
+  | 'reservations.time' | 'reservations.duration' | 'reservations.status'
+  | 'reservations.email' | 'reservations.phone' | 'reservations.specialRequests'
+  | 'reservations.assignTable' | 'reservations.noReservations'
+  | 'reservations.pending' | 'reservations.confirmed' | 'reservations.seated'
+  | 'reservations.cancelled' | 'reservations.noShow'
+  | 'reservations.allStatuses' | 'reservations.newReservation'
+  | 'reservations.guests'   | 'reservations.minutes'
+  | 'waitlist.title' | 'waitlist.join' | 'waitlist.position' | 'waitlist.waiting'
+  | 'waitlist.notified' | 'waitlist.seated' | 'waitlist.cancelled' | 'waitlist.expired'
+  | 'waitlist.estimatedWait' | 'waitlist.noEntries' | 'waitlist.partySize'
+  | 'waitlist.notifyCustomer' | 'waitlist.markSeated' | 'waitlist.remove'
+  | 'waitlist.checkStatus' | 'waitlist.yourPosition' | 'waitlist.notFound'
+  | 'waitlist.waitingCount'
+  | 'tax.title' | 'tax.create' | 'tax.edit' | 'tax.name' | 'tax.rate'
+  | 'tax.isDefault' | 'tax.noCategories' | 'tax.deleteConfirm'
+  | 'tax.itemTaxCategory' | 'tax.taxExempt' | 'tax.itemTaxExempt'
+  | 'discount.title' | 'discount.apply' | 'discount.amount' | 'discount.reason'
+  | 'discount.compItem' | 'discount.uncompItem' | 'discount.comp'
+  | 'discount.noDiscount' | 'discount.applied' | 'discount.placeholder'
+  | 'tracking.title' | 'tracking.orderPlaced' | 'tracking.preparing' | 'tracking.ready'
+  | 'tracking.delivered' | 'tracking.notFound' | 'tracking.loading'
+  | 'tracking.autoRefresh'   | 'tracking.enjoy' | 'tracking.readyForPickup'
+  | 'tracking.beingPrepared'
+  | 'layout.title' | 'layout.save' | 'layout.saving'
+  | 'layout.zoomIn' | 'layout.zoomOut' | 'layout.noTables'
+  | 'layout.legendAvailable' | 'layout.legendOccupied'
+  | 'layout.legendReserved' | 'layout.legendClosed'
+  | 'timeTracking.title' | 'timeTracking.clockIn' | 'timeTracking.clockOut' | 'timeTracking.active'
+  | 'timeTracking.timesheet' | 'timeTracking.staff' | 'timeTracking.hours' | 'timeTracking.noActive'
+  | 'giftCards.title' | 'giftCards.create' | 'giftCards.code' | 'giftCards.balance'
+  | 'giftCards.initialBalance' | 'giftCards.expiresAt' | 'giftCards.active'
+  | 'giftCards.inactive' | 'giftCards.deactivate' | 'giftCards.noCards';
 
 export const translations: Record<TranslationKey, string> = {
-  'app.name': 'QCart',
+  'app.name': 'Qlisted',
 
   'nav.home': 'Home',
   'nav.menu': 'Menu',
@@ -171,6 +215,8 @@ export const translations: Record<TranslationKey, string> = {
   'nav.inventory': 'Inventory',
   'nav.modifiers': 'Modifiers',
   'nav.analytics': 'Analytics',
+  'nav.promotions': 'Promotions',
+  'nav.loyalty': 'Loyalty',
 
   'auth.email': 'Email address',
   'auth.password': 'Password',
@@ -246,6 +292,52 @@ export const translations: Record<TranslationKey, string> = {
   'common.hours': 'hrs',
   'common.settings': 'Settings',
   'common.viewAll': 'View all',
+
+  'promo.title': 'Promotions',
+  'promo.create': 'Create Campaign',
+  'promo.edit': 'Edit Campaign',
+  'promo.name': 'Campaign Name',
+  'promo.type': 'Discount Type',
+  'promo.value': 'Discount Value',
+  'promo.percentage': 'Percentage (%)',
+  'promo.fixed': 'Fixed Amount ($)',
+  'promo.buyXGetY': 'Buy X Get Y',
+  'promo.happyHour': 'Happy Hour',
+  'promo.minOrder': 'Min. Order Amount',
+  'promo.maxDiscount': 'Max Discount',
+  'promo.startDate': 'Start Date',
+  'promo.endDate': 'End Date',
+  'promo.daysOfWeek': 'Days of Week (0-6, comma)',
+  'promo.timeStart': 'Start Time',
+  'promo.timeEnd': 'End Time',
+  'promo.usageLimit': 'Usage Limit',
+  'promo.usageCount': 'Usage Count',
+  'promo.isActive': 'Active',
+  'promo.noCampaigns': 'No campaigns yet. Create your first promotion.',
+  'promo.enterCode': 'Enter promo code',
+  'promo.apply': 'Apply',
+  'promo.applied': 'Applied',
+  'promo.invalid': 'Invalid promo code',
+  'promo.expired': 'Promo code has expired',
+  'promo.reachedLimit': 'Promo code usage limit reached',
+
+  'loyalty.title': 'Loyalty Program',
+  'loyalty.points': 'Points',
+  'loyalty.availablePoints': 'Available Points',
+  'loyalty.lifetime': 'Lifetime',
+  'loyalty.tier': 'Tier',
+  'loyalty.bronze': 'Bronze',
+  'loyalty.silver': 'Silver',
+  'loyalty.gold': 'Gold',
+  'loyalty.platinum': 'Platinum',
+  'loyalty.rewards': 'Available Rewards',
+  'loyalty.redeem': 'Redeem',
+  'loyalty.transactions': 'Recent Transactions',
+  'loyalty.earn': 'Earn',
+  'loyalty.welcome': 'Welcome bonus',
+  'loyalty.noRewards': 'No rewards available at this time.',
+  'loyalty.noTransactions': 'No transactions yet.',
+  'loyalty.refresh': 'Refresh',
 
   'order.pending': 'Pending',
   'order.preparing': 'Preparing',
@@ -362,18 +454,18 @@ export const translations: Record<TranslationKey, string> = {
 
   'footer.privacy': 'Privacy Policy',
   'footer.terms': 'Terms of Service',
-  'footer.copyright': '© {year} QCart. All rights reserved.',
+  'footer.copyright': '© {year} Qlisted. All rights reserved.',
   'footer.company': 'Company',
   'footer.support': 'Support',
   'footer.legal': 'Legal',
 
   'marketing.trustedBy': 'Trusted by 300+ restaurants',
   'marketing.heroTitle': 'Turn every table into a self-service revenue engine',
-  'marketing.heroDesc': 'QCart lets guests scan, order, and pay from their phones — no app, no waiting. Your kitchen and staff stay in sync in real time.',
+  'marketing.heroDesc': 'Qlisted lets guests scan, order, and pay from their phones — no app, no waiting. Your kitchen and staff stay in sync in real time.',
   'marketing.noCreditCard': 'No credit card required · 14-day free trial',
   'marketing.seeFeatures': 'See Features',
   'marketing.featuresTitle': 'Everything you need to run service',
-  'marketing.featuresDesc': 'From the first scan to the final payment, QCart handles it all.',
+  'marketing.featuresDesc': 'From the first scan to the final payment, Qlisted handles it all.',
   'marketing.howItWorksTitle': 'Live in three steps',
   'marketing.howItWorksDesc': 'No hardware. No installs. Just your menu and a printer.',
   'marketing.stepLabel': 'STEP {num}',
@@ -390,7 +482,7 @@ export const translations: Record<TranslationKey, string> = {
   'marketing.mostPopular': 'Most Popular',
   'marketing.faqTitle': 'Frequently asked questions',
   'marketing.ctaTitle': 'Ready to digitize your restaurant?',
-  'marketing.ctaDesc': 'Join hundreds of restaurants using QCart to streamline service and grow revenue.',
+  'marketing.ctaDesc': 'Join hundreds of restaurants using Qlisted to streamline service and grow revenue.',
   'marketing.scanToOrder': 'Scan to order',
   'marketing.statRestaurants': 'Restaurants',
   'marketing.statOrdersServed': 'Orders served',
@@ -459,7 +551,7 @@ export const translations: Record<TranslationKey, string> = {
   'marketing.faq2Q': 'How long does setup take?',
   'marketing.faq2A': 'Most restaurants are live the same day. Add your menu, generate table QR codes, and you\'re ready to take orders.',
   'marketing.faq3Q': 'Can I take payments?',
-  'marketing.faq3A': 'Yes. QCart uses Stripe for secure card payments, with tips, split bills, and shareable payment links built in.',
+  'marketing.faq3A': 'Yes. Qlisted uses Stripe for secure card payments, with tips, split bills, and shareable payment links built in.',
   'marketing.faq4Q': 'Can I manage more than one location?',
   'marketing.faq4A': 'Absolutely. Run multiple restaurants from one account, each with its own menu, staff, tables, and analytics.',
   'pricing.pageTitle': 'Simple, transparent pricing',
@@ -538,7 +630,7 @@ export const translations: Record<TranslationKey, string> = {
   'contact.successTitle': 'Message sent!',
   'contact.successDesc': "We'll get back to you within 24 hours.",
   'demo.pageTitle': 'Get a Demo',
-  'demo.pageDesc': "See QCart in action. Fill out the form and we'll show you how it works.",
+  'demo.pageDesc': "See Qlisted in action. Fill out the form and we'll show you how it works.",
   'demo.formName': 'Your Name',
   'demo.formNamePlaceholder': 'John Doe',
   'demo.formEmail': 'Email',
@@ -576,4 +668,111 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': 'Page not found',
   'error.sessionExpired': 'Your session has expired. Please sign in again.',
   'error.unauthorized': 'You are not authorized to view this page.',
+
+  'reservations.title': 'Reservations',
+  'reservations.create': 'Create Reservation',
+  'reservations.edit': 'Edit Reservation',
+  'reservations.customerName': 'Customer Name',
+  'reservations.partySize': 'Party Size',
+  'reservations.date': 'Date',
+  'reservations.time': 'Time',
+  'reservations.duration': 'Duration',
+  'reservations.status': 'Status',
+  'reservations.email': 'Email',
+  'reservations.phone': 'Phone',
+  'reservations.specialRequests': 'Special Requests',
+  'reservations.assignTable': 'Assign Table',
+  'reservations.noReservations': 'No reservations for this date.',
+  'reservations.pending': 'Pending',
+  'reservations.confirmed': 'Confirmed',
+  'reservations.seated': 'Seated',
+  'reservations.cancelled': 'Cancelled',
+  'reservations.noShow': 'No Show',
+  'reservations.allStatuses': 'All statuses',
+  'reservations.newReservation': 'New Reservation',
+  'reservations.guests': '{count} guests',
+  'reservations.minutes': '{count}min',
+
+  'waitlist.title': 'Waitlist',
+  'waitlist.join': 'Join Waitlist',
+  'waitlist.position': 'Position',
+  'waitlist.waiting': 'Waiting',
+  'waitlist.notified': 'Notified',
+  'waitlist.seated': 'Seated',
+  'waitlist.cancelled': 'Cancelled',
+  'waitlist.expired': 'Expired',
+  'waitlist.estimatedWait': '~{min} min wait',
+  'waitlist.noEntries': 'No entries in the waitlist.',
+  'waitlist.partySize': 'Party Size',
+  'waitlist.notifyCustomer': 'Notify Customer',
+  'waitlist.markSeated': 'Mark Seated',
+  'waitlist.remove': 'Remove',
+  'waitlist.checkStatus': 'Check your spot',
+  'waitlist.yourPosition': 'Your spot: #{pos} — Est. ~{min} min',
+  'waitlist.notFound': 'No active entry found for this phone number.',
+  'waitlist.waitingCount': '{count} waiting',
+
+  'tax.title': 'Tax Configuration',
+  'tax.create': 'Add Tax Category',
+  'tax.edit': 'Edit Tax Category',
+  'tax.name': 'Category Name',
+  'tax.rate': 'Tax Rate',
+  'tax.isDefault': 'Default',
+  'tax.noCategories': 'No tax categories configured.',
+  'tax.deleteConfirm': 'Are you sure you want to delete this tax category? Menu items using it will be untaxed.',
+  'tax.itemTaxCategory': 'Tax Category',
+  'tax.taxExempt': 'Tax Exempt',
+  'tax.itemTaxExempt': 'Exempt from tax',
+
+  'discount.title': 'Discounts',
+  'discount.apply': 'Apply Discount',
+  'discount.amount': 'Discount Amount',
+  'discount.reason': 'Reason',
+  'discount.compItem': 'Comp Item',
+  'discount.uncompItem': 'Un-Comp',
+  'discount.comp': 'Comp',
+  'discount.noDiscount': 'No discounts applied.',
+  'discount.applied': 'Discount Applied',
+  'discount.placeholder': 'e.g. Loyalty discount, Manager comp',
+
+  'tracking.title': 'Order Tracking',
+  'tracking.orderPlaced': 'Order Placed',
+  'tracking.preparing': 'Preparing',
+  'tracking.ready': 'Ready',
+  'tracking.delivered': 'Delivered',
+  'tracking.notFound': 'Order not found.',
+  'tracking.loading': 'Loading your order...',
+  'tracking.autoRefresh': 'Auto-refreshing every 10 seconds',
+  'tracking.enjoy': 'Enjoy your meal!',
+  'tracking.readyForPickup': 'Ready for pickup/serving!',
+  'tracking.beingPrepared': 'Your order is being prepared',
+
+  'layout.title': 'Table Layout',
+  'layout.save': 'Save Layout',
+  'layout.saving': 'Saving...',
+  'layout.zoomIn': 'Zoom In',
+  'layout.zoomOut': 'Zoom Out',
+  'layout.noTables': 'No tables yet. Add tables from the list view first.',
+  'layout.legendAvailable': 'Available',
+  'layout.legendOccupied': 'Occupied',
+  'layout.legendReserved': 'Reserved',
+  'layout.legendClosed': 'Closed',
+  'giftCards.title': 'Gift Cards',
+  'giftCards.create': 'Create Card',
+  'giftCards.code': 'Code',
+  'giftCards.balance': 'Balance',
+  'giftCards.initialBalance': 'Initial Balance',
+  'giftCards.expiresAt': 'Expires At',
+  'giftCards.active': 'Active',
+  'giftCards.inactive': 'Inactive',
+  'giftCards.deactivate': 'Deactivate',
+  'giftCards.noCards': 'No gift cards created yet.',
+  'timeTracking.title': 'Time Tracking',
+  'timeTracking.clockIn': 'Clock In',
+  'timeTracking.clockOut': 'Clock Out',
+  'timeTracking.active': 'Active Shifts',
+  'timeTracking.timesheet': 'Timesheet',
+  'timeTracking.staff': 'Staff',
+  'timeTracking.hours': 'Hours',
+  'timeTracking.noActive': 'No active shifts.',
 };

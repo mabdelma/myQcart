@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, sql, lte, gte } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { logger } from '../lib/logger.js';
 
@@ -64,6 +64,11 @@ export async function applyPromoCode(tenantId: string, orderId: string, code: st
     if (campaign.maxDiscount) discountAmount = Math.min(discountAmount, campaign.maxDiscount);
   } else if (campaign.type === 'fixed') {
     discountAmount = Math.min(campaign.value, order.subtotal);
+  } else if (campaign.type === 'buy_x_get_y') {
+    discountAmount = Math.min(campaign.value, order.subtotal);
+  } else if (campaign.type === 'happy_hour') {
+    discountAmount = order.subtotal * (campaign.value / 100);
+    if (campaign.maxDiscount) discountAmount = Math.min(discountAmount, campaign.maxDiscount);
   } else {
     return { error: 'Promo type not supported for manual apply', status: 400 as const };
   }

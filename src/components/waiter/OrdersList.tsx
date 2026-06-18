@@ -18,7 +18,8 @@ interface OrderItem {
 
 interface OrderWithDetails {
   id: string;
-  tableId: string;
+  tableId?: string;
+  orderType: 'dine_in' | 'takeout' | 'delivery';
   status: string;
   paymentStatus: string;
   total: number;
@@ -115,7 +116,7 @@ export function OrdersList() {
         {orders.map((order) => {
           const orderAge = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
           const isDelayed = orderAge > 15;
-          const table = tables[order.tableId];
+          const table = order.tableId ? tables[order.tableId] : undefined;
 
           return (
             <div key={order.id}
@@ -123,7 +124,7 @@ export function OrdersList() {
               <div className="p-4">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Table {table?.number || '?'}</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{order.orderType === 'dine_in' ? `Table ${table?.number || '?'}` : order.orderType === 'takeout' ? 'Takeout' : 'Delivery'}</h3>
                     <div className="mt-2 flex space-x-2">
                       <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :

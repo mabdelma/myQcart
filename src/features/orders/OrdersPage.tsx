@@ -68,7 +68,7 @@ export function OrdersPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">{t('nav.orders')}</h2>
-        <button onClick={loadOrders} className="flex items-center text-sm text-gray-500 hover:text-[#8B4513]">
+        <button onClick={loadOrders} className="flex items-center text-sm text-gray-500 hover:text-brand">
           <RefreshCw className="w-4 h-4 mr-1" /> {t('common.retry')}
         </button>
       </div>
@@ -100,7 +100,7 @@ export function OrdersPage() {
                     {new Date(order.createdAt).toLocaleTimeString()}
                   </p>
                 </div>
-                <span className="font-bold text-lg text-[#8B4513]">${order.total.toFixed(2)}</span>
+                <span className="font-bold text-lg text-brand">${order.total.toFixed(2)}</span>
               </div>
 
               {(order.status === 'ready' || order.status === 'delivered') && order.paymentStatus !== 'paid' && (
@@ -133,7 +133,7 @@ export function OrdersPage() {
                       </button>
                       {getStripe() && (
                         <button onClick={() => setPayingOrderId(order.id)}
-                          className="flex-1 py-2 bg-[#8B4513] text-white rounded-lg text-sm hover:bg-[#5C4033]">
+                          className="flex-1 py-2 bg-brand text-white rounded-lg text-sm hover:bg-brand-hover">
                           {t('payment.card')}
                         </button>
                       )}

@@ -104,7 +104,7 @@ export function NotificationsProvider({
         const prevOrder = prev.find((p) => p.id === order.id);
         if (prevOrder?.status === order.status) return;
 
-        const tableNumber = tableMap.get(order.tableId) || '?';
+        const tableNumber = order.tableId ? (tableMap.get(order.tableId) || '?') : (order.orderType === 'takeout' ? 'Takeout' : 'Delivery');
 
         switch (role) {
           case 'kitchen':

@@ -68,6 +68,7 @@ export const menuCategories = pgTable('menu_categories', {
   type: text('type', { enum: ['main', 'sub'] }).notNull().default('main'),
   parentId: text('parent_id'),
   sortOrder: integer('sort_order').notNull().default(0),
+  translations: jsonb('translations'),
 });
 
 export const stockItems = pgTable('stock_items', {
@@ -148,6 +149,15 @@ export const menuItemModifiers = pgTable('menu_item_modifiers', {
   sortOrder: integer('sort_order').notNull().default(0),
 });
 
+export const taxCategories = pgTable('tax_categories', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  name: text('name').notNull(),
+  rate: doublePrecision('rate').notNull().default(0),
+  isDefault: boolean('is_default').notNull().default(false),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
 export const menuItems = pgTable('menu_items', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').notNull().references(() => tenants.id),
@@ -159,8 +169,11 @@ export const menuItems = pgTable('menu_items', {
   imageUrl: text('image_url'),
   imageData: text('image_data'),
   available: boolean('available').notNull().default(true),
+  taxCategoryId: text('tax_category_id').references(() => taxCategories.id),
+  taxExempt: boolean('tax_exempt').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   modifiers: text('modifiers'),
+  translations: jsonb('translations'),
 });
 
 export const tables = pgTable('tables', {
@@ -178,12 +191,20 @@ export const tables = pgTable('tables', {
 export const orders = pgTable('orders', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').notNull().references(() => tenants.id),
-  tableId: text('table_id').notNull().references(() => tables.id),
+  tableId: text('table_id').references(() => tables.id),
   serverId: text('server_id'),
   customerName: text('customer_name'),
+  customerPhone: text('customer_phone'),
+  orderType: text('order_type', { enum: ['dine_in', 'takeout', 'delivery'] }).notNull().default('dine_in'),
+  deliveryAddress: text('delivery_address'),
+  deliveryFee: doublePrecision('delivery_fee').default(0),
+  estimatedPickupTime: text('estimated_pickup_time'),
+  estimatedDeliveryTime: text('estimated_delivery_time'),
   status: text('status', { enum: ['pending', 'preparing', 'ready', 'delivered', 'cancelled'] }).notNull().default('pending'),
   itemCount: integer('item_count').notNull().default(0),
   subtotal: doublePrecision('subtotal').notNull().default(0),
+  discountAmount: doublePrecision('discount_amount').default(0),
+  discountReason: text('discount_reason'),
   tax: doublePrecision('tax').notNull().default(0),
   serviceCharge: doublePrecision('service_charge').notNull().default(0),
   total: doublePrecision('total').notNull().default(0),
@@ -202,6 +223,7 @@ export const orderItems = pgTable('order_items', {
   name: text('name').notNull(),
   quantity: integer('quantity').notNull().default(1),
   unitPrice: doublePrecision('unit_price').notNull(),
+  isComp: boolean('is_comp').notNull().default(false),
   modifiers: text('modifiers'),
   notes: text('notes'),
 });
@@ -373,4 +395,85 @@ export const loyaltyTransactions = pgTable('loyalty_transactions', {
   amount: integer('amount').notNull(),
   description: text('description'),
   createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
+export const expoPushTokens = pgTable('expo_push_tokens', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  token: text('token').notNull().unique(),
+  deviceInfo: text('device_info'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
+export const waitlistEntries = pgTable('waitlist_entries', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  customerName: text('customer_name').notNull(),
+  customerPhone: text('customer_phone'),
+  customerEmail: text('customer_email'),
+  partySize: integer('party_size').notNull(),
+  status: text('status', { enum: ['waiting', 'notified', 'seated', 'cancelled', 'expired'] }).notNull().default('waiting'),
+  estimatedWaitMinutes: integer('estimated_wait_minutes').default(15),
+  notifiedAt: text('notified_at'),
+  seatedAt: text('seated_at'),
+  notes: text('notes'),
+  source: text('source', { enum: ['web', 'staff'] }).notNull().default('web'),
+  position: integer('position'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  updatedAt: text('updated_at').notNull().default(sql`now()`),
+});
+
+export const timeEntries = pgTable('time_entries', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  userId: text('user_id').notNull().references(() => users.id),
+  clockIn: text('clock_in').notNull(),
+  clockOut: text('clock_out'),
+  totalHours: doublePrecision('total_hours'),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  updatedAt: text('updated_at').notNull().default(sql`now()`),
+});
+
+export const giftCards = pgTable('gift_cards', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  code: text('code').notNull(),
+  initialBalance: doublePrecision('initial_balance').notNull(),
+  currentBalance: doublePrecision('current_balance').notNull(),
+  expiresAt: text('expires_at'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  updatedAt: text('updated_at').notNull().default(sql`now()`),
+});
+
+export const giftCardRedemptions = pgTable('gift_card_redemptions', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  giftCardId: text('gift_card_id').notNull().references(() => giftCards.id),
+  orderId: text('order_id').notNull().references(() => orders.id),
+  amount: doublePrecision('amount').notNull(),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
+export const reservations = pgTable('reservations', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  tableId: text('table_id').references(() => tables.id),
+  customerName: text('customer_name').notNull(),
+  customerEmail: text('customer_email'),
+  customerPhone: text('customer_phone'),
+  partySize: integer('party_size').notNull(),
+  date: text('date').notNull(),
+  time: text('time').notNull(),
+  duration: integer('duration').notNull().default(90),
+  status: text('status', { enum: ['pending', 'confirmed', 'seated', 'cancelled', 'no_show'] }).notNull().default('pending'),
+  notes: text('notes'),
+  specialRequests: text('special_requests'),
+  source: text('source', { enum: ['web', 'phone', 'walk_in', 'staff'] }).notNull().default('web'),
+  depositAmount: doublePrecision('deposit_amount').default(0),
+  depositPaymentId: text('deposit_payment_id'),
+  reminderSent: boolean('reminder_sent').notNull().default(false),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  updatedAt: text('updated_at').notNull().default(sql`now()`),
 });

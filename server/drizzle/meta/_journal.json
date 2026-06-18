@@ -71,6 +71,69 @@
       "when": 1781636647194,
       "tag": "0009_push_loyalty_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781800000000,
+      "tag": "0010_expo_push_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781900000000,
+      "tag": "0011_reservations",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1781900001000,
+      "tag": "0012_waitlist_entries",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1781900002000,
+      "tag": "0013_delivery_takeout",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1781900003000,
+      "tag": "0014_tax_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1781900004000,
+      "tag": "0015_discounts_comps",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1781900005000,
+      "tag": "0016_item_translations",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1781900006000,
+      "tag": "0017_gift_cards",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781900007000,
+      "tag": "0018_time_entries",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,7 @@ export function InstallBanner() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
       <div className="bg-[#8B4513] text-white px-4 py-3 flex items-center justify-between shadow-lg">
-        <span className="text-sm font-medium">Install QCart</span>
+        <span className="text-sm font-medium">Install Qlisted</span>
         <div className="flex items-center gap-2">
           <button
             onClick={promptInstall}

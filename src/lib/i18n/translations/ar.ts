@@ -220,7 +220,7 @@ export const translations: Record<TranslationKey, string> = {
 
   'marketing.trustedBy': 'موثوق من أكثر من 300 مطعم',
   'marketing.heroTitle': 'حوّل كل طاولة إلى محرك إيرادات ذاتي الخدمة',
-  'marketing.heroDesc': 'QCart يتيح للضيوف المسح والطلب والدفع من هواتفهم — بدون تطبيق، بدون انتظار. مطبخك وموظفوك يبقون على تنسيق فوري.',
+  'marketing.heroDesc': 'Qlisted يتيح للضيوف المسح والطلب والدفع من هواتفهم — بدون تطبيق، بدون انتظار. مطبخك وموظفوك يبقون على تنسيق فوري.',
   'marketing.noCreditCard': 'لا حاجة لبطاقة ائتمان · نسخة تجريبية مجانية لمدة 14 يوماً',
   'marketing.seeFeatures': 'عرض المميزات',
   'marketing.featuresTitle': 'كل ما تحتاجه لإدارة الخدمة',
@@ -389,7 +389,7 @@ export const translations: Record<TranslationKey, string> = {
   'contact.successTitle': 'تم إرسال الرسالة!',
   'contact.successDesc': 'سنتواصل معك خلال 24 ساعة.',
   'demo.pageTitle': 'اطلب عرضاً',
-  'demo.pageDesc': 'شاهد QCart في العمل. املأ النموذج وسنريك كيف يعمل.',
+  'demo.pageDesc': 'شاهد Qlisted في العمل. املأ النموذج وسنريك كيف يعمل.',
   'demo.formName': 'اسمك',
   'demo.formNamePlaceholder': 'محمد أحمد',
   'demo.formEmail': 'البريد الإلكتروني',

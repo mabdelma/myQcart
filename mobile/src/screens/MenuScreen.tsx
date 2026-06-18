@@ -1,13 +1,18 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import type { NativeStackScreenProps } from '@react-navigation/native';
 
-type Props = NativeStackScreenProps<{ Menu: { slug?: string } }, 'Menu'>;
+interface MenuScreenProps {
+  slug: string;
+  tableId?: string;
+  baseUrl: string;
+}
 
-const MenuScreen: React.FC<Props> = ({ route }) => {
-  const slug = route.params?.slug ?? 'demo-cafe';
-  const uri = `https://qcart.gmtmall.com/r/${slug}`;
+const MenuScreen: React.FC<MenuScreenProps> = ({ slug, tableId, baseUrl }) => {
+  let uri = `${baseUrl}/r/${slug}`;
+  if (tableId) {
+    uri += `/table/${tableId}/menu`;
+  }
 
   return (
     <View style={styles.container}>
@@ -24,12 +29,8 @@ const MenuScreen: React.FC<Props> = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  webview: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  webview: { flex: 1 },
 });
 
 export default MenuScreen;

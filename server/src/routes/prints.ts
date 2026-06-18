@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
-import { getPrintJobs, reprintJob } from '../services/printService.js';
+import { getPrintJobs, reprintJob, generateReceiptText } from '../services/printService.js';
 import { db, schema } from '../db/index.js';
 import { v4 as uuid } from 'uuid';
 import { eq, and } from 'drizzle-orm';
@@ -60,6 +60,19 @@ prints.delete('/:slug/prints/printers/:printerId', resolveTenant, authMiddleware
   const printerId = c.req.param('printerId')!;
   await db.delete(schema.printers).where(and(eq(schema.printers.id, printerId), eq(schema.printers.tenantId, tenantId)));
   return c.json({ data: { id: printerId } });
+});
+
+prints.get('/:slug/orders/:orderId/receipt', resolveTenant, authMiddleware, async (c) => {
+  const tenantId = c.get('tenantId')!;
+  const orderId = c.req.param('orderId')!;
+  try {
+    const receipt = await generateReceiptText(tenantId, orderId);
+    c.header('Content-Type', 'text/plain');
+    return c.body(receipt);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal server error';
+    return c.json({ error: message }, 404);
+  }
 });
 
 export default prints;

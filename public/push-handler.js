@@ -3,7 +3,7 @@
   try {
     const data = event.data.json();
     event.waitUntil(
-      self.registration.showNotification(data.title || 'QCart', {
+      self.registration.showNotification(data.title || 'Qlisted', {
         body: data.body || '',
         icon: data.icon || '/icon.svg',
         badge: '/icon.svg',

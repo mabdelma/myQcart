@@ -126,6 +126,37 @@ menu.delete('/:slug/menu/items/:itemId', authMiddleware, requireRole('admin'), r
   return c.json({ success: true });
 });
 
+const translationsSchema = z.object({
+  translations: z.record(z.object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+  })),
+});
+
+menu.put('/:slug/menu/items/:itemId/translations', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', translationsSchema), async (c) => {
+  const tenantId = c.get('tenantId');
+  const itemId = c.req.param('itemId')!;
+  const { translations } = c.req.valid('json');
+
+  await db.update(schema.menuItems)
+    .set({ translations })
+    .where(and(eq(schema.menuItems.id, itemId), eq(schema.menuItems.tenantId, tenantId)));
+
+  return c.json({ success: true });
+});
+
+menu.put('/:slug/menu/categories/:categoryId/translations', authMiddleware, requireRole('admin', 'manager'), resolveTenant, zValidator('json', translationsSchema), async (c) => {
+  const tenantId = c.get('tenantId');
+  const categoryId = c.req.param('categoryId')!;
+  const { translations } = c.req.valid('json');
+
+  await db.update(schema.menuCategories)
+    .set({ translations })
+    .where(and(eq(schema.menuCategories.id, categoryId), eq(schema.menuCategories.tenantId, tenantId)));
+
+  return c.json({ success: true });
+});
+
 // Bulk menu import
 const menuImportSchema = z.object({
   categories: z.array(z.object({

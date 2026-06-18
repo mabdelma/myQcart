@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette } from 'lucide-react';
+import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette, Tag, Star, CalendarDays, Clock, Percent, Grid3X3, Gift, Timer } from 'lucide-react';
 import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 
 interface SidebarProps {
@@ -15,8 +15,16 @@ const tabs = [
   { id: 'menu', icon: ChefHat },
   { id: 'modifiers', icon: ToggleLeft },
   { id: 'tables', icon: Table },
+  { id: 'layout', icon: Grid3X3 },
   { id: 'subscription', icon: CreditCard },
   { id: 'branding', icon: Palette },
+  { id: 'campaigns', icon: Tag },
+  { id: 'waitlist', icon: Clock },
+  { id: 'reservations', icon: CalendarDays },
+  { id: 'tax', icon: Percent },
+  { id: 'loyalty', icon: Star },
+  { id: 'gift-cards', icon: Gift },
+  { id: 'time-tracking', icon: Timer },
   { id: 'settings', icon: Settings },
 ] as const;
 
@@ -28,8 +36,16 @@ const tabKeyMap: Record<string, string> = {
   menu: 'nav.menu',
   modifiers: 'nav.modifiers',
   tables: 'staff.tables',
+  layout: 'layout.title',
   subscription: 'nav.subscription',
   branding: 'nav.branding',
+  campaigns: 'nav.promotions',
+  waitlist: 'waitlist.title',
+  reservations: 'reservations.title',
+  tax: 'tax.title',
+  loyalty: 'nav.loyalty',
+  'gift-cards': 'giftCards.title',
+  'time-tracking': 'timeTracking.title',
   settings: 'common.settings',
 };
 

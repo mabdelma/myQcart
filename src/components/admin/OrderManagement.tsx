@@ -120,7 +120,7 @@ export function OrderManagement() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const table = tables[order.tableId];
+      const table = order.tableId ? tables[order.tableId] : undefined;
       const tableMatch = table && table.number.toString().includes(query);
       if (!tableMatch) return false;
     }

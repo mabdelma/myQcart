@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical, ToggleLeft, Globe } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { menuApi, uploadApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { MenuItem, MenuCategory } from '../../lib/api/types';
+import type { MenuItem, MenuCategory, ModifierGroup } from '../../lib/api/types';
+
+const locales = [
+  { code: 'en', label: 'English' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'pt', label: 'Português' },
+  { code: 'zh', label: '中文' },
+  { code: 'hi', label: 'हिन्दी' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'ja', label: '日本語' },
+];
 
 const SortableItem = React.memo(function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (item: MenuItem) => void; onDelete: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -65,6 +78,8 @@ export function MenuManagement() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [editing, setEditing] = useState<Partial<MenuItem> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [allModifierGroups, setAllModifierGroups] = useState<ModifierGroup[]>([]);
+  const [linkedGroupIds, setLinkedGroupIds] = useState<string[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -82,6 +97,9 @@ export function MenuManagement() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+    if (slug) {
+      menuApi.getModifierGroups(slug).then((r) => setAllModifierGroups(r.data)).catch(() => {});
+    }
   }, [slug, selectedCategory]);
 
   async function handleSave(e: React.FormEvent) {
@@ -90,14 +108,44 @@ export function MenuManagement() {
     try {
       if (editing.id) {
         await menuApi.updateItem(slug, editing.id, editing);
+        const currentLinked = new Set(linkedGroupIds);
+        const previouslyLinked = allModifierGroups.filter((g) => currentLinked.has(g.id)).map((g) => g.id);
+        try {
+          const existingModifiers = await menuApi.getMenuItemModifiers(slug, editing.id);
+          for (const g of existingModifiers) {
+            if (!currentLinked.has(g.id)) {
+              await menuApi.unlinkMenuItemModifier(slug, editing.id, g.id);
+            }
+          }
+          for (const g of previouslyLinked) {
+            if (!existingModifiers.some((e) => e.id === g)) {
+              await menuApi.linkMenuItemModifier(slug, editing.id, g);
+            }
+          }
+        } catch { /* no existing modifiers */ }
       } else {
-        await menuApi.createItem(slug, editing as Parameters<typeof menuApi.createItem>[1]);
+        const newItem = await menuApi.createItem(slug, editing as Parameters<typeof menuApi.createItem>[1]);
+        for (const g of linkedGroupIds) {
+          try {
+            await menuApi.linkMenuItemModifier(slug, newItem.id, g);
+          } catch { /* ignore */ }
+        }
       }
       setEditing(null);
+      setLinkedGroupIds([]);
       const data = await menuApi.getFullMenu(slug);
       setItems(data.items);
     } catch (err) {
       console.error('Failed to save item:', err);
+    }
+  }
+
+  function startEditing(item: MenuItem) {
+    setEditing(item);
+    if (slug) {
+      menuApi.getMenuItemModifiers(slug, item.id).then((groups) => {
+        setLinkedGroupIds(groups.map((g) => g.id));
+      }).catch(() => setLinkedGroupIds([]));
     }
   }
 
@@ -240,8 +288,68 @@ export function MenuManagement() {
                 />
                 <label htmlFor="menu-avail" className="ml-2 text-sm text-gray-900">Available</label>
               </div>
+
+              {/* Translations */}
+              <details className="border border-gray-200 rounded-lg">
+                <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                  <Globe className="w-4 h-4" /> Translations
+                </summary>
+                <div className="px-3 pb-3 space-y-3 border-t border-gray-200 pt-3">
+                  {locales.filter((l) => l.code !== 'en').map((locale) => (
+                    <div key={locale.code} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">{locale.label}</span>
+                      <input type="text" placeholder={`Name (${locale.code})`}
+                        value={(editing.translations?.[locale.code] as { name?: string } | undefined)?.name || ''}
+                        onChange={(e) => {
+                          const tr = editing.translations || {};
+                          tr[locale.code] = { ...tr[locale.code], name: e.target.value };
+                          setEditing({ ...editing, translations: tr });
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" />
+                      <textarea placeholder={`Description (${locale.code})`}
+                        value={(editing.translations?.[locale.code] as { description?: string } | undefined)?.description || ''}
+                        onChange={(e) => {
+                          const tr = editing.translations || {};
+                          tr[locale.code] = { ...tr[locale.code], description: e.target.value };
+                          setEditing({ ...editing, translations: tr });
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" rows={2} />
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              {allModifierGroups.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                    <ToggleLeft className="w-4 h-4" /> Modifier Groups
+                  </label>
+                  <div className="space-y-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-2">
+                    {allModifierGroups.map((g) => (
+                      <label key={g.id} className="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={linkedGroupIds.includes(g.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setLinkedGroupIds([...linkedGroupIds, g.id]);
+                            } else {
+                              setLinkedGroupIds(linkedGroupIds.filter((id) => id !== g.id));
+                            }
+                          }}
+                          className="h-4 w-4 text-[#8B4513] border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-900">{g.name}</span>
+                        <span className="text-xs text-gray-400">
+                          ({g.options.length} options)
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end space-x-3">
-                <button type="button" onClick={() => setEditing(null)}
+                <button type="button" onClick={() => { setEditing(null); setLinkedGroupIds([]); }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                   Cancel
                 </button>
@@ -285,7 +393,7 @@ export function MenuManagement() {
         <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => (
-              <SortableItem key={item.id} item={item} onEdit={setEditing} onDelete={handleDelete} />
+              <SortableItem key={item.id} item={item} onEdit={startEditing} onDelete={handleDelete} />
             ))}
           </div>
         </SortableContext>

@@ -3,7 +3,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
 import { logger } from '../lib/logger.js';
-import { sendEmail } from '../lib/mail.js';
+import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
 import { emitOrderEvent } from '../lib/events.js';
 import Stripe from 'stripe';
 import type { PaginationParams, PaginatedResult } from '../lib/pagination.js';
@@ -309,20 +309,21 @@ async function sendReceiptEmail(tenantId: string, orderId: string, paymentId: st
     const payment = await db.select().from(schema.payments).where(eq(schema.payments.id, paymentId)).limit(1);
     const method = payment[0]?.method || 'card';
 
+    const content = `
+      <h2 style="margin-top:0;">Payment Receipt</h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#666;">Order</td><td style="text-align:right;font-weight:600;">#${orderId.slice(0, 8)}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Amount</td><td style="text-align:right;font-weight:600;">$${order.total.toFixed(2)}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Paid</td><td style="text-align:right;font-weight:600;">$${(order.paidAmount || 0).toFixed(2)}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Method</td><td style="text-align:right;">${method}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Status</td><td style="text-align:right;">${order.paymentStatus}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Date</td><td style="text-align:right;">${new Date().toLocaleString()}</td></tr>
+      </table>
+    `;
     await sendEmail({
       to: tenant.email,
       subject: `Receipt for Order #${orderId.slice(0, 8)} — ${tenant.name}`,
-      html: `
-        <h2>Payment Receipt</h2>
-        <p><strong>Order:</strong> #${orderId.slice(0, 8)}</p>
-        <p><strong>Amount:</strong> $${order.total.toFixed(2)}</p>
-        <p><strong>Paid:</strong> $${(order.paidAmount || 0).toFixed(2)}</p>
-        <p><strong>Payment Method:</strong> ${method}</p>
-        <p><strong>Status:</strong> ${order.paymentStatus}</p>
-        <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-        <hr />
-        <p style="color:#666;font-size:12px">QCart &middot; ${tenant.name}</p>
-      `,
+      html: brandedEmailHtml(content, tenant.name, tenant.primaryColor, tenant.logoUrl),
     });
   } catch (err) {
     logger.error({ err, orderId }, 'Failed to send receipt email');

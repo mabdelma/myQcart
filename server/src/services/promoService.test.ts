@@ -197,17 +197,31 @@ describe('promoService', () => {
       }
     });
 
-    it('returns error for unsupported promo type', async () => {
-      const campaign = { ...baseCampaign, type: 'buy_x_get_y' as const };
+    it('applies buy_x_get_y discount correctly', async () => {
+      const campaign = { ...baseCampaign, type: 'buy_x_get_y' as const, value: 10 };
       const order = { id: 'order-1', tenantId: 'tenant-1', subtotal: 100, total: 120, notes: null };
       db.__setQueryQueue([[campaign], [order]]);
 
       const result = await applyPromoCode('tenant-1', 'order-1', 'BOGO');
 
-      expect('error' in result).toBe(true);
-      if ('error' in result) {
-        expect(result.error).toBe('Promo type not supported for manual apply');
-        expect(result.status).toBe(400);
+      expect('data' in result).toBe(true);
+      if ('data' in result) {
+        expect(result.data.discountAmount).toBe(10);
+        expect(result.data.newTotal).toBe(110);
+      }
+    });
+
+    it('applies happy_hour discount correctly', async () => {
+      const campaign = { ...baseCampaign, type: 'happy_hour' as const, value: 15 };
+      const order = { id: 'order-1', tenantId: 'tenant-1', subtotal: 100, total: 120, notes: null };
+      db.__setQueryQueue([[campaign], [order]]);
+
+      const result = await applyPromoCode('tenant-1', 'order-1', 'HAPPY');
+
+      expect('data' in result).toBe(true);
+      if ('data' in result) {
+        expect(result.data.discountAmount).toBe(15);
+        expect(result.data.newTotal).toBe(105);
       }
     });
 

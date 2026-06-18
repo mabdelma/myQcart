@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import type { MenuItem } from '../lib/api/types';
+import type { MenuItem, ModifierSelection } from '../lib/api/types';
 
 interface CartItem {
   menuItem: MenuItem;
   quantity: number;
   comment?: string;
+  selectedModifiers?: ModifierSelection[];
+}
+
+function modifiersPriceAdjustment(modifiers?: ModifierSelection[]): number {
+  return (modifiers ?? []).reduce((sum, m) => sum + m.priceAdjustment, 0);
+}
+
+function itemTotal(item: CartItem): number {
+  return (item.menuItem.price + modifiersPriceAdjustment(item.selectedModifiers)) * item.quantity;
 }
 
 interface CartState {
@@ -14,7 +23,7 @@ interface CartState {
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: MenuItem; quantity: number; comment?: string; tableId?: string }
+  | { type: 'ADD_ITEM'; payload: MenuItem; quantity: number; comment?: string; selectedModifiers?: ModifierSelection[]; tableId?: string }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'SET_COMMENT'; payload: { id: string; comment: string } }
@@ -28,36 +37,39 @@ const CartContext = createContext<{
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
-      // Don't add unavailable items
-      if (!action.payload.available) {
-        return state;
-      }
-      
-      const existingItem = state.items.find(item => item.menuItem.id === action.payload.id);
+      if (!action.payload.available) return state;
+
+      const modifiersKey = JSON.stringify(action.selectedModifiers ?? []);
+      const existingItem = state.items.find(item =>
+        item.menuItem.id === action.payload.id &&
+        JSON.stringify(item.selectedModifiers ?? []) === modifiersKey
+      );
       const quantity = action.quantity || 1;
-      
+      const unitPrice = action.payload.price + modifiersPriceAdjustment(action.selectedModifiers);
+
       if (existingItem) {
         return {
           ...state,
           tableId: action.tableId || state.tableId,
           items: state.items.map(item =>
-            item.menuItem.id === action.payload.id
+            item.menuItem.id === action.payload.id && JSON.stringify(item.selectedModifiers ?? []) === modifiersKey
               ? { ...item, quantity: item.quantity + quantity, comment: action.comment || item.comment }
               : item
           ),
-          total: state.total + (action.payload.price * quantity)
+          total: state.total + (unitPrice * quantity),
         };
       }
 
       return {
         ...state,
         tableId: action.tableId || state.tableId,
-        items: [...state.items, { 
-          menuItem: action.payload, 
-          quantity, 
-          comment: action.comment || undefined 
+        items: [...state.items, {
+          menuItem: action.payload,
+          quantity,
+          comment: action.comment || undefined,
+          selectedModifiers: action.selectedModifiers,
         }],
-        total: state.total + (action.payload.price * quantity)
+        total: state.total + (unitPrice * quantity),
       };
     }
 
@@ -68,7 +80,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return {
         ...state,
         items: state.items.filter(item => item.menuItem.id !== action.payload),
-        total: state.total - (item.menuItem.price * item.quantity)
+        total: state.total - itemTotal(item),
       };
     }
 
@@ -77,6 +89,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       if (!item) return state;
 
       const quantityDiff = action.payload.quantity - item.quantity;
+      const unitPrice = item.menuItem.price + modifiersPriceAdjustment(item.selectedModifiers);
 
       return {
         ...state,
@@ -85,7 +98,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             ? { ...item, quantity: action.payload.quantity }
             : item
         ),
-        total: state.total + (item.menuItem.price * quantityDiff)
+        total: state.total + (unitPrice * quantityDiff),
       };
     }
 

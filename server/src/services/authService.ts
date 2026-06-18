@@ -81,7 +81,7 @@ export async function registerUser(input: RegisterInput) {
       <p><a href="${verifyLink}">${verifyLink}</a></p>
       <p>This link expires in 24 hours.</p>
       <hr />
-      <p style="color:#666;font-size:12px;">QCart &middot; ${existingTenant.name}</p>
+      <p style="color:#666;font-size:12px;">Qlisted &middot; ${existingTenant.name}</p>
     `,
   });
 
@@ -314,7 +314,7 @@ export async function resendVerificationEmail(email: string) {
 
   await sendEmail({
     to: user.email,
-    subject: 'Verify your email — QCart',
+    subject: 'Verify your email — Qlisted',
     html: `
       <h2>Email Verification</h2>
       <p>Hi ${user.name},</p>
@@ -322,7 +322,7 @@ export async function resendVerificationEmail(email: string) {
       <p><a href="${verifyLink}">${verifyLink}</a></p>
       <p>This link expires in 24 hours.</p>
       <hr />
-      <p style="color:#666;font-size:12px;">QCart</p>
+      <p style="color:#666;font-size:12px;">Qlisted</p>
     `,
   });
 
@@ -356,7 +356,7 @@ export async function requestPasswordReset(email: string) {
 
   await sendEmail({
     to: user.email,
-    subject: 'Reset your QCart password',
+    subject: 'Reset your Qlisted password',
     html: `
       <h2>Password Reset</h2>
       <p>Hi ${user.name},</p>
@@ -365,7 +365,7 @@ export async function requestPasswordReset(email: string) {
       <p>This link expires in 1 hour.</p>
       <p>If you didn't request this, you can safely ignore this email.</p>
       <hr />
-      <p style="color:#666;font-size:12px;">QCart</p>
+      <p style="color:#666;font-size:12px;">Qlisted</p>
     `,
   });
 

@@ -9,7 +9,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <UtensilsCrossed className="h-6 w-6 text-[#8B4513]" />
-              <span className="text-lg font-bold text-white">QCart</span>
+              <span className="text-lg font-bold text-white">Qlisted</span>
             </div>
             <p className="text-sm text-gray-400 max-w-md">
               Digital ordering and payment platform for modern restaurants.
@@ -33,7 +33,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} QCart. All rights reserved.</p>
+          <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Qlisted. All rights reserved.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <Link to="/signin" className="text-sm text-gray-400 hover:text-white transition-colors">Login</Link>
           </div>

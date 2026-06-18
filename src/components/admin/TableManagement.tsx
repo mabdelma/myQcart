@@ -46,7 +46,7 @@ export function TableManagement() {
       ]);
 
       const activeOrdersMap = allOrders.reduce((acc, order) => {
-        if (order.status !== 'delivered' && order.status !== 'paid') {
+        if (order.status !== 'delivered' && order.status !== 'paid' && order.tableId) {
           acc[order.tableId] = order;
         }
         return acc;

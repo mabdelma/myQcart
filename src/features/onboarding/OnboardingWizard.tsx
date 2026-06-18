@@ -38,7 +38,7 @@ export function OnboardingWizard() {
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg">
         <div className="flex items-center justify-center mb-6">
           <Building2 className="h-10 w-10 text-[#8B4513]" />
-          <h1 className="text-2xl font-bold text-[#5C4033] ml-3">QCart Setup</h1>
+          <h1 className="text-2xl font-bold text-[#5C4033] ml-3">Qlisted Setup</h1>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">{error}</div>}

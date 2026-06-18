@@ -17,7 +17,8 @@ interface OrderItem {
 
 interface OrderWithDetails {
   id: string;
-  tableId: string;
+  tableId?: string;
+  orderType: 'dine_in' | 'takeout' | 'delivery';
   status: string;
   paymentStatus: string;
   total: number;
@@ -119,7 +120,7 @@ export function OrderHistory() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const table = tables[order.tableId];
+      const table = order.tableId ? tables[order.tableId] : undefined;
       const tableMatch = table?.number.toString().includes(query);
       const itemsMatch = order.items.some((item) => item.name.toLowerCase().includes(query));
       return tableMatch || itemsMatch;
@@ -189,14 +190,14 @@ export function OrderHistory() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredOrders.map((order) => {
           const orderAge = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
-          const table = tables[order.tableId];
+          const table = order.tableId ? tables[order.tableId] : undefined;
           return (
             <div key={order.id} onClick={() => setSelectedOrder(order)}
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
               <div className="p-4">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Table {table?.number || '?'}</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{order.orderType === 'dine_in' ? `Table ${table?.number || '?'}` : order.orderType === 'takeout' ? 'Takeout' : 'Delivery'}</h3>
                     <div className="flex items-center mt-1">
                       <Clock className="w-4 h-4 text-gray-400 mr-1" />
                       <span className="text-sm text-gray-500">{orderAge} min ago</span>

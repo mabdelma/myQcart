@@ -41,12 +41,12 @@ export function SignIn() {
 
         <Link to="/" className="relative flex items-center gap-2">
           <UtensilsCrossed className="h-8 w-8" />
-          <span className="text-2xl font-bold">QCart</span>
+          <span className="text-2xl font-bold">Qlisted</span>
           <span className="ml-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">Console</span>
         </Link>
 
         <div className="relative max-w-md">
-          <h1 className="text-4xl font-bold leading-tight">The console behind every QCart restaurant.</h1>
+          <h1 className="text-4xl font-bold leading-tight">The console behind every Qlisted restaurant.</h1>
           <p className="mt-4 text-amber-100/90">
             One secure sign-in for platform super admins, restaurant admins, and staff.
           </p>
@@ -65,7 +65,7 @@ export function SignIn() {
           </ul>
         </div>
 
-        <p className="relative text-sm text-amber-100/70">&copy; {new Date().getFullYear()} QCart. All rights reserved.</p>
+        <p className="relative text-sm text-amber-100/70">&copy; {new Date().getFullYear()} Qlisted. All rights reserved.</p>
       </div>
 
       {/* ── Form panel ───────────────────────────────────────────────────── */}
@@ -74,7 +74,7 @@ export function SignIn() {
           {/* Mobile logo */}
           <Link to="/" className="mb-8 flex items-center justify-center gap-2 lg:hidden">
             <UtensilsCrossed className="h-8 w-8 text-[#8B4513]" />
-            <span className="text-2xl font-bold text-gray-900">QCart</span>
+            <span className="text-2xl font-bold text-gray-900">Qlisted</span>
           </Link>
 
           <div className="mb-8">

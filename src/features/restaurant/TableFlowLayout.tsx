@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { Outlet, NavLink, useParams, useLocation } from 'react-router';
 import { ShoppingCart, ClipboardList, ChefHat, Receipt, ChevronRight } from 'lucide-react';
+import { BrandingProvider } from '../../contexts/BrandingProvider';
 import { CartProvider, useCart } from '../../contexts/CartContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { tenantApi, menuApi, tableApi } from '../../lib/api';
@@ -52,9 +53,9 @@ function Breadcrumb() {
                 to={`/r/${slug}/table/${tableId}/${s.path}`}
                 className={`transition-colors whitespace-nowrap ${
                   i <= currentIdx
-                    ? 'text-[#8B4513] font-medium'
+                    ? 'text-brand font-medium'
                     : 'text-gray-400'
-                } hover:text-[#8B4513]`}
+                } hover:text-brand`}
               >
                 {s.label}
               </NavLink>
@@ -105,13 +106,18 @@ function TableFlowInner() {
 
   return (
     <TableFlowContext.Provider value={value}>
+      <BrandingProvider primaryColor={tenant.primaryColor} accentColor={tenant.accentColor} logoUrl={tenant.logoUrl} faviconUrl={tenant.faviconUrl}>
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm border-b sticky top-0 z-40">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-3">
               <div className="flex items-center space-x-6">
                 <div className="flex items-center">
-                  <ChefHat className="h-6 w-6 text-[#8B4513]" />
+                  {tenant.logoUrl ? (
+                    <img src={tenant.logoUrl} alt={tenant.name} className="h-7 w-7 rounded-full object-cover" />
+                  ) : (
+                    <ChefHat className="h-6 w-6 text-brand" />
+                  )}
                   <span className="ml-2 text-lg font-bold text-gray-900">{tenant.name}</span>
                 </div>
                 <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded font-medium">
@@ -120,31 +126,31 @@ function TableFlowInner() {
               </div>
               <div className="flex items-center space-x-1 sm:space-x-3">
                 <NavLink to={`/r/${slug}/table/${tableId}/menu`}
-                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-brand-light text-brand' : 'text-gray-500 hover:text-brand hover:bg-brand-light/50'}`}>
                   {t('nav.menu')}
                 </NavLink>
                 <NavLink to={`/r/${slug}/table/${tableId}/cart`}
-                  className={({ isActive }) => `relative px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  className={({ isActive }) => `relative px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-brand-light text-brand' : 'text-gray-500 hover:text-brand hover:bg-brand-light/50'}`}>
                   <ShoppingCart className="h-4 w-4 inline sm:mr-1" />
                   <span className="hidden sm:inline">{t('nav.cart')}</span>
                   {state.items.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#8B4513] text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                    <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                       {state.items.length}
                     </span>
                   )}
                 </NavLink>
                 <NavLink to={`/r/${slug}/table/${tableId}/orders`}
-                  className={({ isActive }) => `relative px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  className={({ isActive }) => `relative px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-brand-light text-brand' : 'text-gray-500 hover:text-brand hover:bg-brand-light/50'}`}>
                   <ClipboardList className="h-4 w-4 inline sm:mr-1" />
                   <span className="hidden sm:inline">{t('nav.orders')}</span>
                   {state.items.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#8B4513] text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                    <span className="absolute -top-1 -right-1 bg-brand text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                       {state.items.length}
                     </span>
                   )}
                 </NavLink>
                 <NavLink to={`/r/${slug}/table/${tableId}/bill`}
-                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-[#F5DEB3] text-[#8B4513]' : 'text-gray-500 hover:text-[#8B4513] hover:bg-[#F5DEB3]/50'}`}>
+                  className={({ isActive }) => `px-2 sm:px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${isActive ? 'bg-brand-light text-brand' : 'text-gray-500 hover:text-brand hover:bg-brand-light/50'}`}>
                   <Receipt className="h-4 w-4 inline sm:mr-1" />
                   <span className="hidden sm:inline">{t('nav.bill')}</span>
                 </NavLink>
@@ -162,12 +168,13 @@ function TableFlowInner() {
       {state.items.length > 0 && !isCartPage && (
         <NavLink to={`/r/${slug}/table/${tableId}/cart`}
           aria-label={`View cart with ${state.items.length} items, total $${state.total.toFixed(2)}`}
-          className="fixed bottom-6 right-6 bg-[#8B4513] text-white rounded-full px-5 py-3 shadow-lg flex items-center gap-2 hover:bg-[#5C4033] transition-colors z-30">
+          className="fixed bottom-6 right-6 bg-brand text-white rounded-full px-5 py-3 shadow-lg flex items-center gap-2 hover:bg-brand-hover transition-colors z-30">
           <ShoppingCart className="w-5 h-5" />
           <span className="font-medium">{state.items.length}</span>
           <span className="font-bold">${state.total.toFixed(2)}</span>
         </NavLink>
       )}
+      </BrandingProvider>
     </TableFlowContext.Provider>
   );
 }

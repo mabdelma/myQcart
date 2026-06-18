@@ -33,7 +33,7 @@ export function OrderList({
       {orders.map((order) => {
         const orderAge = getOrderAge(order.createdAt);
         const isDelayed = isOrderDelayed(order);
-        const table = tables[order.tableId];
+        const table = order.tableId ? tables[order.tableId] : undefined;
         
         return (
           <article
@@ -55,7 +55,7 @@ export function OrderList({
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
-                    Table {table?.number || order.tableId}
+                    {order.orderType === 'dine_in' ? `Table ${table?.number || '?'}` : order.orderType === 'takeout' ? 'Takeout' : 'Delivery'}
                   </h3>
                   <div className="flex items-center mt-1">
                     <Clock className="w-4 h-4 text-gray-400 mr-1" />

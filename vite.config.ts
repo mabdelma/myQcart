@@ -36,8 +36,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'QCart - Restaurant Ordering',
-        short_name: 'QCart',
+        name: 'Qlisted - Restaurant Ordering',
+        short_name: 'Qlisted',
         description: 'Digital ordering & payment platform for restaurants',
         theme_color: '#8B4513',
         background_color: '#ffffff',

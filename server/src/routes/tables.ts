@@ -248,8 +248,11 @@ tables.post('/:slug/tables/transfer-order', authMiddleware, requireRole('admin',
   if (!targetTable) return c.json({ error: 'Target table not found' }, 404);
 
   const oldTableId = order.tableId;
+  if (!oldTableId) {
+    return c.json({ error: 'Cannot transfer a takeout or delivery order to a table' }, 400);
+  }
   await db.update(schema.orders)
-    .set({ tableId: targetTableId, notes: `Transferred from table ${order.tableId} | ${order.notes || ''}` })
+    .set({ tableId: targetTableId, notes: `Transferred from table ${oldTableId} | ${order.notes || ''}` })
     .where(eq(schema.orders.id, orderId));
 
   const remainingOrders = await db.select().from(schema.orders).where(and(eq(schema.orders.tableId, oldTableId), eq(schema.orders.paymentStatus, 'unpaid'), eq(schema.orders.id, sql`${schema.orders.id} != ${orderId}`)));

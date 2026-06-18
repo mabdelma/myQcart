@@ -29,7 +29,9 @@ export async function exportOrders(tenantId: string, startDate?: string, endDate
   const rows = [];
   for (const order of orders) {
     const items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, order.id));
-    const [table] = await db.select().from(schema.tables).where(eq(schema.tables.id, order.tableId)).limit(1);
+    const [table] = order.tableId
+      ? await db.select().from(schema.tables).where(eq(schema.tables.id, order.tableId)).limit(1)
+      : [null];
     for (const item of items) {
       rows.push({
         orderId: order.id,

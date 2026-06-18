@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { CreditCard, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { connectApi } from '../../lib/api';
+import type { ConnectAccountStatus, PayoutInfo } from '../../lib/api/types';
+import { CreditCard, Check, ChevronDown, ChevronUp, Loader2, DollarSign, Plus, ExternalLink } from 'lucide-react';
 
 interface SubscriptionPlan {
   id: string;
@@ -26,11 +28,66 @@ const PLANS: SubscriptionPlan[] = [
 
 export function SubscriptionManagement() {
   const { state: { tenant } } = useAuth();
+  const slug = tenant?.slug;
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [changing, setChanging] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+
+  // Stripe Connect state
+  const [connectStatus, setConnectStatus] = useState<ConnectAccountStatus | null>(null);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [balance, setBalance] = useState<{ available: { amount: number; currency: string }[]; pending: { amount: number; currency: string }[] } | null>(null);
+  const [payouts, setPayouts] = useState<PayoutInfo[]>([]);
+  const [email, setEmail] = useState('');
+  const [payoutAmount, setPayoutAmount] = useState(0);
+  const [payoutCreating, setPayoutCreating] = useState(false);
+
+  const loadConnect = useCallback(async () => {
+    if (!slug) return;
+    setConnectLoading(true);
+    try {
+      const [status, bal, payoutList] = await Promise.all([
+        connectApi.status(slug).catch(() => null),
+        connectApi.balance(slug).catch(() => null),
+        connectApi.payouts(slug).catch(() => []),
+      ]);
+      if (status) setConnectStatus(status);
+      if (bal) setBalance(bal);
+      setPayouts(payoutList);
+    } catch {}
+    setConnectLoading(false);
+  }, [slug]);
+
+  useEffect(() => { if (slug) loadConnect(); }, [slug, loadConnect]);
+
+  const handleCreateAccount = async () => {
+    if (!slug || !email) return;
+    try {
+      await connectApi.createAccount(slug, email);
+      await loadConnect();
+    } catch {}
+  };
+
+  const handleOnboarding = async () => {
+    if (!slug) return;
+    try {
+      const { url } = await connectApi.onboardingLink(slug);
+      window.open(url, '_blank');
+    } catch {}
+  };
+
+  const handlePayout = async () => {
+    if (!slug || payoutAmount <= 0) return;
+    setPayoutCreating(true);
+    try {
+      await connectApi.createPayout(slug, Math.round(payoutAmount * 100));
+      setPayoutAmount(0);
+      await loadConnect();
+    } catch {}
+    setPayoutCreating(false);
+  };
 
   const load = useCallback(async () => {
     if (!tenant) return;
@@ -161,6 +218,73 @@ export function SubscriptionManagement() {
                 </div>
               ))
             )}
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <DollarSign className="w-6 h-6 text-[#8B4513]" />
+          <h3 className="text-lg font-medium">Payouts & Stripe Connect</h3>
+        </div>
+        {connectLoading ? (
+          <p className="text-sm text-gray-500">Loading...</p>
+        ) : connectStatus?.connected ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-500">Available Balance</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {balance ? `$${(balance.available.reduce((s, b) => s + b.amount, 0) / 100).toFixed(2)}` : '—'}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-500">Pending Balance</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {balance ? `$${(balance.pending.reduce((s, b) => s + b.amount, 0) / 100).toFixed(2)}` : '—'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="number" min="1" step="0.01" value={payoutAmount || ''} placeholder="Amount ($)"
+                onChange={(e) => setPayoutAmount(parseFloat(e.target.value) || 0)}
+                className="w-40 rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" />
+              <button onClick={handlePayout} disabled={payoutCreating}
+                className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">
+                {payoutCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" /> Payout</>}
+              </button>
+            </div>
+            {payouts.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Payout History</h4>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {payouts.map((p) => (
+                    <div key={p.id} className="flex justify-between text-sm py-1 border-b border-gray-100">
+                      <span className="text-gray-600">{new Date(p.created || p.arrivalDate).toLocaleDateString()}</span>
+                      <span className="font-medium">${(p.amount / 100).toFixed(2)}</span>
+                      <span className={`text-xs capitalize ${p.status === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>{p.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-500">Connect your Stripe account to receive payouts.</p>
+            <input type="email" placeholder="Email for Stripe account" value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="block w-80 rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" />
+            <div className="flex gap-2">
+              <button onClick={handleCreateAccount}
+                className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] text-sm">
+                <Plus className="w-4 h-4 mr-1" /> Create Account
+              </button>
+              <button onClick={handleOnboarding}
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm">
+                <ExternalLink className="w-4 h-4 mr-1" /> Complete Onboarding
+              </button>
+            </div>
           </div>
         )}
       </div>

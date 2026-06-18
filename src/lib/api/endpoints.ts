@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry } from './types';
 
 // Auth
 export const authApi = {
@@ -39,7 +39,7 @@ export const menuApi = {
     api.put<{ success: boolean }>(`/r/${slug}/menu/categories/${categoryId}`, data),
   deleteCategory: (slug: string, categoryId: string) =>
     api.delete<{ success: boolean }>(`/r/${slug}/menu/categories/${categoryId}`),
-  createItem: (slug: string, data: { categoryId: string; name: string; price: number; description?: string; imageUrl?: string; available?: boolean; sortOrder?: number; modifiers?: string }) =>
+  createItem: (slug: string, data: { categoryId: string; name: string; price: number; description?: string; imageUrl?: string; available?: boolean; sortOrder?: number; modifiers?: string; taxCategoryId?: string; taxExempt?: boolean }) =>
     api.post<MenuItem>(`/r/${slug}/menu/items`, data),
   updateItem: (slug: string, itemId: string, data: Partial<MenuItem>) =>
     api.put<{ success: boolean }>(`/r/${slug}/menu/items/${itemId}`, data),
@@ -63,6 +63,12 @@ export const menuApi = {
     api.put<{ success: boolean }>(`/r/${slug}/modifier-options/${optionId}`, data),
   deleteModifierOption: (slug: string, optionId: string) =>
     api.delete<{ success: boolean }>(`/r/${slug}/modifier-options/${optionId}`),
+  getMenuItemModifiers: (slug: string, menuItemId: string) =>
+    api.get<ModifierGroup[]>(`/r/${slug}/menu-items/${menuItemId}/modifiers`),
+  linkMenuItemModifier: (slug: string, menuItemId: string, groupId: string) =>
+    api.post<{ success: boolean }>(`/r/${slug}/menu-items/${menuItemId}/modifiers/${groupId}`),
+  unlinkMenuItemModifier: (slug: string, menuItemId: string, groupId: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/menu-items/${menuItemId}/modifiers/${groupId}`),
 };
 
 // Tables
@@ -83,16 +89,22 @@ export const tableApi = {
 
 // Orders
 export const orderApi = {
-  create: (slug: string, data: { tableId: string; customerName?: string; items: { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string; modifiers?: string }[]; notes?: string }) =>
-    api.post<{ id: string; items: OrderItem[]; subtotal: number; tax: number; serviceCharge: number; total: number }>(`/r/${slug}/orders`, data, { skipAuth: true }),
+  create: (slug: string, data: { tableId?: string; customerName?: string; customerPhone?: string; orderType?: string; deliveryAddress?: string; deliveryFee?: number; estimatedPickupTime?: string; estimatedDeliveryTime?: string; items: { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string; modifiers?: string }[]; notes?: string }) =>
+    api.post<{ id: string; items: OrderItem[]; subtotal: number; tax: number; serviceCharge: number; deliveryFee: number; total: number; orderType: string }>(`/r/${slug}/orders`, data, { skipAuth: true }),
   getForTable: (slug: string, tableId: string) =>
     api.get<Order[]>(`/r/${slug}/table/${tableId}/orders`, { skipAuth: true }),
-  list: (slug: string, status?: string) =>
-    api.get<Order[]>(`/r/${slug}/orders${status ? `?status=${status}` : ''}`),
+  list: (slug: string, status?: string, orderType?: string) =>
+    api.get<Order[]>(`/r/${slug}/orders${status ? `?status=${status}` : ''}${orderType ? `${status ? '&' : '?'}orderType=${orderType}` : ''}`),
   getDetail: (slug: string, orderId: string) =>
     api.get<OrderWithItems>(`/r/${slug}/orders/${orderId}`),
+  trackOrder: (slug: string, orderId: string) =>
+    api.get<OrderWithItems>(`/r/${slug}/orders/${orderId}/track`, { skipAuth: true }),
   updateStatus: (slug: string, orderId: string, status: string) =>
     api.patch<{ success: boolean }>(`/r/${slug}/orders/${orderId}/status`, { status }),
+  applyDiscount: (slug: string, orderId: string, data: { amount: number; reason?: string }) =>
+    api.post<{ discountAmount: number; discountReason?: string; total: number }>(`/r/${slug}/orders/${orderId}/discount`, data),
+  compItem: (slug: string, orderId: string, itemId: string, isComp: boolean) =>
+    api.post<{ itemId: string; isComp: boolean; subtotal: number; total: number }>(`/r/${slug}/orders/${orderId}/items/${itemId}/comp`, { isComp }),
   getByServer: (slug: string, serverId: string) =>
     api.get<Order[]>(`/r/${slug}/orders/server/${serverId}`),
   updateItems: (slug: string, orderId: string, data: { addItems?: { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string; modifiers?: string }[]; removeItemIds?: string[] }) =>
@@ -162,7 +174,111 @@ export const loyaltyApi = {
     api.post<{ success: boolean; points: number; discount: number }>(`/r/${slug}/loyalty/redeem`, data),
 };
 
+export const waitlistApi = {
+  join: (slug: string, data: { customerName: string; partySize: number; customerPhone?: string; customerEmail?: string; notes?: string }) =>
+    api.post<{ id: string; position: number; estimatedWaitMinutes: number }>(`/r/${slug}/waitlist`, data, { skipAuth: true }),
+  list: (slug: string, status?: string) =>
+    api.get<WaitlistEntry[]>(`/r/${slug}/waitlist${status ? `?status=${status}` : ''}`),
+  updateStatus: (slug: string, entryId: string, status: string) =>
+    api.patch<{ success: boolean }>(`/r/${slug}/waitlist/${entryId}/status`, { status }),
+  delete: (slug: string, entryId: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/waitlist/${entryId}`),
+  checkStatus: (slug: string, phone: string) =>
+    api.get<{ status: string; position?: number; estimatedWaitMinutes?: number } | { status: 'not_found' }>(`/r/${slug}/waitlist/status?phone=${encodeURIComponent(phone)}`, { skipAuth: true }),
+};
+
+export const reservationApi = {
+  create: (slug: string, data: { customerName: string; partySize: number; date: string; time: string; customerEmail?: string; customerPhone?: string; duration?: number; notes?: string; specialRequests?: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/reservations`, data, { skipAuth: true }),
+  list: (slug: string, date?: string, status?: string) =>
+    api.get<Reservation[]>(`/r/${slug}/reservations${date ? `?date=${date}` : ''}${status ? `${date ? '&' : '?'}status=${status}` : ''}`),
+  get: (slug: string, reservationId: string) =>
+    api.get<Reservation>(`/r/${slug}/reservations/${reservationId}`),
+  updateStatus: (slug: string, reservationId: string, status: string) =>
+    api.patch<{ success: boolean }>(`/r/${slug}/reservations/${reservationId}/status`, { status }),
+  assignTable: (slug: string, reservationId: string, tableId: string) =>
+    api.post<{ success: boolean; tableNumber: number }>(`/r/${slug}/reservations/${reservationId}/assign-table`, { tableId }),
+  update: (slug: string, reservationId: string, data: Partial<{ customerName: string; partySize: number; date: string; time: string; customerEmail?: string; customerPhone?: string; notes?: string; specialRequests?: string }>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/reservations/${reservationId}`, data),
+  delete: (slug: string, reservationId: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/reservations/${reservationId}`),
+};
+
 export const promoApi = {
   validate: (slug: string, code: string, subtotal?: number) =>
     api.get<{ valid: boolean; code: string; type: string; value: number; discount: number; description: string }>(`/r/${slug}/promo/validate?code=${encodeURIComponent(code)}${subtotal ? `&subtotal=${subtotal}` : ''}`),
+  listCampaigns: (slug: string) =>
+    api.get<{ data: Campaign[] }>(`/r/${slug}/campaigns`),
+  createCampaign: (slug: string, data: CampaignInput) =>
+    api.post<{ data: { id: string } }>(`/r/${slug}/campaigns`, data),
+  updateCampaign: (slug: string, campaignId: string, data: Partial<CampaignInput>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/campaigns/${campaignId}`, data),
+  deleteCampaign: (slug: string, campaignId: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/campaigns/${campaignId}`),
+  applyPromo: (slug: string, orderId: string, code: string) =>
+    api.post<{ discountAmount: number; newTotal: number }>(`/r/${slug}/orders/${orderId}/apply-promo`, { code }),
+};
+
+export const giftCardApi = {
+  list: (slug: string) => api.get<GiftCard[]>(`/r/${slug}/gift-cards`),
+  create: (slug: string, data: { code: string; initialBalance: number; expiresAt?: string }) =>
+    api.post<GiftCard>(`/r/${slug}/gift-cards`, data),
+  lookup: (slug: string, code: string) =>
+    api.get<GiftCard>(`/r/${slug}/gift-cards/lookup/${code}`),
+  redeem: (slug: string, code: string, orderId: string) =>
+    api.post<{ redeemed: number; newBalance: number; remainingOrderBalance: number }>(`/r/${slug}/gift-cards/redeem`, { code, orderId }),
+  deactivate: (slug: string, id: string) =>
+    api.patch<GiftCard>(`/r/${slug}/gift-cards/${id}/deactivate`),
+  redemptions: (slug: string, id: string) =>
+    api.get<GiftCardRedemption[]>(`/r/${slug}/gift-cards/${id}/redemptions`),
+};
+
+export const timeApi = {
+  clockIn: (slug: string, notes?: string) => api.post<TimeEntry>(`/r/${slug}/time/clock-in`, { notes }),
+  clockOut: (slug: string, notes?: string) => api.post<TimeEntry>(`/r/${slug}/time/clock-out`, { notes }),
+  active: (slug: string) => api.get<(TimeEntry & { userName: string; userRole: string })[]>(`/r/${slug}/time/active`),
+  timesheet: (slug: string, params?: { userId?: string; startDate?: string; endDate?: string }) =>
+    api.get<(TimeEntry & { userName: string; userRole: string })[]>(`/r/${slug}/time/timesheet`, { params }),
+};
+
+export const invoiceApi = {
+  download: async (slug: string, orderId: string) => {
+    const token = localStorage.getItem('auth_token');
+    const res = await fetch(`/api/r/${slug}/orders/${orderId}/invoice`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to download invoice');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice-${orderId.slice(0, 8)}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+};
+
+export const connectApi = {
+  createAccount: (slug: string, email: string) =>
+    api.post<{ accountId: string }>(`/r/${slug}/connect/account`, { email }),
+  onboardingLink: (slug: string) =>
+    api.get<{ url: string }>(`/r/${slug}/connect/onboarding-link`),
+  status: (slug: string) =>
+    api.get<ConnectAccountStatus>(`/r/${slug}/connect/status`),
+  balance: (slug: string) =>
+    api.get<{ available: { amount: number; currency: string }[]; pending: { amount: number; currency: string }[] }>(`/r/${slug}/connect/balance`),
+  createPayout: (slug: string, amount: number, currency?: string) =>
+    api.post<PayoutInfo>(`/r/${slug}/connect/payout`, { amount, currency }),
+  payouts: (slug: string) =>
+    api.get<PayoutInfo[]>(`/r/${slug}/connect/payouts`),
+};
+
+export const taxCategoryApi = {
+  list: (slug: string) => api.get<TaxCategory[]>(`/r/${slug}/tax-categories`),
+  create: (slug: string, data: { name: string; rate: number; isDefault?: boolean }) =>
+    api.post<TaxCategory>(`/r/${slug}/tax-categories`, data),
+  update: (slug: string, id: string, data: { name?: string; rate?: number; isDefault?: boolean }) =>
+    api.put<TaxCategory>(`/r/${slug}/tax-categories/${id}`, data),
+  delete: (slug: string, id: string) =>
+    api.delete<{ success: boolean }>(`/r/${slug}/tax-categories/${id}`),
 };

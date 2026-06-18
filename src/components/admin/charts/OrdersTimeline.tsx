@@ -74,7 +74,7 @@ export function OrdersTimeline() {
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-sm font-medium text-gray-900">
-                    Table {order.tableId}
+                    {order.orderType === 'dine_in' ? `Table ${order.tableId?.slice(0, 8) || '?'}` : order.orderType === 'takeout' ? 'Takeout' : 'Delivery'}
                   </span>
                   <span className="ml-2 text-sm text-gray-500">
                     ${order.total.toFixed(2)}

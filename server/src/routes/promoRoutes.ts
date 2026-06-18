@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
 import { db, schema } from '../db/index.js';
-import { eq, and, sql, lte, gte } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 const promoValidate = new Hono();
 
@@ -68,6 +68,11 @@ promoValidate.get('/:slug/promo/validate', authMiddleware, requireRole('admin', 
     if (campaign.maxDiscount) discountAmount = Math.min(discountAmount, campaign.maxDiscount);
   } else if (campaign.type === 'fixed') {
     discountAmount = Math.min(campaign.value, subtotal || Infinity);
+  } else if (campaign.type === 'buy_x_get_y') {
+    discountAmount = Math.min(campaign.value, subtotal || Infinity);
+  } else if (campaign.type === 'happy_hour') {
+    discountAmount = subtotal * (campaign.value / 100);
+    if (campaign.maxDiscount) discountAmount = Math.min(discountAmount, campaign.maxDiscount);
   } else {
     return c.json({ error: 'Promo type not supported for this endpoint' }, 400);
   }

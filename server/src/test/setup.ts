@@ -9,6 +9,7 @@ vi.mock('../db/index.js', () => {
     menuItems: 'menuItems',
     tables: 'tables',
     orders: 'orders',
+
     orderItems: 'orderItems',
     payments: 'payments',
     paymentLinks: 'paymentLinks',
@@ -27,6 +28,9 @@ vi.mock('../db/index.js', () => {
     tenantSubscriptions: 'tenantSubscriptions',
     printers: 'printers',
     printJobs: 'printJobs',
+    reservations: 'reservations',
+    waitlistEntries: 'waitlistEntries',
+    taxCategories: 'taxCategories',
   };
 
   let queryQueue: unknown[] = [];

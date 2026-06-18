@@ -48,7 +48,7 @@ export function TableMenuPage() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('menu.search')}
           aria-label={t('menu.search')}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-[#8B4513] focus:border-[#8B4513] text-gray-700 placeholder-gray-400"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-brand focus:border-brand text-gray-700 placeholder-gray-400"
         />
       </div>
 
@@ -56,7 +56,7 @@ export function TableMenuPage() {
         {mainCats.map((c) => (
           <button key={c.id} onClick={() => setSelectedCat(c.id)}
             className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors flex-shrink-0 ${
-              selectedCat === c.id ? 'bg-[#8B4513] text-white' : 'bg-white text-gray-700 border border-gray-200 hover:border-[#8B4513]'
+              selectedCat === c.id ? 'bg-brand text-white' : 'bg-white text-gray-700 border border-gray-200 hover:border-brand'
             }`}>
             {c.name}
           </button>
@@ -88,12 +88,12 @@ export function TableMenuPage() {
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900">{item.name}</h3>
               {item.description && <p className="text-sm text-gray-500 truncate">{item.description}</p>}
-              <p className="text-[#8B4513] font-bold mt-1">${item.price.toFixed(2)}</p>
+              <p className="text-brand font-bold mt-1">${item.price.toFixed(2)}</p>
             </div>
             {item.available ? (
               <button onClick={(e) => handleAdd(e, item)}
                 aria-label={`Add ${item.name} to cart`}
-                className="px-3 py-1.5 bg-[#8B4513] text-white rounded-full text-sm hover:bg-[#5C4033] flex-shrink-0 transition-colors">
+                className="px-3 py-1.5 bg-brand text-white rounded-full text-sm hover:bg-brand-hover flex-shrink-0 transition-colors">
                 {addingId === item.id ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               </button>
             ) : (

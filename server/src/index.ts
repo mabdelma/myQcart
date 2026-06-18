@@ -59,6 +59,14 @@ import {
   auditRoutes,
   loyaltyRoutes,
   promoValidateRoutes,
+  reservationRoutes,
+  waitlistRoutes,
+  taxCategoryRoutes,
+  giftCardRoutes,
+  connectRoutes,
+  invoiceRoutes,
+  timeRoutes,
+  smsRoutes,
 } from './routes/index.js';
 
 const app = new Hono();
@@ -181,6 +189,14 @@ app.route('/api/r', pushRoutes);
 app.route('/api/r', auditRoutes);
 app.route('/api/r', loyaltyRoutes);
 app.route('/api/r', promoValidateRoutes);
+app.route('/api/r', reservationRoutes);
+app.route('/api/r', waitlistRoutes);
+app.route('/api/r', taxCategoryRoutes);
+app.route('/api/r', giftCardRoutes);
+app.route('/api/r', connectRoutes);
+app.route('/api/r', invoiceRoutes);
+app.route('/api/r', timeRoutes);
+app.route('/api/r', smsRoutes);
 
 // Error handling
 app.onError((err, c) => {
@@ -201,7 +217,7 @@ serve({
   fetch: app.fetch,
   port,
 }, (info) => {
-  logger.info({ port: info.port }, 'QCart API server started');
+  logger.info({ port: info.port }, 'Qlisted API server started');
 });
 
 export default app;

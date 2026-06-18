@@ -17,6 +17,14 @@ import { WhiteLabelSettings } from '../../features/admin/WhiteLabelSettings';
 import { AnalyticsDashboard } from '../../features/analytics/AnalyticsDashboard';
 import { SalesDashboard } from '../../features/analytics/SalesDashboard';
 import { ScheduledExports } from '../../features/admin/ScheduledExports';
+import { CampaignManagement } from '../../features/admin/CampaignManagement';
+import { LoyaltyManagement } from '../../features/admin/LoyaltyManagement';
+import { ReservationManagement } from '../../features/admin/ReservationManagement';
+import { WaitlistManagement } from '../../features/admin/WaitlistManagement';
+import { TaxManagement } from '../../features/admin/TaxManagement';
+import { TableLayoutEditor } from '../../features/admin/TableLayoutEditor';
+import GiftCards from '../../features/admin/GiftCards';
+import TimeTracking from '../../features/admin/TimeTracking';
 
 const routes = [
   { path: 'orders', element: <OrderManagement /> },
@@ -28,7 +36,15 @@ const routes = [
   { path: 'users', element: <UserManagement /> },
   { path: 'settings', element: <SettingsPage /> },
   { path: 'subscription', element: <SubscriptionManagement /> },
-  { path: 'branding', element: <WhiteLabelSettings /> }
+  { path: 'branding', element: <WhiteLabelSettings /> },
+  { path: 'campaigns', element: <CampaignManagement /> },
+  { path: 'loyalty', element: <LoyaltyManagement /> },
+  { path: 'reservations', element: <ReservationManagement /> },
+  { path: 'waitlist', element: <WaitlistManagement /> },
+  { path: 'tax', element: <TaxManagement /> },
+  { path: 'layout', element: <TableLayoutEditor /> },
+  { path: 'gift-cards', element: <GiftCards /> },
+  { path: 'time-tracking', element: <TimeTracking /> }
 ];
 
 export function AdminPortal() {

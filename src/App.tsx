@@ -34,6 +34,7 @@ const OrdersPage = lazy(() => import('./features/orders/OrdersPage').then(m => (
 const CheckoutPage = lazy(() => import('./features/checkout/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const BillPage = lazy(() => import('./features/checkout/BillPage').then(m => ({ default: m.BillPage })));
 const PaymentLinkPage = lazy(() => import('./features/payment-links/PaymentLinkPage').then(m => ({ default: m.PaymentLinkPage })));
+const OrderTracking = lazy(() => import('./features/orders/OrderTracking').then(m => ({ default: m.OrderTracking })));
 
 function RouteFallback() {
   const location = useLocation();
@@ -109,6 +110,11 @@ function App() {
           {/* Public restaurant landing page */}
           <Route path="/r/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
           <Route path="/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
+
+          {/* Customer-facing order tracking */}
+          <Route path="/r/:slug/orders/:orderId/track" element={
+            <RouteErrorBoundary name="order-tracking"><OrderTracking /></RouteErrorBoundary>
+          } />
 
           {/* Payment link (customer-facing, no auth required) */}
           <Route path="/pay/:token" element={

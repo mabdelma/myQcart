@@ -117,6 +117,62 @@ async function seed() {
     id: uuid(), tenantId, number: 1, capacity: 4, qrToken,
   });
 
+  await db.insert(schema.promoCampaigns).values([
+    {
+      id: uuid(), tenantId, name: 'WELCOME10', type: 'percentage', value: 10,
+      minOrderAmount: 15, maxDiscount: 5, isActive: true, usageLimit: 100,
+    },
+    {
+      id: uuid(), tenantId, name: 'FIVE OFF', type: 'fixed', value: 5,
+      minOrderAmount: 20, isActive: true, usageLimit: 50,
+    },
+    {
+      id: uuid(), tenantId, name: 'HAPPYHOUR', type: 'happy_hour', value: 15,
+      timeStart: '15:00', timeEnd: '18:00', isActive: true,
+    },
+  ]);
+
+  await db.insert(schema.loyaltySummary).values({
+    id: uuid(), tenantId, points: 150, lifetimePoints: 250, tier: 'silver',
+  });
+
+  await db.insert(schema.loyaltyTransactions).values([
+    { id: uuid(), tenantId, type: 'earn', amount: 50, description: 'Welcome bonus' },
+    { id: uuid(), tenantId, type: 'earn', amount: 100, description: 'Order #abc123' },
+    { id: uuid(), tenantId, type: 'redeem', amount: 50, description: 'Redeemed: $5 Off' },
+  ]);
+
+  await db.insert(schema.waitlistEntries).values([{
+    id: uuid(), tenantId,
+    customerName: 'Alice Brown', customerPhone: '+1-555-1111', partySize: 3,
+    status: 'waiting', position: 1, estimatedWaitMinutes: 15, source: 'web',
+  }, {
+    id: uuid(), tenantId,
+    customerName: 'Bob Green', customerPhone: '+1-555-2222', partySize: 2,
+    status: 'waiting', position: 2, estimatedWaitMinutes: 30, source: 'web',
+  }, {
+    id: uuid(), tenantId,
+    customerName: 'Carol White', customerPhone: '+1-555-3333', partySize: 5,
+    status: 'waiting', position: 3, estimatedWaitMinutes: 45, source: 'staff',
+    notes: 'Prefers booth seating',
+  }]);
+
+  const today = new Date().toISOString().split('T')[0];
+  await db.insert(schema.reservations).values([{
+    id: uuid(), tenantId, tableId: null,
+    customerName: 'John Smith', customerEmail: 'john@example.com', customerPhone: '+1-555-1234',
+    partySize: 4, date: today, time: '19:00', status: 'confirmed', source: 'web',
+    specialRequests: 'Anniversary dinner - please prepare something special',
+  }, {
+    id: uuid(), tenantId, tableId: null,
+    customerName: 'Sarah Johnson', customerEmail: 'sarah@example.com',
+    partySize: 2, date: today, time: '20:30', status: 'pending', source: 'web',
+  }, {
+    id: uuid(), tenantId, tableId: null,
+    customerName: 'Mike Wilson', customerPhone: '+1-555-5678',
+    partySize: 6, date: today, time: '18:00', status: 'pending', source: 'phone',
+  }]);
+
   console.log(`Seeded tenant: demo-cafe (ID: ${tenantId})`);
   console.log('Admin login: owner@demo.com / pass123');
   console.log(`Table QR token: ${qrToken}`);

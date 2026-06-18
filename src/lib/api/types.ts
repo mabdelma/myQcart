@@ -36,9 +36,10 @@ export interface MenuCategory {
   id: string;
   tenantId: string;
   name: string;
-  type: 'main' | 'sub';
+  type: string;
   parentId?: string;
   sortOrder: number;
+  translations?: Record<string, { name?: string }>;
 }
 
 export interface MenuItem {
@@ -53,6 +54,71 @@ export interface MenuItem {
   available: boolean;
   sortOrder: number;
   modifiers?: string;
+  taxCategoryId?: string;
+  taxExempt?: boolean;
+  translations?: Record<string, { name?: string; description?: string }>;
+}
+
+export interface TaxCategory {
+  id: string;
+  tenantId: string;
+  name: string;
+  rate: number;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface GiftCard {
+  id: string;
+  tenantId: string;
+  code: string;
+  initialBalance: number;
+  currentBalance: number;
+  expiresAt?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GiftCardRedemption {
+  id: string;
+  tenantId: string;
+  giftCardId: string;
+  orderId: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface TimeEntry {
+  id: string;
+  clockIn: string;
+  clockOut?: string;
+  totalHours?: number;
+  notes?: string;
+  userId: string;
+  userName?: string;
+  userRole?: string;
+}
+
+export interface ConnectAccountStatus {
+  connected: boolean;
+  account: {
+    id: string;
+    email: string | null;
+    country: string;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    detailsSubmitted: boolean;
+  } | null;
+}
+
+export interface PayoutInfo {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  arrivalDate: string;
+  created?: string;
 }
 
 export interface TableData {
@@ -69,12 +135,20 @@ export interface TableData {
 export interface Order {
   id: string;
   tenantId: string;
-  tableId: string;
+  tableId?: string;
   serverId?: string;
   customerName?: string;
+  customerPhone?: string;
+  orderType: 'dine_in' | 'takeout' | 'delivery';
+  deliveryAddress?: string;
+  deliveryFee: number;
+  estimatedPickupTime?: string;
+  estimatedDeliveryTime?: string;
   status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
   itemCount: number;
   subtotal: number;
+  discountAmount?: number;
+  discountReason?: string;
   tax: number;
   serviceCharge: number;
   total: number;
@@ -92,6 +166,7 @@ export interface OrderItem {
   name: string;
   quantity: number;
   unitPrice: number;
+  isComp?: boolean;
   modifiers?: string;
   notes?: string;
 }
@@ -250,4 +325,85 @@ export interface RecommendationItem {
   name: string;
   price: number;
   orderCount: number;
+}
+
+export interface ModifierSelection {
+  groupId: string;
+  groupName: string;
+  optionId: string;
+  optionName: string;
+  priceAdjustment: number;
+}
+
+export interface Campaign {
+  id: string;
+  tenantId: string;
+  name: string;
+  type: 'percentage' | 'fixed' | 'buy_x_get_y' | 'happy_hour';
+  value: number;
+  minOrderAmount?: number;
+  maxDiscount?: number;
+  startDate?: string;
+  endDate?: string;
+  daysOfWeek?: string;
+  timeStart?: string;
+  timeEnd?: string;
+  isActive: boolean;
+  usageLimit?: number;
+  usageCount: number;
+  createdAt: string;
+}
+
+export interface Reservation {
+  id: string;
+  tenantId: string;
+  tableId?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  partySize: number;
+  date: string;
+  time: string;
+  duration: number;
+  status: 'pending' | 'confirmed' | 'seated' | 'cancelled' | 'no_show';
+  notes?: string;
+  specialRequests?: string;
+  source: 'web' | 'phone' | 'walk_in' | 'staff';
+  depositAmount?: number;
+  depositPaymentId?: string;
+  reminderSent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WaitlistEntry {
+  id: string;
+  tenantId: string;
+  customerName: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  partySize: number;
+  status: 'waiting' | 'notified' | 'seated' | 'cancelled' | 'expired';
+  estimatedWaitMinutes?: number;
+  notifiedAt?: string;
+  seatedAt?: string;
+  notes?: string;
+  source: 'web' | 'staff';
+  position?: number;
+  createdAt: string;
+}
+
+export interface CampaignInput {
+  name: string;
+  type: 'percentage' | 'fixed' | 'buy_x_get_y' | 'happy_hour';
+  value: number;
+  minOrderAmount?: number;
+  maxDiscount?: number;
+  startDate?: string;
+  endDate?: string;
+  daysOfWeek?: string;
+  timeStart?: string;
+  timeEnd?: string;
+  usageLimit?: number;
+  isActive?: boolean;
 }

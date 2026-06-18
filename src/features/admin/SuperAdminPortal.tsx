@@ -89,7 +89,7 @@ export function SuperAdminPortal() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-6 h-6" />
-            <h1 className="text-xl font-bold">QCart — Platform Admin</h1>
+            <h1 className="text-xl font-bold">Qlisted — Platform Admin</h1>
           </div>
           <button onClick={logout} className="flex items-center gap-1 text-sm bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg">
             <LogOut className="w-4 h-4" /> Sign out

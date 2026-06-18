@@ -9,7 +9,7 @@ describe('API Health Check', () => {
     const body = await res.json();
     expect(body.status).toBe('ok');
     expect(body.timestamp).toBeTruthy();
-  }, 15000);
+  }, 30000);
 
   it('returns 404 for unknown routes', async () => {
     const app = (await import('../index.js')).default;

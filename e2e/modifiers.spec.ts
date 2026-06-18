@@ -3,24 +3,55 @@ import { test, expect } from '@playwright/test';
 test.describe('Admin Modifier Management', () => {
   test('modifier groups page renders with create form', async ({ page }) => {
     await page.goto('/signin');
+    await page.fill('input[type="email"]', 'owner@demo.com');
+    await page.fill('input[type="password"]', 'pass123');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 10000 });
 
-    // Navigate to admin portal (will redirect to signin if not authed)
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/signin/, { timeout: 10000 });
+    await page.goto('/admin/modifiers');
+    await expect(page.locator('text=Modifier Groups').or(page.locator('text=Add Group'))).toBeVisible({ timeout: 10000 });
   });
 
   test('modifier tab exists in sidebar', async ({ page }) => {
     await page.goto('/signin');
-    // Verify sidebar is present at signin (shared layout)
-    // The sidebar nav includes a modifiers tab for signed-in admin users
-    // For now verify the public page loads
-    await expect(page.locator('h2')).toBeVisible({ timeout: 10000 });
+    await page.fill('input[type="email"]', 'owner@demo.com');
+    await page.fill('input[type="password"]', 'pass123');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 10000 });
+
+    const nav = page.locator('nav');
+    await expect(nav).toBeVisible();
   });
 
-  test('modifier group CRUD flow renders', async ({ page }) => {
-    // Smoke test: modifier management is behind auth,
-    // verify the admin route exists
-    const response = await page.goto('/admin');
-    expect(response?.status()).toBeLessThan(500);
+  test('modifier groups API endpoint returns data', async ({ page }) => {
+    await page.goto('/signin');
+    await page.fill('input[type="email"]', 'owner@demo.com');
+    await page.fill('input[type="password"]', 'pass123');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 10000 });
+
+    const response = await page.goto('/api/r/demo-cafe/modifier-groups');
+    expect(response?.status()).toBe(200);
+    const body = await response?.json();
+    expect(Array.isArray(body)).toBe(true);
+  });
+
+  test('menu item modifiers endpoint returns array', async ({ page }) => {
+    await page.goto('/signin');
+    await page.fill('input[type="email"]', 'owner@demo.com');
+    await page.fill('input[type="password"]', 'pass123');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 10000 });
+
+    const menuResponse = await page.goto('/api/r/demo-cafe/menu');
+    expect(menuResponse?.status()).toBe(200);
+    const menuData = await menuResponse?.json();
+    const firstItem = menuData.items?.[0];
+    if (firstItem) {
+      const response = await page.goto(`/api/r/demo-cafe/menu-items/${firstItem.id}/modifiers`);
+      expect(response?.status()).toBe(200);
+      const body = await response?.json();
+      expect(Array.isArray(body)).toBe(true);
+    }
   });
 });
