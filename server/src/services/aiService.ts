@@ -173,19 +173,20 @@ export async function createRealtimeSession(tenantId: string, tenantName: string
     + `You cannot place orders or take payment — tell the guest to use the on-screen menu to add items and check out.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
 
   try {
-    const res = await fetch('https://api.openai.com/v1/realtime/sessions', {
+    const res = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: REALTIME_MODEL, voice: 'alloy', modalities: ['audio', 'text'], instructions }),
+      body: JSON.stringify({
+        session: { type: 'realtime', model: REALTIME_MODEL, instructions, audio: { output: { voice: 'alloy' } } },
+      }),
     });
     if (!res.ok) {
       logger.error({ status: res.status, body: await res.text() }, 'realtime session mint failed');
       return { error: 'Could not start voice session', status: 502 as const };
     }
-    const session = await res.json() as { client_secret?: { value?: string; expires_at?: number } };
-    const clientSecret = session.client_secret?.value;
-    if (!clientSecret) return { error: 'Could not start voice session', status: 502 as const };
-    return { data: { clientSecret, expiresAt: session.client_secret?.expires_at, model: REALTIME_MODEL }, status: 200 as const };
+    const session = await res.json() as { value?: string; expires_at?: number };
+    if (!session.value) return { error: 'Could not start voice session', status: 502 as const };
+    return { data: { clientSecret: session.value, expiresAt: session.expires_at, model: REALTIME_MODEL }, status: 200 as const };
   } catch (e) {
     logger.error(e, 'realtime session error');
     return { error: 'Could not start voice session', status: 502 as const };

@@ -34,13 +34,13 @@ export function VoiceOrderWidget({ slug }: { slug: string }) {
     try {
       const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
       micRef.current = mic;
-      const { clientSecret, model } = await aiApi.voiceSession(slug);
+      const { clientSecret } = await aiApi.voiceSession(slug);
 
       const pc = new RTCPeerConnection();
       pcRef.current = pc;
       pc.ontrack = (e) => { if (audioRef.current) audioRef.current.srcObject = e.streams[0]; };
       const track = mic.getAudioTracks()[0];
-      if (track) pc.addTrack(track, mic);
+      if (track) pc.addTransceiver(track, { direction: 'sendrecv' });
       pc.createDataChannel('oai-events');
       pc.onconnectionstatechange = () => {
         const s = pc.connectionState;
@@ -50,7 +50,9 @@ export function VoiceOrderWidget({ slug }: { slug: string }) {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      const resp = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`, {
+      // GA Realtime: SDP exchange happens at /v1/realtime/calls (model is fixed
+      // at mint time), authenticated with the ephemeral client secret.
+      const resp = await fetch('https://api.openai.com/v1/realtime/calls', {
         method: 'POST',
         body: offer.sdp,
         headers: { Authorization: `Bearer ${clientSecret}`, 'Content-Type': 'application/sdp' },
