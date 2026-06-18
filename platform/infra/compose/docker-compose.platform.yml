@@ -1,0 +1,66 @@
+# Runs the microservices on plain Docker Compose — a pragmatic intermediate that
+# lets the strangler extraction proceed on the current VPS BEFORE a k8s cluster
+# exists (Phase 0). Same images/env as the k8s manifests. Build context = repo root.
+#
+#   docker compose -f infra/compose/docker-compose.platform.yml up --build
+#
+# In production these would join the existing `edge` network so Caddy can route
+# api.escoutly.com/v1/<svc> to them (uncomment the networks block).
+
+name: escoutly-platform
+
+x-svc: &svc
+  restart: unless-stopped
+  environment:
+    AUTH_SECRET: ${AUTH_SECRET:-dev-insecure-secret}
+    DATABASE_URL: ${DATABASE_URL:-postgresql://escoutly:escoutly@platform-db:5432/escoutly}
+    NODE_ENV: ${NODE_ENV:-development}
+    AUTH_URL_INTERNAL: http://auth:8080
+    LISTINGS_URL_INTERNAL: http://listings:8080
+    BILLING_URL_INTERNAL: http://billing:8080
+    ENGAGEMENT_URL_INTERNAL: http://engagement:8080
+    NOTIFICATIONS_URL_INTERNAL: http://notifications:8080
+
+services:
+  platform-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: escoutly
+      POSTGRES_PASSWORD: escoutly
+      POSTGRES_DB: escoutly
+    volumes: [platform_db:/var/lib/postgresql/data]
+
+  auth:
+    <<: *svc
+    build: { context: ../.., dockerfile: services/auth/Dockerfile }
+    ports: ["8081:8080"]
+  listings:
+    <<: *svc
+    build: { context: ../.., dockerfile: services/listings/Dockerfile }
+    ports: ["8082:8080"]
+  billing:
+    <<: *svc
+    build: { context: ../.., dockerfile: services/billing/Dockerfile }
+    ports: ["8083:8080"]
+  engagement:
+    <<: *svc
+    build: { context: ../.., dockerfile: services/engagement/Dockerfile }
+    ports: ["8084:8080"]
+  notifications:
+    <<: *svc
+    build: { context: ../.., dockerfile: services/notifications/Dockerfile }
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET:-dev-insecure-secret}
+      NODE_ENV: ${NODE_ENV:-development}
+      SMTP_HOST: ${SMTP_HOST:-mailer}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      EMAIL_FROM: ${EMAIL_FROM:-Escoutly <noreply@escoutly.com>}
+    ports: ["8085:8080"]
+
+volumes:
+  platform_db:
+
+# networks:
+#   default:
+#     name: edge
+#     external: true
