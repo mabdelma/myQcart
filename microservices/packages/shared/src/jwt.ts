@@ -51,6 +51,38 @@ export function verifyToken(token?: string | null): ServiceClaims | null {
   }
 }
 
+/**
+ * Verify a STANDARD HS256 JWT issued by the monolith (or the auth service) —
+ * `header.payload.sig`, exp in SECONDS, signed with AUTH_SECRET (=JWT_SECRET).
+ * This is what authed services use to accept monolith-compatible tokens.
+ */
+export interface MonolithClaims {
+  sub: string;
+  userId?: string;
+  tenantId: string | null;
+  role: string;
+  exp: number; // epoch SECONDS
+  [k: string]: unknown;
+}
+
+export function verifyHs256(token?: string | null): MonolithClaims | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [h, p, sig] = parts;
+  const expected = createHmac("sha256", secret()).update(`${h}.${p}`).digest("base64url");
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const claims = JSON.parse(Buffer.from(p, "base64url").toString()) as MonolithClaims;
+    if (!claims.sub || typeof claims.exp !== "number" || claims.exp * 1000 < Date.now()) return null;
+    return claims;
+  } catch {
+    return null;
+  }
+}
+
 /** Pull a bearer token from an Authorization header. */
 export function bearer(header?: string | null): string | null {
   if (!header) return null;
