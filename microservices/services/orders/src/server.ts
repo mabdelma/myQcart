@@ -27,8 +27,9 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 })
 // /events route subscribes and relays to the kitchen feed. Required for cutover.
 const pub = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 3 }) : null;
 pub?.on("error", (e) => log.error({ err: e }, "redis error"));
-function emitOrderCreated(tenantId: string, orderId: string) {
-  pub?.publish(`order:${tenantId}`, JSON.stringify({ type: "order_created", tenantId, orderId })).catch((e) => log.error({ err: e }, "redis publish failed"));
+function emitEvent(type: string, tenantId: string, orderId: string, data?: Record<string, unknown>) {
+  const msg = JSON.stringify(data ? { type, tenantId, orderId, data } : { type, tenantId, orderId });
+  pub?.publish(`order:${tenantId}`, msg).catch((e) => log.error({ err: e }, "redis publish failed"));
 }
 
 const toCamel = (row: Record<string, unknown>) =>
@@ -103,8 +104,34 @@ app.post<{ Params: { slug: string }; Body: CreateOrderInput }>("/compat/orders/:
     await pool.query("UPDATE tables SET status = 'occupied' WHERE id = $1", [input.tableId]);
   }
 
-  emitOrderCreated(tenant.id, orderId); // notify the kitchen feed (monolith /events relays it)
+  emitEvent("order_created", tenant.id, orderId); // notify the kitchen feed (monolith /events relays it)
   return reply.code(201).send({ id: orderId, items: orderItems, subtotal, tax, serviceCharge, deliveryFee, total, orderType });
+});
+
+// Order status update — ported from updateOrderStatus (authed: staff roles).
+// Mirrors the update + both SSE events. Note: 'ready' push notification (web
+// push) still fires from the monolith and isn't ported here.
+const STATUSES = ["pending", "preparing", "ready", "delivered", "cancelled"];
+app.patch<{ Params: { slug: string; orderId: string }; Body: { status?: string } }>("/compat/status/:slug/:orderId", async (req, reply) => {
+  const claims = verifyHs256(bearer(req.headers.authorization));
+  if (!claims) return reply.code(401).send(err("Authentication required"));
+  if (!["admin", "manager", "kitchen", "waiter"].includes(String(claims.role))) return reply.code(403).send(err("Forbidden"));
+  const status = req.body?.status;
+  if (!status || !STATUSES.includes(status)) return reply.code(400).send(err("invalid status"));
+  const t = await pool.query("SELECT id FROM tenants WHERE slug = $1 AND is_active = true LIMIT 1", [req.params.slug]);
+  const tid = t.rows[0]?.id;
+  if (!tid) return reply.code(404).send(err("Tenant not found"));
+  if (claims.tenantId !== tid) return reply.code(403).send(err("Forbidden"));
+
+  const now = new Date().toISOString();
+  if (status === "delivered") {
+    await pool.query("UPDATE orders SET status = $1, updated_at = $2, completed_at = $2 WHERE id = $3 AND tenant_id = $4", [status, now, req.params.orderId, tid]);
+  } else {
+    await pool.query("UPDATE orders SET status = $1, updated_at = $2 WHERE id = $3 AND tenant_id = $4", [status, now, req.params.orderId, tid]);
+  }
+  emitEvent("order_updated", tid, req.params.orderId, { status });
+  emitEvent("order_status_changed", tid, req.params.orderId, { status });
+  return reply.send({ success: true });
 });
 
 // Guest places an order (mirror monolith POST /api/r/:slug/orders).

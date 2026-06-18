@@ -49,6 +49,9 @@ function target(method: string, url: string): { base?: string; path: string } {
   // POST /api/r/:slug/orders → orders service order placement (exact path only).
   const place = method === "POST" && /^\/api\/r\/([^/]+)\/orders$/.exec(pathOnly);
   if (place && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/orders/${place[1]}` };
+  // PATCH /api/r/:slug/orders/:id/status → orders service status update.
+  const stat = method === "PATCH" && /^\/api\/r\/([^/]+)\/orders\/([^/]+)\/status$/.exec(pathOnly);
+  if (stat && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/status/${stat[1]}/${stat[2]}` };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };
