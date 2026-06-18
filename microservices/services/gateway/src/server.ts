@@ -34,10 +34,24 @@ function resolve(path: string): { base?: string; strip: string } {
 }
 
 app.all("/*", async (req, reply) => {
-  const { base, strip } = resolve(req.url.split("?")[0]);
+  const pathOnly = req.url.split("?")[0];
+  let base: string | undefined;
+  let forwardPath: string;
+
+  // Transparent cutover: the monolith's GET /api/r/:slug/menu is served by the
+  // catalog service (translated to its /compat/menu/:slug). Everything else
+  // resolves normally (service prefix or monolith fallthrough).
+  const menu = req.method === "GET" && /^\/api\/r\/([^/]+)\/menu$/.exec(pathOnly);
+  if (menu && ROUTES["/api/catalog"]) {
+    base = ROUTES["/api/catalog"];
+    forwardPath = `/compat/menu/${menu[1]}`;
+  } else {
+    const r = resolve(pathOnly);
+    base = r.base;
+    forwardPath = r.strip ? req.url.slice(r.strip.length) || "/" : req.url;
+  }
   if (!base) return reply.code(502).send(err("no upstream configured for this path"));
   try {
-    const forwardPath = strip ? req.url.slice(strip.length) || "/" : req.url;
     const target = base.replace(/\/$/, "") + forwardPath;
     const headers: Record<string, string> = {};
     for (const [k, v] of Object.entries(req.headers)) if (typeof v === "string") headers[k] = v;

@@ -62,6 +62,22 @@ app.get<{ Params: { slug: string; id: string } }>("/v1/tenants/:slug/menu/items/
   return ok(r.rows[0]);
 });
 
+// Compat endpoint — byte-compatible with the monolith's GET /api/r/:slug/menu
+// ({ categories, items } of raw rows, camelCased). The gateway maps the live
+// menu path here at cutover so the frontend sees an identical response.
+const toCamel = (row: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(row).map(([k, v]) => [k.replace(/_([a-z])/g, (_m, c) => c.toUpperCase()), v]));
+
+app.get<{ Params: { slug: string } }>("/compat/menu/:slug", async (req, reply) => {
+  const tenant = await tenantBySlug(req.params.slug);
+  if (!tenant) return reply.code(404).send(err("Tenant not found"));
+  const [cats, items] = await Promise.all([
+    pool.query("SELECT * FROM menu_categories WHERE tenant_id = $1 ORDER BY sort_order", [tenant.id]),
+    pool.query("SELECT * FROM menu_items WHERE tenant_id = $1 ORDER BY sort_order", [tenant.id]),
+  ]);
+  return reply.send({ categories: cats.rows.map(toCamel), items: items.rows.map(toCamel) });
+});
+
 // Admin writes — still stubbed (port from createMenuItem/updateMenuItem next).
 app.post("/v1/tenants/:slug/menu/items", async (req, reply) => {
   if (!verifyToken(bearer(req.headers.authorization))) return reply.code(401).send(err("Unauthorized"));
