@@ -38,6 +38,10 @@ services:
   billing:
     environment:
       DATABASE_URL: "${DATABASE_URL:-}"
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
+      STRIPE_PRICE_STARTER: "${STRIPE_PRICE_STARTER:-}"
+      STRIPE_PRICE_GROWTH: "${STRIPE_PRICE_GROWTH:-}"
+      STRIPE_PRICE_ENTERPRISE: "${STRIPE_PRICE_ENTERPRISE:-}"
     networks: [qlisted-svc, qcart-prod_default]
 
   engagement:
