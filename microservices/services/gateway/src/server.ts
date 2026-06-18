@@ -47,8 +47,9 @@ function target(method: string, url: string): { base?: string; path: string } {
   // POST /api/admin/subscriptions/:id/(checkout|cancel) → billing service.
   const subw = method === "POST" && /^\/api\/admin\/subscriptions\/([^/]+)\/(checkout|cancel)$/.exec(pathOnly);
   if (subw && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/subscription/${subw[1]}/${subw[2]}` };
-  // POST /api/auth/login → auth service (issues monolith-compatible token + refresh).
-  if (method === "POST" && pathOnly === "/api/auth/login" && ROUTES["/api/auth"]) return { base: ROUTES["/api/auth"], path: "/v1/auth/login" };
+  // POST /api/auth/(login|register|forgot-password|reset-password) → auth service.
+  const authw = method === "POST" && /^\/api\/auth\/(login|register|forgot-password|reset-password)$/.exec(pathOnly);
+  if (authw && ROUTES["/api/auth"]) return { base: ROUTES["/api/auth"], path: `/v1/auth/${authw[1]}` };
   // POST /api/r/:slug/orders → orders service order placement (exact path only).
   const place = method === "POST" && /^\/api\/r\/([^/]+)\/orders$/.exec(pathOnly);
   if (place && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/orders/${place[1]}` };

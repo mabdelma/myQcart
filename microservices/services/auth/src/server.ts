@@ -74,10 +74,69 @@ app.post<{ Body: { email?: string; password?: string } }>("/v1/auth/login", asyn
 
   return reply.send({ token, user: { id: u.id, name: u.name, email: u.email, role: u.role, tenantId: u.tenant_id }, refreshToken });
 });
-app.post("/v1/auth/register", async () => err("not_implemented: port from server/src/routes/auth.ts register"));
-app.post("/v1/auth/refresh", async () => err("not_implemented: port refresh-token rotation"));
-app.post("/v1/auth/verify-email", async () => err("not_implemented: port email verification"));
-app.post("/v1/auth/reset-password", async () => err("not_implemented: port password reset"));
+// Best-effort email delegation to the notifications service (no-op without it).
+async function notify(to: string, subject: string, html: string) {
+  const url = process.env.NOTIFICATIONS_URL;
+  if (!url) return;
+  try {
+    await fetch(`${url}/v1/notify/send`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ to, subject, html }) });
+  } catch { /* best-effort */ }
+}
+const FRONTEND = () => process.env.FRONTEND_URL || "http://localhost:5173";
+
+// Register — ported from registerUser. { tenantSlug, name, email, password, role? }
+const ROLES = ["admin", "manager", "waiter", "kitchen", "cashier"];
+app.post<{ Body: { tenantSlug?: string; name?: string; email?: string; password?: string; role?: string } }>("/v1/auth/register", async (req, reply) => {
+  const b = req.body || {};
+  if (!b.tenantSlug || !b.name || !b.email || !b.password) return reply.code(400).send({ error: "tenantSlug, name, email, password required" });
+  const role = b.role && ROLES.includes(b.role) ? b.role : "waiter";
+  const tr = await pool.query("SELECT id, name FROM tenants WHERE slug = $1 LIMIT 1", [b.tenantSlug]);
+  const tenant = tr.rows[0];
+  if (!tenant) return reply.code(404).send({ error: "Restaurant not found. Contact your admin." });
+  const ex = await pool.query("SELECT id FROM users WHERE email = $1 LIMIT 1", [b.email]);
+  if (ex.rows[0]) return reply.code(409).send({ error: "Email already registered" });
+
+  const passwordHash = await bcrypt.hash(b.password, 12);
+  const userId = randomUUID();
+  await pool.query("INSERT INTO users (id, tenant_id, name, email, password_hash, role) VALUES ($1,$2,$3,$4,$5,$6)", [userId, tenant.id, b.name, b.email, passwordHash, role]);
+  const token = signJwt({ sub: userId, userId, tenantId: tenant.id, role, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 });
+
+  const vToken = randomUUID();
+  const vHash = createHash("sha256").update(vToken).digest("hex");
+  await pool.query("UPDATE users SET verification_token = $1, verification_token_expiry = $2 WHERE id = $3", [vHash, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), userId]);
+  await notify(b.email, `Verify your email — ${tenant.name}`, `<h2>Welcome, ${b.name}!</h2><p>Verify your email:</p><p><a href="${FRONTEND()}/verify-email?token=${vToken}">${FRONTEND()}/verify-email?token=${vToken}</a></p><p>This link expires in 24 hours.</p>`);
+  return reply.code(201).send({ token, user: { id: userId, name: b.name, email: b.email, role } });
+});
+
+// Forgot password — ported from requestPasswordReset (no email enumeration).
+app.post<{ Body: { email?: string } }>("/v1/auth/forgot-password", async (req, reply) => {
+  const msg = { message: "If an account with that email exists, a reset link has been sent." };
+  const email = req.body?.email;
+  if (!email) return reply.code(400).send({ error: "email required" });
+  const u = await pool.query("SELECT id, name, email FROM users WHERE email = $1 LIMIT 1", [email]);
+  const user = u.rows[0];
+  if (!user) return reply.send(msg);
+  const raw = randomUUID();
+  const hash = createHash("sha256").update(raw).digest("hex");
+  await pool.query("UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3", [hash, new Date(Date.now() + 60 * 60 * 1000).toISOString(), user.id]);
+  await notify(user.email, "Reset your Qlisted password", `<h2>Password Reset</h2><p>Hi ${user.name},</p><p>Reset your password:</p><p><a href="${FRONTEND()}/reset-password?token=${raw}">${FRONTEND()}/reset-password?token=${raw}</a></p><p>This link expires in 1 hour.</p>`);
+  return reply.send(msg);
+});
+
+// Reset password — ported from resetPassword.
+app.post<{ Body: { token?: string; password?: string } }>("/v1/auth/reset-password", async (req, reply) => {
+  const { token, password } = req.body || {};
+  if (!token || !password) return reply.code(400).send({ error: "token and password required" });
+  const hash = createHash("sha256").update(token).digest("hex");
+  const u = await pool.query("SELECT id, reset_token_expiry FROM users WHERE reset_token = $1 LIMIT 1", [hash]);
+  const user = u.rows[0];
+  if (!user) return reply.code(400).send({ error: "Invalid or expired reset token" });
+  if (!user.reset_token_expiry || new Date(user.reset_token_expiry) < new Date()) return reply.code(400).send({ error: "Reset token has expired" });
+  const passwordHash = await bcrypt.hash(password, 12);
+  await pool.query("UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL WHERE id = $2", [passwordHash, user.id]);
+  await pool.query("DELETE FROM sessions WHERE user_id = $1", [user.id]);
+  return reply.send({ message: "Password has been reset successfully." });
+});
 
 // Demo issuance so downstream services can be integration-tested before full port.
 app.post("/v1/auth/token", async (req) => {

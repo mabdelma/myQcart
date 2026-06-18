@@ -28,6 +28,8 @@ services:
   auth:
     environment:
       DATABASE_URL: "${DATABASE_URL:-}"
+      NOTIFICATIONS_URL: "${NOTIFICATIONS_URL:-http://qlisted-notifications:8080}"
+      FRONTEND_URL: "${FRONTEND_URL:-https://qlisted.com}"
     networks: [qlisted-svc, qcart-prod_default]
 
   orders:
