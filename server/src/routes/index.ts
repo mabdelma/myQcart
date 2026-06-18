@@ -15,6 +15,7 @@ export { default as printRoutes } from './prints.js';
 export { default as modifierRoutes } from './modifiers.js';
 export { default as promoRoutes } from './promos.js';
 export { default as exportRoutes } from './exports.js';
+export { default as reportRoutes } from './reports.js';
 export { default as inventoryRoutes } from './inventory.js';
 export { default as groupRoutes } from './groups.js';
 export { default as onboardingRoutes } from './onboarding.js';

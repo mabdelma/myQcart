@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { connectApi } from '../../lib/api';
+import { api, connectApi } from '../../lib/api';
 import type { ConnectAccountStatus, PayoutInfo } from '../../lib/api/types';
 import { CreditCard, Check, ChevronDown, ChevronUp, Loader2, DollarSign, Plus, ExternalLink } from 'lucide-react';
 
@@ -94,12 +94,11 @@ export function SubscriptionManagement() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/admin/subscriptions/${tenant.id}`);
-      if (!res.ok) throw new Error('Failed to load subscription');
-      const data = await res.json();
+      // Authed via the api client (sends the Bearer token).
+      const data = await api.get<SubscriptionInfo>(`/admin/subscriptions/${tenant.id}`);
       setInfo(data);
     } catch (err) {
-      setError((err as Error).message);
+      setError((err as { message?: string }).message || 'Failed to load subscription');
     } finally {
       setLoading(false);
     }
@@ -111,15 +110,12 @@ export function SubscriptionManagement() {
     if (!tenant) return;
     setChanging(true);
     try {
-      const res = await fetch(`/api/admin/subscriptions/${tenant.id}/change`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
-      });
-      if (!res.ok) throw new Error('Failed to change plan');
+      // Real billing: start a Stripe Checkout session and redirect to it.
+      const { url } = await api.post<{ url: string }>(`/admin/subscriptions/${tenant.id}/checkout`, { planId });
+      if (url) { window.location.href = url; return; }
       await load();
     } catch (err) {
-      setError((err as Error).message);
+      setError((err as { message?: string }).message || 'Failed to start checkout');
     } finally {
       setChanging(false);
     }

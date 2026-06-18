@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { logger } from '../lib/logger.js';
 import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
 import { emitOrderEvent } from '../lib/events.js';
+import { handleSubscriptionEvent } from './subscriptionService.js';
 import Stripe from 'stripe';
 import type { PaginationParams, PaginatedResult } from '../lib/pagination.js';
 import { buildPagination } from '../lib/pagination.js';
@@ -263,6 +264,12 @@ export async function handleStripeWebhook(body: string, signature: string) {
 
   try {
     const event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET || '');
+
+    // Subscription/billing events → subscription service.
+    if (await handleSubscriptionEvent(event)) {
+      return { data: { received: true }, status: 200 as const };
+    }
+
     const intent = event.data.object as Stripe.PaymentIntent;
 
     if (event.type === 'payment_intent.succeeded') {

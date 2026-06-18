@@ -50,6 +50,7 @@ import {
   modifierRoutes,
   promoRoutes,
   exportRoutes,
+  reportRoutes,
   inventoryRoutes,
   groupRoutes,
   onboardingRoutes,
@@ -182,6 +183,7 @@ app.route('/api/r', printRoutes);
 app.route('/api/r', modifierRoutes);
 app.route('/api/r', promoRoutes);
 app.route('/api/r', exportRoutes);
+app.route('/api/r', reportRoutes);
 app.route('/api/r', inventoryRoutes);
 app.route('/api/r', customerRoutes);
 app.route('/api/r', integrationRoutes);

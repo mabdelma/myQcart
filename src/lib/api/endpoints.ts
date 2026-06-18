@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport } from './types';
 
 // Auth
 export const authApi = {
@@ -18,6 +18,25 @@ export const adminApi = {
   setTenantStatus: (tenantId: string, isActive: boolean) =>
     api.put<{ success: boolean }>(`/admin/tenants/${tenantId}/status`, { isActive }),
   getTenantUsage: (tenantId: string) => api.get<TenantUsage>(`/admin/tenants/${tenantId}/usage`),
+};
+
+// Reports (P&L)
+export const reportApi = {
+  getPnL: (slug: string, start?: string, end?: string) => {
+    const q = new URLSearchParams();
+    if (start) q.set('start', start);
+    if (end) q.set('end', end);
+    const qs = q.toString();
+    return api.get<PnLReport>(`/r/${slug}/reports/pnl${qs ? `?${qs}` : ''}`);
+  },
+  // PDF path (downloaded with an auth header in the UI).
+  pnlPdfPath: (slug: string, start?: string, end?: string) => {
+    const q = new URLSearchParams();
+    if (start) q.set('start', start);
+    if (end) q.set('end', end);
+    const qs = q.toString();
+    return `/r/${slug}/reports/pnl.pdf${qs ? `?${qs}` : ''}`;
+  },
 };
 
 // Tenants

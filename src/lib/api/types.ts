@@ -407,3 +407,19 @@ export interface CampaignInput {
   usageLimit?: number;
   isActive?: boolean;
 }
+
+export interface PnLReport {
+  start: string | null;
+  end: string | null;
+  grossRevenue: number;
+  tips: number;
+  refunds: number;
+  netRevenue: number;
+  tax: number;
+  serviceCharge: number;
+  cogs: number;
+  grossProfit: number;
+  orderCount: number;
+  avgOrderValue: number;
+  byMethod: { method: string; amount: number; count: number }[];
+}

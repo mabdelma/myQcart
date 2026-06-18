@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
+import { getSubscription, createCheckoutSession, cancelSubscription, PLANS } from '../services/subscriptionService.js';
 import { db, schema } from '../db/index.js';
 import { eq, desc, sql, and } from 'drizzle-orm';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
@@ -246,56 +248,58 @@ admin.get('/admin/tenants/:tenantId/usage', authMiddleware, requireRole('super_a
   });
 });
 
-const PLANS = [
-  { id: 'starter', name: 'Starter', price: 29, usersLimit: 3, ordersLimit: 500 },
-  { id: 'growth', name: 'Growth', price: 79, usersLimit: 10, ordersLimit: 2000 },
-  { id: 'enterprise', name: 'Enterprise', price: 199, usersLimit: 50, ordersLimit: 10000 },
-];
+// Real subscription billing (Stripe). A non-super_admin may only touch their own tenant.
+function assertTenantAccess(c: Context, tenantId: string): boolean {
+  const role = c.get('role');
+  const own = c.get('userTenantId');
+  return role === 'super_admin' || own === tenantId;
+}
 
 admin.get('/admin/subscriptions/:tenantId', authMiddleware, requireRole('admin', 'manager', 'super_admin'), async (c) => {
   const tenantId = c.req.param('tenantId')!;
+  if (!assertTenantAccess(c, tenantId)) return c.json({ error: 'Forbidden' }, 403);
 
-  const [tenantRecord] = await db
-    .select()
-    .from(schema.tenants)
-    .where(eq(schema.tenants.id, tenantId))
-    .limit(1);
-
+  const [tenantRecord] = await db.select().from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
   if (!tenantRecord) return c.json({ error: 'Tenant not found' }, 404);
 
-  const [userCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(schema.users)
-    .where(eq(schema.users.tenantId, tenantId));
-
-  const [orderCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(schema.orders)
-    .where(eq(schema.orders.tenantId, tenantId));
-
-  const planId = 'growth';
-  const plan = PLANS.find((p) => p.id === planId) || PLANS[1];
-
+  const sub = await getSubscription(tenantId);
   return c.json({
-    plan,
-    renewDate: new Date(Date.now() + 30 * 86400000).toISOString(),
-    billingHistory: [],
-    usage: {
-      users: Number(userCount?.count || 0),
-      orders: Number(orderCount?.count || 0),
-    },
+    plan: sub.plan,
+    plans: PLANS,
+    status: sub.status,
+    stripeSubscriptionId: sub.stripeSubscriptionId,
+    renewDate: sub.currentPeriodEnd,
+    billingEnabled: sub.billingEnabled,
+    usage: sub.usage,
   });
 });
 
-admin.post('/admin/subscriptions/:tenantId/change', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
+// Start a Stripe Checkout (subscription) for a plan → returns a redirect URL.
+admin.post('/admin/subscriptions/:tenantId/checkout', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
   const tenantId = c.req.param('tenantId')!;
+  if (!assertTenantAccess(c, tenantId)) return c.json({ error: 'Forbidden' }, 403);
   const { planId } = await c.req.json() as { planId: string };
 
-  const plan = PLANS.find((p) => p.id === planId);
-  if (!plan) return c.json({ error: 'Invalid plan' }, 400);
+  const [tenantRecord] = await db.select().from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
+  if (!tenantRecord) return c.json({ error: 'Tenant not found' }, 404);
 
-  logger.info({ tenantId, planId }, 'Subscription plan changed');
-  return c.json({ success: true, plan });
+  const base = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const result = await createCheckoutSession(
+    { id: tenantId, email: tenantRecord.email },
+    planId,
+    `${base}/admin/subscription?status=success`,
+    `${base}/admin/subscription?status=cancelled`,
+  );
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data);
+});
+
+admin.post('/admin/subscriptions/:tenantId/cancel', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
+  const tenantId = c.req.param('tenantId')!;
+  if (!assertTenantAccess(c, tenantId)) return c.json({ error: 'Forbidden' }, 403);
+  const result = await cancelSubscription(tenantId);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data);
 });
 
 export default admin;

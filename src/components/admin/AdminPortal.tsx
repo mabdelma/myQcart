@@ -25,9 +25,11 @@ import { TaxManagement } from '../../features/admin/TaxManagement';
 import { TableLayoutEditor } from '../../features/admin/TableLayoutEditor';
 import GiftCards from '../../features/admin/GiftCards';
 import TimeTracking from '../../features/admin/TimeTracking';
+import { ReportsPage } from '../../features/admin/ReportsPage';
 
 const routes = [
   { path: 'orders', element: <OrderManagement /> },
+  { path: 'reports', element: <ReportsPage /> },
   { path: 'staff', element: <StaffPerformance /> },
   { path: 'menu', element: <MenuManagement /> },
   { path: 'modifiers', element: <ModifierManagement /> },
