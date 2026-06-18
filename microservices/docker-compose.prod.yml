@@ -1,0 +1,49 @@
+# ─── Production overlay for the Qlisted services ─────────────────────────────
+# Runs the gateway + services on the VPS ALONGSIDE the monolith. They join the
+# monolith's network (qcart-prod_default) to reach Postgres + the monolith API,
+# and the shared `edge` network so Caddy can route to the gateway at cutover.
+# Nothing is in the live request path until Caddy is pointed at the gateway.
+#
+#   docker compose -f docker-compose.services.yml -f docker-compose.prod.yml \
+#     --env-file .env up -d --build
+#
+# .env must provide AUTH_SECRET (= monolith JWT_SECRET) and DATABASE_URL.
+name: qlisted-services
+
+networks:
+  qcart-prod_default:
+    external: true
+
+services:
+  gateway:
+    environment:
+      MONOLITH_URL: "http://api:3001"
+    networks: [qlisted-svc, edge, qcart-prod_default]
+
+  catalog:
+    environment:
+      DATABASE_URL: "${DATABASE_URL:?set DATABASE_URL in .env}"
+    networks: [qlisted-svc, qcart-prod_default]
+
+  auth:
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-}"
+    networks: [qlisted-svc, qcart-prod_default]
+
+  orders:
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-}"
+    networks: [qlisted-svc, qcart-prod_default]
+
+  billing:
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-}"
+    networks: [qlisted-svc, qcart-prod_default]
+
+  engagement:
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-}"
+    networks: [qlisted-svc, qcart-prod_default]
+
+  notifications:
+    networks: [qlisted-svc, qcart-prod_default]

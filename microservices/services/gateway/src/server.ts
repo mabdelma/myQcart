@@ -25,16 +25,20 @@ const MONOLITH_URL = process.env.MONOLITH_URL;
 
 app.get("/health", async () => ok({ service: "gateway", status: "up" }));
 
-function upstreamFor(path: string): string | undefined {
+// Matched service prefix → forward to that service with the prefix STRIPPED
+// (e.g. /api/catalog/v1/x → catalog /v1/x). No match → monolith, path unchanged.
+function resolve(path: string): { base?: string; strip: string } {
   const hit = Object.keys(ROUTES).find((p) => path === p || path.startsWith(p + "/"));
-  return hit ? ROUTES[hit] : MONOLITH_URL;
+  if (hit) return { base: ROUTES[hit], strip: hit };
+  return { base: MONOLITH_URL, strip: "" };
 }
 
 app.all("/*", async (req, reply) => {
-  const base = upstreamFor(req.url.split("?")[0]);
+  const { base, strip } = resolve(req.url.split("?")[0]);
   if (!base) return reply.code(502).send(err("no upstream configured for this path"));
   try {
-    const target = base.replace(/\/$/, "") + req.url;
+    const forwardPath = strip ? req.url.slice(strip.length) || "/" : req.url;
+    const target = base.replace(/\/$/, "") + forwardPath;
     const headers: Record<string, string> = {};
     for (const [k, v] of Object.entries(req.headers)) if (typeof v === "string") headers[k] = v;
     const res = await fetch(target, {
