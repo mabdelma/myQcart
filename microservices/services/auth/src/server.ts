@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import pg from "pg";
 import bcrypt from "bcryptjs";
-import { createHmac } from "node:crypto";
+import { createHmac, createHash, randomUUID } from "node:crypto";
 import { createLogger, ok, err, verifyToken, signToken, bearer } from "@qlisted/shared";
 
 /**
@@ -61,7 +61,18 @@ app.post<{ Body: { email?: string; password?: string } }>("/v1/auth/login", asyn
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
   });
   await pool.query("UPDATE users SET last_active = $1 WHERE id = $2", [new Date().toISOString(), u.id]);
-  return reply.send({ token, user: { id: u.id, name: u.name, email: u.email, role: u.role, tenantId: u.tenant_id } });
+
+  // Refresh token — same scheme as the monolith's loginWithRefresh (sha256 hash
+  // stored in refresh_tokens), so the monolith's /api/auth/refresh accepts it.
+  const refreshToken = randomUUID();
+  const tokenHash = createHash("sha256").update(refreshToken).digest("hex");
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  await pool.query(
+    "INSERT INTO refresh_tokens (id, user_id, tenant_id, token_hash, expires_at) VALUES ($1, $2, $3, $4, $5)",
+    [randomUUID(), u.id, u.tenant_id, tokenHash, expiresAt],
+  );
+
+  return reply.send({ token, user: { id: u.id, name: u.name, email: u.email, role: u.role, tenantId: u.tenant_id }, refreshToken });
 });
 app.post("/v1/auth/register", async () => err("not_implemented: port from server/src/routes/auth.ts register"));
 app.post("/v1/auth/refresh", async () => err("not_implemented: port refresh-token rotation"));

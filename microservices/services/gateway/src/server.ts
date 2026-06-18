@@ -44,6 +44,8 @@ function target(method: string, url: string): { base?: string; path: string } {
   // GET /api/admin/subscriptions/:tenantId → billing service compat shim.
   const sub = method === "GET" && /^\/api\/admin\/subscriptions\/([^/]+)$/.exec(pathOnly);
   if (sub && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/subscription/${sub[1]}` };
+  // POST /api/auth/login → auth service (issues monolith-compatible token + refresh).
+  if (method === "POST" && pathOnly === "/api/auth/login" && ROUTES["/api/auth"]) return { base: ROUTES["/api/auth"], path: "/v1/auth/login" };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };
