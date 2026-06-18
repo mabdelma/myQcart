@@ -71,10 +71,17 @@ export async function createPaymentIntent(tenantId: string, orderId: string, tip
   const stripe = getStripe();
   const chargeAmount = Math.round((paymentAmount + (tip || 0)) * 100);
 
+  // Charge in the tenant's own currency and let Stripe surface every eligible
+  // local method (Bizum for EUR/Spain, cards, wallets, …) via the Payment
+  // Element — no per-method code. Bizum must be enabled on the Stripe account.
+  const [tenant] = await db.select({ currency: schema.tenants.currency }).from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
+  const currency = (tenant?.currency || 'usd').toLowerCase();
+
   if (stripe) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: chargeAmount,
-      currency: 'usd',
+      currency,
+      automatic_payment_methods: { enabled: true },
       metadata: { orderId, tenantId },
     });
 
