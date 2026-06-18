@@ -35,6 +35,9 @@ function target(method: string, url: string): { base?: string; path: string } {
   // Transparent cutover: monolith's GET /api/r/:slug/menu → catalog compat shim.
   const menu = method === "GET" && /^\/api\/r\/([^/]+)\/menu$/.exec(pathOnly);
   if (menu && ROUTES["/api/catalog"]) return { base: ROUTES["/api/catalog"], path: `/compat/menu/${menu[1]}` };
+  // GET /api/r/:slug/orders/:id/track → orders service compat shim.
+  const track = method === "GET" && /^\/api\/r\/([^/]+)\/orders\/([^/]+)\/track$/.exec(pathOnly);
+  if (track && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/track/${track[1]}/${track[2]}` };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };
