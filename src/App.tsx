@@ -4,8 +4,9 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { I18nProvider } from './contexts/I18nContext';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { homePathForRole } from './lib/roleRoutes';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import { MenuSkeleton } from './components/ui/MenuSkeleton';
 import { CartSkeleton } from './components/ui/CartSkeleton';
@@ -56,8 +57,14 @@ const HOST_LANDING: Record<string, string> = {
 };
 
 function RootRoute() {
+  const { state } = useAuth();
   const sub = window.location.hostname.split('.')[0];
   const target = HOST_LANDING[sub];
+  if (state.loading) return <RouteFallback />;
+  // Signed-in users go straight to their dashboard — never the public marketing
+  // site (so an admin hitting qlisted.com lands on their console, headers and all).
+  if (state.user) return <Navigate to={homePathForRole(state.user.role)} replace />;
+  // Anonymous: subdomain landing (auth-gated routes bounce to /signin) or marketing.
   return target ? <Navigate to={target} replace /> : <MarketingLanding />;
 }
 
