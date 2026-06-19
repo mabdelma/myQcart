@@ -81,6 +81,51 @@ const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 
+// ── Receipt email (parity with monolith sendReceiptEmail) ───────────────────
+// Renders a branded receipt and hands it to the notifications service. No-op
+// unless NOTIFICATIONS_URL is set (and notifications has SMTP configured).
+function brandedEmailHtml(content: string, tenantName: string, color?: string | null, logoUrl?: string | null): string {
+  const c = color || "#8B4513";
+  const logo = logoUrl ? `<img src="${logoUrl}" alt="${tenantName}" style="height:40px;width:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;" />` : "";
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;"><table width="100%" style="max-width:560px;background:#fff;border-radius:8px;overflow:hidden;"><tr><td style="background:${c};padding:16px 24px;"><table width="100%"><tr><td style="color:#fff;font-size:18px;font-weight:600;">${logo}${tenantName}</td></tr></table></td></tr><tr><td style="padding:24px;">${content}</td></tr><tr><td style="padding:12px 24px;border-top:1px solid #eee;"><p style="margin:0;color:#999;font-size:12px;">Qlisted &middot; ${tenantName}</p></td></tr></table></td></tr></table></body></html>`;
+}
+
+async function sendReceipt(orderId: string, tenantId: string): Promise<void> {
+  const notifyUrl = process.env.NOTIFICATIONS_URL;
+  if (!notifyUrl) return;
+  try {
+    const o = await pool.query("SELECT total, paid_amount, payment_status FROM orders WHERE id = $1 LIMIT 1", [orderId]);
+    const order = o.rows[0];
+    if (!order) return;
+    const tr = await pool.query("SELECT name, email, primary_color, logo_url FROM tenants WHERE id = $1 LIMIT 1", [tenantId]);
+    const tenant = tr.rows[0];
+    if (!tenant?.email) return;
+    const pr = await pool.query("SELECT method FROM payments WHERE order_id = $1 AND status = 'paid' ORDER BY created_at DESC LIMIT 1", [orderId]);
+    const method = pr.rows[0]?.method || "card";
+    const inner = `
+      <h2 style="margin-top:0;">Payment Receipt</h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#666;">Order</td><td style="text-align:right;font-weight:600;">#${orderId.slice(0, 8)}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Amount</td><td style="text-align:right;font-weight:600;">$${Number(order.total).toFixed(2)}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Paid</td><td style="text-align:right;font-weight:600;">$${Number(order.paid_amount || 0).toFixed(2)}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Method</td><td style="text-align:right;">${method}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Status</td><td style="text-align:right;">${order.payment_status}</td></tr>
+        <tr><td style="padding:6px 0;color:#666;">Date</td><td style="text-align:right;">${new Date().toLocaleString()}</td></tr>
+      </table>`;
+    await fetch(notifyUrl.replace(/\/$/, "") + "/v1/notify/send", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        to: tenant.email,
+        subject: `Receipt for Order #${orderId.slice(0, 8)} — ${tenant.name}`,
+        html: brandedEmailHtml(inner, tenant.name, tenant.primary_color, tenant.logo_url),
+      }),
+    });
+  } catch (e) {
+    log.error({ err: e, orderId }, "receipt email failed");
+  }
+}
+
 // Keep the raw JSON bytes on every request (the webhook needs them for Stripe
 // signature verification) while still exposing the parsed object as req.body.
 app.addContentTypeParser("application/json", { parseAs: "buffer" }, (req, body, done) => {
@@ -268,6 +313,8 @@ app.post<{ Body: unknown }>("/compat/webhook", async (req, reply) => {
             const remaining = Number(o.rows[0].total) - totalPaid;
             const status = remaining <= 0 ? "paid" : totalPaid > 0 ? "partially_paid" : "unpaid";
             await pool.query("UPDATE orders SET payment_status = $1, paid_amount = $2, updated_at = $3 WHERE id = $4", [status, totalPaid, new Date().toISOString(), orderId]);
+            // Fire-and-forget receipt (parity with monolith); no-op without NOTIFICATIONS_URL/SMTP.
+            void sendReceipt(orderId, tenantId);
           }
         }
       }

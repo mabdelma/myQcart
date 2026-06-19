@@ -47,6 +47,7 @@ services:
       STRIPE_PRICE_GROWTH: "${STRIPE_PRICE_GROWTH:-}"
       STRIPE_PRICE_ENTERPRISE: "${STRIPE_PRICE_ENTERPRISE:-}"
       FRONTEND_URL: "${FRONTEND_URL:-https://qlisted.com}"
+      NOTIFICATIONS_URL: "${NOTIFICATIONS_URL:-http://qlisted-notifications:8080}"
     networks: [qlisted-svc, qcart-prod_default]
 
   engagement:

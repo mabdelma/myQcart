@@ -53,11 +53,54 @@ app.get<{ Params: { slug: string; orderId: string } }>("/compat/track/:slug/:ord
   return reply.send({ ...toCamel(o.rows[0]), items: items.rows.map(toCamel) });
 });
 
+// ── KOT print (parity with monolith createKotPrintJob) ──────────────────────
+// Queues a kitchen ticket for every auto-print printer. No-op if the tenant has
+// none configured. Best-effort: never blocks/fails order placement.
+const KOT_SEP = "=".repeat(40);
+function formatKot(d: { orderId: string; tableNumber: number; customerName?: string; tenantName: string; createdAt: string; notes?: string; items: { name: string; quantity: number; notes?: string | null; modifiers?: unknown }[] }): string {
+  const L: string[] = [KOT_SEP, `         ${d.tenantName.toUpperCase()}`, KOT_SEP, `Table: ${d.tableNumber}`];
+  if (d.customerName) L.push(`Customer: ${d.customerName}`);
+  L.push(`Order: #${d.orderId.slice(0, 8)}`, `Time: ${d.createdAt}`, KOT_SEP, "");
+  for (const it of d.items) {
+    L.push(`${`${it.quantity}x`.padStart(4)} ${it.name}`);
+    if (it.modifiers) {
+      const mods = typeof it.modifiers === "string" ? JSON.parse(it.modifiers) : it.modifiers;
+      if (Array.isArray(mods)) for (const m of mods) L.push(`      - ${typeof m === "string" ? m : (m?.name || "")}`);
+    }
+    if (it.notes) L.push(`      (${it.notes})`);
+    L.push("");
+  }
+  if (d.notes) L.push(`Notes: ${d.notes}`, "");
+  L.push(KOT_SEP, "        *** KITCHEN COPY ***", KOT_SEP);
+  return L.join("\n");
+}
+async function createKot(orderId: string, tenantId: string, tenantName: string, tableId: string | null, customerName: string | null, notes: string | null, items: { name: string; quantity: number; notes?: string | null; modifiers?: unknown }[]): Promise<void> {
+  try {
+    const pr = await pool.query("SELECT id FROM printers WHERE tenant_id = $1 AND auto_print = true AND is_active = true", [tenantId]);
+    if (!pr.rows.length) return;
+    let tableNumber = 0;
+    if (tableId) {
+      const tb = await pool.query("SELECT number FROM tables WHERE id = $1 LIMIT 1", [tableId]);
+      tableNumber = tb.rows[0]?.number || 0;
+    }
+    const content = formatKot({ orderId, tableNumber, customerName: customerName || undefined, tenantName, createdAt: new Date().toISOString(), notes: notes || undefined, items });
+    const now = new Date().toISOString();
+    for (const p of pr.rows) {
+      await pool.query(
+        "INSERT INTO print_jobs (id, tenant_id, order_id, printer_id, type, status, content, created_at) VALUES ($1,$2,$3,$4,'kot','pending',$5,$6)",
+        [randomUUID(), tenantId, orderId, p.id, content, now],
+      );
+    }
+  } catch (e) {
+    log.error({ err: e, orderId }, "KOT print enqueue failed");
+  }
+}
+
 // Order placement — ported from createOrder (alongside; NOT cut over). Mirrors
-// totals/tax/service-charge + insert. NOTE before cutover: also emit the SSE
-// order_created event (Redis) + KOT print, which still live on the monolith.
+// totals/tax/service-charge + insert, emits the SSE order_created event, and
+// enqueues KOT print jobs (parity with the monolith).
 app.post<{ Params: { slug: string }; Body: CreateOrderInput }>("/compat/orders/:slug", async (req, reply) => {
-  const t = await pool.query("SELECT id, tax_rate, service_charge FROM tenants WHERE slug = $1 AND is_active = true LIMIT 1", [req.params.slug]);
+  const t = await pool.query("SELECT id, name, tax_rate, service_charge FROM tenants WHERE slug = $1 AND is_active = true LIMIT 1", [req.params.slug]);
   const tenant = t.rows[0];
   if (!tenant) return reply.code(404).send(err("Tenant not found"));
 
@@ -105,6 +148,7 @@ app.post<{ Params: { slug: string }; Body: CreateOrderInput }>("/compat/orders/:
   }
 
   emitEvent("order_created", tenant.id, orderId); // notify the kitchen feed (monolith /events relays it)
+  void createKot(orderId, tenant.id, tenant.name || "", input.tableId || null, input.customerName || null, input.notes || null, orderItems);
   return reply.code(201).send({ id: orderId, items: orderItems, subtotal, tax, serviceCharge, deliveryFee, total, orderType });
 });
 
