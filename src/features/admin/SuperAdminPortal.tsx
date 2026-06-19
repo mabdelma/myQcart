@@ -211,15 +211,17 @@ export function SuperAdminPortal() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                     <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Restaurant</th>
-                    <th className="px-6 py-3 font-medium">Email</th><th className="px-6 py-3 font-medium">Phone</th><th className="px-6 py-3 font-medium">Status</th>
+                    <th className="px-6 py-3 font-medium">Contact</th><th className="px-6 py-3 font-medium">Size</th>
+                    <th className="px-6 py-3 font-medium">Message</th><th className="px-6 py-3 font-medium">Status</th>
                   </tr></thead>
                   <tbody className="divide-y divide-gray-100">
                     {leads.map((l) => (
-                      <tr key={l.id}>
+                      <tr key={l.id} className="align-top">
                         <td className="px-6 py-3 font-medium text-gray-900">{l.name}</td>
                         <td className="px-6 py-3 text-gray-500">{l.restaurant}</td>
-                        <td className="px-6 py-3 text-gray-500">{l.email}</td>
-                        <td className="px-6 py-3 text-gray-500">{l.phone || '—'}</td>
+                        <td className="px-6 py-3 text-gray-500">{l.email}{l.phone ? <><br />{l.phone}</> : ''}</td>
+                        <td className="px-6 py-3 text-gray-500">{l.size || '—'}</td>
+                        <td className="px-6 py-3 text-gray-600 max-w-md whitespace-pre-wrap">{l.message || <span className="text-gray-400">—</span>}</td>
                         <td className="px-6 py-3"><span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">{l.status}</span></td>
                       </tr>
                     ))}
