@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import pg from "pg";
 import bcrypt from "bcryptjs";
 import { createHmac, createHash, randomUUID } from "node:crypto";
-import { createLogger, ok, err, verifyToken, signToken, bearer } from "@qlisted/shared";
+import { createLogger, ok, err, verifyToken, signToken, bearer, initSentry, captureError } from "@qlisted/shared";
 
 /**
  * AUTH service — owns users, credentials, JWT issuance, sessions, super_admin.
@@ -12,6 +12,8 @@ import { createLogger, ok, err, verifyToken, signToken, bearer } from "@qlisted/
  */
 const log = createLogger("auth");
 const app = Fastify({ loggerInstance: log });
+initSentry("auth");
+app.addHook("onError", async (req, _reply, error) => captureError(error, { url: req.url, method: req.method }));
 const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });

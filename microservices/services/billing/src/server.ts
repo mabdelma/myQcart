@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import pg from "pg";
 import Stripe from "stripe";
 import { randomUUID } from "node:crypto";
-import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
+import { createLogger, ok, err, verifyHs256, bearer, initSentry, captureError } from "@qlisted/shared";
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -77,6 +77,8 @@ async function handleSubscriptionEvent(event: Stripe.Event): Promise<boolean> {
  */
 const log = createLogger("billing");
 const app = Fastify({ loggerInstance: log });
+initSentry("billing");
+app.addHook("onError", async (req, _reply, error) => captureError(error, { url: req.url, method: req.method }));
 const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });

@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import replyFrom from "@fastify/reply-from";
-import { createLogger, ok, err } from "@qlisted/shared";
+import { createLogger, ok, err, initSentry, captureError } from "@qlisted/shared";
 
 /**
  * GATEWAY — the strangler-fig seam. Transparently proxies (streaming, raw body
@@ -10,6 +10,8 @@ import { createLogger, ok, err } from "@qlisted/shared";
  */
 const log = createLogger("gateway");
 const app = Fastify({ loggerInstance: log });
+initSentry("gateway");
+app.addHook("onError", async (req, _reply, error) => captureError(error, { url: req.url, method: req.method }));
 const PORT = Number(process.env.PORT || 8080);
 
 app.register(replyFrom);

@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import pg from "pg";
 import Redis from "ioredis";
 import { randomUUID } from "node:crypto";
-import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
+import { createLogger, ok, err, verifyHs256, bearer, initSentry, captureError } from "@qlisted/shared";
 
 interface OrderItemInput { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string | null; modifiers?: string | null }
 interface CreateOrderInput {
@@ -19,6 +19,8 @@ interface CreateOrderInput {
  */
 const log = createLogger("orders");
 const app = Fastify({ loggerInstance: log });
+initSentry("orders");
+app.addHook("onError", async (req, _reply, error) => captureError(error, { url: req.url, method: req.method }));
 const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });

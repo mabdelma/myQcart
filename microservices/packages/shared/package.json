@@ -15,6 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@sentry/node": "^8.47.0",
     "pino": "^9.5.0"
   },
   "devDependencies": {

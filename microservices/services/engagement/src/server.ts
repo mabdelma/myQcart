@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import pg from "pg";
-import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
+import { createLogger, ok, err, verifyHs256, bearer, initSentry, captureError } from "@qlisted/shared";
 
 /**
  * ENGAGEMENT service — loyalty, promotions/campaigns, reviews. The campaigns
@@ -9,6 +9,8 @@ import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
  */
 const log = createLogger("engagement");
 const app = Fastify({ loggerInstance: log });
+initSentry("engagement");
+app.addHook("onError", async (req, _reply, error) => captureError(error, { url: req.url, method: req.method }));
 const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });

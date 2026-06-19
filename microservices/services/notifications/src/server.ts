@@ -1,5 +1,5 @@
 import Fastify from "fastify";
-import { createLogger, ok, err } from "@qlisted/shared";
+import { createLogger, ok, err, initSentry, captureError } from "@qlisted/shared";
 import type { EmailRequest } from "@qlisted/shared";
 import { renderEmail } from "./templates.js";
 import { sendEmail, smtpConfigured } from "./email.js";
@@ -11,6 +11,8 @@ import { sendEmail, smtpConfigured } from "./email.js";
  */
 const log = createLogger("notifications");
 const app = Fastify({ loggerInstance: log });
+initSentry("notifications");
+app.addHook("onError", async (req, _reply, error) => captureError(error, { url: req.url, method: req.method }));
 const PORT = Number(process.env.PORT || 8080);
 
 app.get("/health", async () => ok({ service: "notifications", status: "up", smtp: smtpConfigured }));
