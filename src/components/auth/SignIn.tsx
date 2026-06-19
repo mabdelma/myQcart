@@ -27,6 +27,7 @@ const AUDIENCES: Record<Audience, {
   badge: string; brandTitle: string; brandSubtitle: string;
   formTitle: string; formSubtitle: string; gradient: string; button: string;
   Icon: ComponentType<{ className?: string }>; placeholder: string; points: Point[];
+  altPortals: { label: string; href: string }[];
 }> = {
   platform: {
     badge: 'Platform Console',
@@ -43,6 +44,7 @@ const AUDIENCES: Record<Audience, {
       { icon: Users, title: 'All users', desc: 'See every account across the platform.' },
       { icon: CreditCard, title: 'Billing & leads', desc: 'Track revenue, subscriptions, and demo requests.' },
     ],
+    altPortals: [{ label: 'Restaurant dashboard →', href: 'https://app.qlisted.com' }],
   },
   admin: {
     badge: 'Restaurant Dashboard',
@@ -59,6 +61,7 @@ const AUDIENCES: Record<Audience, {
       { icon: Users, title: 'Team', desc: 'Add staff and control what each role can do.' },
       { icon: CreditCard, title: 'Payments', desc: 'Subscriptions, payouts, and reporting.' },
     ],
+    altPortals: [{ label: 'Platform console →', href: 'https://central.qlisted.com' }],
   },
   staff: {
     badge: 'Team',
@@ -75,6 +78,10 @@ const AUDIENCES: Record<Audience, {
       { icon: Activity, title: 'Real-time', desc: 'Kitchen, floor, and cashier stay in sync.' },
       { icon: ChefHat, title: 'Your station', desc: 'A view built for your role.' },
     ],
+    altPortals: [
+      { label: 'Restaurant dashboard →', href: 'https://app.qlisted.com' },
+      { label: 'Platform console →', href: 'https://central.qlisted.com' },
+    ],
   },
   default: {
     badge: 'Console',
@@ -90,6 +97,10 @@ const AUDIENCES: Record<Audience, {
       { icon: ShieldCheck, title: 'Platform oversight', desc: 'Super admins manage every restaurant from one place.' },
       { icon: Store, title: 'Restaurant management', desc: 'Owners and managers run menus, tables, staff, and settings.' },
       { icon: Activity, title: 'Live operations', desc: 'Kitchen, waiters, and cashiers stay in sync in real time.' },
+    ],
+    altPortals: [
+      { label: 'Platform console →', href: 'https://central.qlisted.com' },
+      { label: 'Restaurant dashboard →', href: 'https://app.qlisted.com' },
     ],
   },
 };
@@ -214,6 +225,18 @@ export function SignIn() {
           </form>
 
           <GoogleSignInButton />
+
+          {a.altPortals.length > 0 && (
+            <div className="mt-6 border-t border-gray-200 pt-4 text-center text-sm text-gray-500">
+              Not the right place?{' '}
+              {a.altPortals.map((p, i) => (
+                <span key={p.href}>
+                  {i > 0 && <span className="mx-1 text-gray-300">·</span>}
+                  <a href={p.href} className="font-medium text-gray-600 hover:text-gray-900">{p.label}</a>
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="mt-8 flex items-center justify-between text-sm">
             <Link to="/" className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700">

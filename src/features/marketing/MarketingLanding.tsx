@@ -81,8 +81,9 @@ export function MarketingLanding() {
                   {t('cta.bookDemo')}
                 </Link>
               </div>
-              <p className="mt-5 text-sm text-gray-500 flex items-center gap-2 justify-center lg:justify-start">
+              <p className="mt-5 text-sm text-gray-500 flex flex-wrap items-center gap-x-2 gap-y-1 justify-center lg:justify-start">
                 <Check className="h-4 w-4 text-green-600" /> {t('marketing.noCreditCard')}
+                <Link to="/pricing" className="font-medium text-[#8B4513] hover:underline">· {t('nav.pricing')}</Link>
               </p>
             </div>
 
