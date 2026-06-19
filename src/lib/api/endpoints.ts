@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead } from './types';
 
 // Auth
 export const authApi = {
@@ -21,6 +21,8 @@ export const adminApi = {
   setTenantStatus: (tenantId: string, isActive: boolean) =>
     api.put<{ success: boolean }>(`/admin/tenants/${tenantId}/status`, { isActive }),
   getTenantUsage: (tenantId: string) => api.get<TenantUsage>(`/admin/tenants/${tenantId}/usage`),
+  listUsers: () => api.get<PlatformUser[]>('/admin/users'),
+  listLeads: () => api.get<Lead[]>('/admin/leads'),
 };
 
 // AI assistant (admin copilot + customer chat)

@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut, TrendingUp, Table, Coffee, BookOpen } from 'lucide-react';
+import { ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut, TrendingUp, Table, Coffee, BookOpen, Mail } from 'lucide-react';
 import { adminApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PlatformAnalytics, TenantSummary } from '../../lib/api/types';
+import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead } from '../../lib/api/types';
 
 interface Row extends TenantSummary {
   users?: number;
@@ -21,7 +21,15 @@ export function SuperAdminPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [section, setSection] = useState<'overview' | 'restaurants' | 'billing'>('overview');
+  const [section, setSection] = useState<'overview' | 'restaurants' | 'users' | 'leads' | 'billing'>('overview');
+  const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+
+  useEffect(() => {
+    if (section === 'users' && users.length === 0) adminApi.listUsers().then(setUsers).catch(() => {});
+    if (section === 'leads' && leads.length === 0) adminApi.listLeads().then(setLeads).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,6 +95,8 @@ export function SuperAdminPortal() {
   const nav = [
     { id: 'overview' as const, label: 'Overview', icon: ShieldCheck },
     { id: 'restaurants' as const, label: 'Restaurants', icon: Store },
+    { id: 'users' as const, label: 'Users', icon: Users },
+    { id: 'leads' as const, label: 'Leads', icon: Mail },
     { id: 'billing' as const, label: 'Billing', icon: DollarSign },
   ];
 
@@ -161,6 +171,56 @@ export function SuperAdminPortal() {
                             {busyId === t.id ? '…' : t.isActive ? 'Deactivate' : 'Activate'}
                           </button>
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {section === 'users' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Users ({users.length})</h2></div>
+              {users.length === 0 ? <p className="p-6 text-gray-500">Loading…</p> : (
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500 text-left"><tr>
+                    <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Email</th>
+                    <th className="px-6 py-3 font-medium">Role</th><th className="px-6 py-3 font-medium">Restaurant</th><th className="px-6 py-3 font-medium">Status</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {users.map((u) => (
+                      <tr key={u.id}>
+                        <td className="px-6 py-3 font-medium text-gray-900">{u.name}</td>
+                        <td className="px-6 py-3 text-gray-500">{u.email}</td>
+                        <td className="px-6 py-3"><span className="px-2 py-0.5 rounded-full text-xs bg-[#F5DEB3] text-[#5C4033]">{u.role}</span></td>
+                        <td className="px-6 py-3 text-gray-500">{u.tenantName || (u.role === 'super_admin' ? '— platform —' : '—')}</td>
+                        <td className="px-6 py-3"><span className={`px-2 py-0.5 rounded-full text-xs ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>{u.isActive ? 'Active' : 'Disabled'}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {section === 'leads' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Leads / demo requests ({leads.length})</h2></div>
+              {leads.length === 0 ? <p className="p-6 text-gray-500">No leads yet.</p> : (
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500 text-left"><tr>
+                    <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Restaurant</th>
+                    <th className="px-6 py-3 font-medium">Email</th><th className="px-6 py-3 font-medium">Phone</th><th className="px-6 py-3 font-medium">Status</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {leads.map((l) => (
+                      <tr key={l.id}>
+                        <td className="px-6 py-3 font-medium text-gray-900">{l.name}</td>
+                        <td className="px-6 py-3 text-gray-500">{l.restaurant}</td>
+                        <td className="px-6 py-3 text-gray-500">{l.email}</td>
+                        <td className="px-6 py-3 text-gray-500">{l.phone || '—'}</td>
+                        <td className="px-6 py-3"><span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">{l.status}</span></td>
                       </tr>
                     ))}
                   </tbody>

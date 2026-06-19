@@ -290,6 +290,29 @@ export interface TenantSummary {
   createdAt: string;
 }
 
+export interface PlatformUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  tenantId: string | null;
+  tenantName: string | null;
+  isActive: boolean;
+  joinedAt: string | null;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  restaurant: string;
+  phone: string | null;
+  size: string | null;
+  message: string | null;
+  status: string;
+  createdAt: string;
+}
+
 export interface TenantWithStats extends Tenant {
   stats: { users: number; orders: number; revenue: number; customers: number; tables: number; menuItems: number; storageEstimate: string };
 }

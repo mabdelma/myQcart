@@ -302,4 +302,29 @@ admin.post('/admin/subscriptions/:tenantId/cancel', authMiddleware, requireRole(
   return c.json(result.data);
 });
 
+// Platform-wide users (super admin) — every user across all restaurants.
+admin.get('/admin/users', authMiddleware, requireRole('super_admin'), async (c) => {
+  const rows = await db
+    .select({
+      id: schema.users.id,
+      name: schema.users.name,
+      email: schema.users.email,
+      role: schema.users.role,
+      tenantId: schema.users.tenantId,
+      tenantName: schema.tenants.name,
+      isActive: schema.users.isActive,
+      joinedAt: schema.users.joinedAt,
+    })
+    .from(schema.users)
+    .leftJoin(schema.tenants, eq(schema.users.tenantId, schema.tenants.id))
+    .orderBy(desc(schema.users.joinedAt));
+  return c.json(rows);
+});
+
+// Leads / demo requests (super admin).
+admin.get('/admin/leads', authMiddleware, requireRole('super_admin'), async (c) => {
+  const rows = await db.select().from(schema.demoRequests).orderBy(desc(schema.demoRequests.createdAt));
+  return c.json(rows);
+});
+
 export default admin;
