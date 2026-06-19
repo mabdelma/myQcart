@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import pg from "pg";
 import Stripe from "stripe";
+import { randomUUID } from "node:crypto";
 import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
 
 function getStripe(): Stripe | null {
@@ -116,8 +117,43 @@ app.post<{ Params: { tenantId: string } }>("/compat/subscription/:tenantId/cance
   return reply.send({ success: true });
 });
 
-// Order payment intents (mirror monolith /api/r/:slug/payments).
-app.post("/v1/tenants/:slug/payments/intent", async () => err("not_implemented: port from createPaymentIntent"));
+// Order payment intent — ported from createPaymentIntent (public, mirrors
+// POST /api/r/:slug/payments/create-intent). Creates a Stripe PaymentIntent
+// (no charge — confirmed client-side) + a pending payments row. {orderId, tip?}.
+app.post<{ Params: { slug: string }; Body: { orderId?: string; tip?: number } }>("/compat/payment-intent/:slug", async (req, reply) => {
+  const tr = await pool.query("SELECT id, lower(coalesce(currency,'usd')) AS currency FROM tenants WHERE slug = $1 AND is_active = true LIMIT 1", [req.params.slug]);
+  const tenant = tr.rows[0];
+  if (!tenant) return reply.code(404).send({ error: "Tenant not found" });
+  const { orderId, tip } = req.body || {};
+  if (!orderId) return reply.code(400).send({ error: "orderId required" });
+
+  const o = await pool.query("SELECT total, payment_status FROM orders WHERE id = $1 AND tenant_id = $2 LIMIT 1", [orderId, tenant.id]);
+  const order = o.rows[0];
+  if (!order) return reply.code(404).send({ error: "Order not found" });
+  if (order.payment_status === "paid") return reply.code(400).send({ error: "Order already paid" });
+
+  const paid = await pool.query("SELECT COALESCE(SUM(amount + COALESCE(tip,0)),0)::float AS s FROM payments WHERE order_id = $1 AND status = 'paid'", [orderId]);
+  const remaining = Number(order.total) - Number(paid.rows[0].s);
+  if (remaining <= 0) return reply.code(400).send({ error: "Order already fully paid" });
+
+  const stripe = getStripe();
+  if (!stripe) return reply.code(501).send({ error: "Billing not configured" });
+  const paymentAmount = remaining;
+  const chargeAmount = Math.round((paymentAmount + (tip || 0)) * 100);
+
+  const intent = await stripe.paymentIntents.create({
+    amount: chargeAmount,
+    currency: tenant.currency,
+    automatic_payment_methods: { enabled: true },
+    metadata: { orderId, tenantId: tenant.id },
+  });
+  const paymentId = randomUUID();
+  await pool.query(
+    "INSERT INTO payments (id, tenant_id, order_id, amount, tip, method, status, stripe_payment_intent_id) VALUES ($1,$2,$3,$4,$5,'card','pending',$6)",
+    [paymentId, tenant.id, orderId, paymentAmount, tip || 0, intent.id],
+  );
+  return reply.send({ clientSecret: intent.client_secret, paymentId, amount: chargeAmount });
+});
 
 // SaaS subscriptions (mirror monolith /api/admin/subscriptions).
 app.get("/v1/tenants/:id/subscription", async (req, reply) => {

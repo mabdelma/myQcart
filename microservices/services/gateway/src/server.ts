@@ -56,6 +56,9 @@ function target(method: string, url: string): { base?: string; path: string } {
   // PATCH /api/r/:slug/orders/:id/status → orders service status update.
   const stat = method === "PATCH" && /^\/api\/r\/([^/]+)\/orders\/([^/]+)\/status$/.exec(pathOnly);
   if (stat && ROUTES["/api/orders"]) return { base: ROUTES["/api/orders"], path: `/compat/status/${stat[1]}/${stat[2]}` };
+  // POST /api/r/:slug/payments/create-intent → billing service payment intent.
+  const pi = method === "POST" && /^\/api\/r\/([^/]+)\/payments\/create-intent$/.exec(pathOnly);
+  if (pi && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/payment-intent/${pi[1]}` };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };
