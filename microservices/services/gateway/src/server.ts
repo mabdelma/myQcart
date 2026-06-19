@@ -59,6 +59,8 @@ function target(method: string, url: string): { base?: string; path: string } {
   // POST /api/r/:slug/payments/create-intent → billing service payment intent.
   const pi = method === "POST" && /^\/api\/r\/([^/]+)\/payments\/create-intent$/.exec(pathOnly);
   if (pi && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: `/compat/payment-intent/${pi[1]}` };
+  // POST /api/webhooks/stripe → billing service webhook (raw body preserved).
+  if (method === "POST" && pathOnly === "/api/webhooks/stripe" && ROUTES["/api/billing"]) return { base: ROUTES["/api/billing"], path: "/compat/webhook" };
   // Service prefix → strip prefix and forward to the service.
   const hit = Object.keys(ROUTES).find((p) => pathOnly === p || pathOnly.startsWith(p + "/"));
   if (hit) return { base: ROUTES[hit], path: url.slice(hit.length) || "/" };

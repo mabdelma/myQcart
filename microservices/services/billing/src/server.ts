@@ -1,12 +1,73 @@
 import Fastify from "fastify";
 import pg from "pg";
 import Stripe from "stripe";
+import rawBody from "fastify-raw-body";
 import { randomUUID } from "node:crypto";
 import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
   return key ? new Stripe(key, { apiVersion: "2025-02-24.acacia" }) : null;
+}
+
+const iso = (s?: number | null) => (s ? new Date(s * 1000).toISOString() : null);
+
+// Upsert the tenant's subscription row (newest), mirroring subscriptionService.upsert.
+async function upsertSub(tenantId: string, v: { planId?: string | null; stripeSubscriptionId?: string | null; status?: string | null; currentPeriodStart?: string | null; currentPeriodEnd?: string | null }) {
+  const ex = await pool.query("SELECT id FROM tenant_subscriptions WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT 1", [tenantId]);
+  if (ex.rows[0]) {
+    await pool.query(
+      `UPDATE tenant_subscriptions SET plan_id = COALESCE($2, plan_id), stripe_subscription_id = COALESCE($3, stripe_subscription_id),
+         status = COALESCE($4, status), current_period_start = COALESCE($5, current_period_start), current_period_end = COALESCE($6, current_period_end) WHERE id = $1`,
+      [ex.rows[0].id, v.planId ?? null, v.stripeSubscriptionId ?? null, v.status ?? null, v.currentPeriodStart ?? null, v.currentPeriodEnd ?? null],
+    );
+  } else {
+    await pool.query(
+      "INSERT INTO tenant_subscriptions (id, tenant_id, plan_id, stripe_subscription_id, status, current_period_start, current_period_end) VALUES ($1,$2,COALESCE($3,'starter'),$4,COALESCE($5,'trial'),$6,$7)",
+      [randomUUID(), tenantId, v.planId ?? null, v.stripeSubscriptionId ?? null, v.status ?? null, v.currentPeriodStart ?? null, v.currentPeriodEnd ?? null],
+    );
+  }
+}
+
+// Subscription/billing events → true if handled (mirrors handleSubscriptionEvent).
+async function handleSubscriptionEvent(event: Stripe.Event): Promise<boolean> {
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const s = event.data.object as Stripe.Checkout.Session;
+      if (s.mode !== "subscription") return false;
+      const tenantId = s.metadata?.tenantId;
+      const planId = s.metadata?.planId || "starter";
+      if (!tenantId) return true;
+      let pStart: string | null = null, pEnd: string | null = null;
+      const stripe = getStripe();
+      if (stripe && s.subscription) {
+        const sub = await stripe.subscriptions.retrieve(s.subscription as string);
+        pStart = iso(sub.current_period_start); pEnd = iso(sub.current_period_end);
+      }
+      await upsertSub(tenantId, { planId, stripeSubscriptionId: (s.subscription as string) || null, status: "active", currentPeriodStart: pStart, currentPeriodEnd: pEnd });
+      return true;
+    }
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted": {
+      const sub = event.data.object as Stripe.Subscription;
+      const tenantId = sub.metadata?.tenantId;
+      if (!tenantId) return true;
+      const status = event.type === "customer.subscription.deleted" ? "canceled"
+        : (sub.status === "past_due" || sub.status === "unpaid") ? "past_due"
+        : sub.status === "canceled" ? "canceled" : "active";
+      await upsertSub(tenantId, { stripeSubscriptionId: sub.id, status, currentPeriodStart: iso(sub.current_period_start), currentPeriodEnd: iso(sub.current_period_end), ...(sub.metadata?.planId ? { planId: sub.metadata.planId } : {}) });
+      return true;
+    }
+    case "invoice.payment_failed": {
+      const inv = event.data.object as Stripe.Invoice;
+      const subId = (inv as unknown as { subscription?: string }).subscription;
+      if (!subId) return true;
+      await pool.query("UPDATE tenant_subscriptions SET status = 'past_due' WHERE stripe_subscription_id = $1", [subId]);
+      return true;
+    }
+    default:
+      return false;
+  }
 }
 
 /**
@@ -20,6 +81,9 @@ const app = Fastify({ loggerInstance: log });
 const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+
+// Raw body only for the webhook route (Stripe signature verification needs exact bytes).
+app.register(rawBody, { field: "rawBody", global: false, encoding: false, runFirst: true });
 
 interface Plan { id: string; name: string; price: number; usersLimit: number; ordersLimit: number; priceEnv: string }
 const PLANS: Plan[] = [
@@ -165,7 +229,50 @@ app.post("/v1/tenants/:id/subscription/checkout", async (req, reply) => {
   return err("not_implemented: port from createCheckoutSession");
 });
 
-// Stripe webhook (raw body) — ports from handleStripeWebhook + handleSubscriptionEvent.
-app.post("/v1/billing/webhook", async () => err("not_implemented: port from paymentService.handleStripeWebhook"));
+// Stripe webhook — ported from handleStripeWebhook. Verifies the signature over
+// the raw body, routes subscription events, and records payment_intent.succeeded.
+app.post<{ Body: unknown }>("/compat/webhook", { config: { rawBody: true } }, async (req, reply) => {
+  const stripe = getStripe();
+  if (!stripe) return reply.code(501).send({ error: "Stripe not configured" });
+  const sig = req.headers["stripe-signature"] as string | undefined;
+  if (!sig) return reply.code(400).send({ error: "Missing signature" });
+
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent((req as unknown as { rawBody: Buffer }).rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET || "");
+  } catch (e) {
+    log.error({ err: e }, "Stripe webhook verification failed");
+    return reply.code(400).send({ error: "Webhook error" });
+  }
+
+  try {
+    if (await handleSubscriptionEvent(event)) return reply.send({ received: true });
+
+    if (event.type === "payment_intent.succeeded") {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      const orderId = intent.metadata?.orderId;
+      const tenantId = intent.metadata?.tenantId;
+      if (orderId && tenantId) {
+        const existing = await pool.query("SELECT id FROM payments WHERE stripe_payment_intent_id = $1 AND status = 'paid' LIMIT 1", [intent.id]);
+        if (!existing.rows[0]) {
+          await pool.query("UPDATE payments SET status = 'paid' WHERE stripe_payment_intent_id = $1", [intent.id]);
+          // recompute order payment status (mirrors updateOrderPaymentStatus)
+          const o = await pool.query("SELECT total FROM orders WHERE id = $1 AND tenant_id = $2 LIMIT 1", [orderId, tenantId]);
+          if (o.rows[0]) {
+            const paid = await pool.query("SELECT COALESCE(SUM(amount + COALESCE(tip,0)),0)::float AS s FROM payments WHERE order_id = $1 AND status = 'paid'", [orderId]);
+            const totalPaid = Number(paid.rows[0].s);
+            const remaining = Number(o.rows[0].total) - totalPaid;
+            const status = remaining <= 0 ? "paid" : totalPaid > 0 ? "partially_paid" : "unpaid";
+            await pool.query("UPDATE orders SET payment_status = $1, paid_amount = $2, updated_at = $3 WHERE id = $4", [status, totalPaid, new Date().toISOString(), orderId]);
+          }
+        }
+      }
+    }
+    return reply.send({ received: true });
+  } catch (e) {
+    log.error({ err: e }, "webhook handling error");
+    return reply.code(400).send({ error: "Webhook error" });
+  }
+});
 
 app.listen({ port: PORT, host: "0.0.0.0" }).then(() => log.info(`billing on :${PORT}`));
