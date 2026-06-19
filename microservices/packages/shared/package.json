@@ -11,7 +11,13 @@
     "./http": "./src/http.ts",
     "./types": "./src/types.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
   }
 }

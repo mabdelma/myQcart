@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "echo 'Run a single service: npm -w @qlisted/<svc> run dev'",
+    "test": "npm -w @qlisted/shared run test",
     "dev:gateway": "npm -w @qlisted/gateway run dev",
     "dev:auth": "npm -w @qlisted/auth run dev",
     "dev:catalog": "npm -w @qlisted/catalog run dev",
