@@ -1,7 +1,6 @@
 import Fastify from "fastify";
 import pg from "pg";
 import Stripe from "stripe";
-import rawBody from "fastify-raw-body";
 import { randomUUID } from "node:crypto";
 import { createLogger, ok, err, verifyHs256, bearer } from "@qlisted/shared";
 
@@ -82,8 +81,13 @@ const PORT = Number(process.env.PORT || 8080);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 
-// Raw body only for the webhook route (Stripe signature verification needs exact bytes).
-app.register(rawBody, { field: "rawBody", global: false, encoding: false, runFirst: true });
+// Keep the raw JSON bytes on every request (the webhook needs them for Stripe
+// signature verification) while still exposing the parsed object as req.body.
+app.addContentTypeParser("application/json", { parseAs: "buffer" }, (req, body, done) => {
+  (req as unknown as { rawBody: Buffer }).rawBody = body as Buffer;
+  try { done(null, JSON.parse((body as Buffer).toString("utf8") || "{}")); }
+  catch (e) { done(e as Error); }
+});
 
 interface Plan { id: string; name: string; price: number; usersLimit: number; ordersLimit: number; priceEnv: string }
 const PLANS: Plan[] = [
@@ -231,7 +235,7 @@ app.post("/v1/tenants/:id/subscription/checkout", async (req, reply) => {
 
 // Stripe webhook — ported from handleStripeWebhook. Verifies the signature over
 // the raw body, routes subscription events, and records payment_intent.succeeded.
-app.post<{ Body: unknown }>("/compat/webhook", { config: { rawBody: true } }, async (req, reply) => {
+app.post<{ Body: unknown }>("/compat/webhook", async (req, reply) => {
   const stripe = getStripe();
   if (!stripe) return reply.code(501).send({ error: "Stripe not configured" });
   const sig = req.headers["stripe-signature"] as string | undefined;
