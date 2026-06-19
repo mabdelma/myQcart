@@ -74,11 +74,11 @@ export function MarketingLanding() {
                 {t('marketing.heroDesc')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link to="/demo" className="inline-flex items-center justify-center px-8 py-3.5 bg-[#8B4513] text-white font-medium rounded-lg hover:bg-[#5C4033] transition-colors text-lg shadow-sm">
+                <Link to="/onboarding" className="inline-flex items-center justify-center px-8 py-3.5 bg-[#8B4513] text-white font-medium rounded-lg hover:bg-[#5C4033] transition-colors text-lg shadow-sm">
                   {t('cta.startTrial')} <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-                <Link to="/features" className="inline-flex items-center justify-center px-8 py-3.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-lg">
-                  {t('marketing.seeFeatures')}
+                <Link to="/demo" className="inline-flex items-center justify-center px-8 py-3.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-lg">
+                  {t('cta.bookDemo')}
                 </Link>
               </div>
               <p className="mt-5 text-sm text-gray-500 flex items-center gap-2 justify-center lg:justify-start">
@@ -271,11 +271,11 @@ export function MarketingLanding() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t('marketing.ctaTitle')}</h2>
           <p className="text-lg text-amber-100 mb-10 max-w-2xl mx-auto">{t('marketing.ctaDesc')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/demo" className="inline-flex items-center justify-center px-8 py-3.5 bg-white text-[#8B4513] font-medium rounded-lg hover:bg-amber-50 transition-colors text-lg">
-              {t('cta.requestDemo')} <ArrowRight className="ml-2 h-5 w-5" />
+            <Link to="/onboarding" className="inline-flex items-center justify-center px-8 py-3.5 bg-white text-[#8B4513] font-medium rounded-lg hover:bg-amber-50 transition-colors text-lg">
+              {t('cta.startTrial')} <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
-            <Link to="/signin" className="inline-flex items-center justify-center px-8 py-3.5 border border-white/40 text-white font-medium rounded-lg hover:bg-white/10 transition-colors text-lg">
-              {t('cta.signIn')}
+            <Link to="/demo" className="inline-flex items-center justify-center px-8 py-3.5 border border-white/40 text-white font-medium rounded-lg hover:bg-white/10 transition-colors text-lg">
+              {t('cta.bookDemo')}
             </Link>
           </div>
         </div>

@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ComponentType } from 'react';
 import { Link, useNavigate } from 'react-router';
 import {
   UtensilsCrossed, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft,
-  ShieldCheck, Store, Activity,
+  ShieldCheck, Store, Activity, Users, CreditCard, ClipboardList, ChefHat,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
@@ -10,11 +10,89 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { homePathForRole } from '../../lib/roleRoutes';
 import { GoogleSignInButton } from './GoogleSignInButton';
 
-const panelPoints = [
-  { icon: ShieldCheck, title: 'Platform oversight', desc: 'Super admins manage every restaurant from one place.' },
-  { icon: Store, title: 'Restaurant management', desc: 'Owners and managers run menus, tables, staff, and settings.' },
-  { icon: Activity, title: 'Live operations', desc: 'Kitchen, waiters, and cashiers stay in sync in real time.' },
-];
+type Audience = 'platform' | 'admin' | 'staff' | 'default';
+type Point = { icon: ComponentType<{ className?: string }>; title: string; desc: string };
+
+// Which login experience to show, derived from the subdomain the user arrived on.
+// central → platform console · app/ai → restaurant dashboard · login → staff.
+function detectAudience(): Audience {
+  const sub = typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '';
+  if (sub === 'central') return 'platform';
+  if (sub === 'app' || sub === 'ai') return 'admin';
+  if (sub === 'login') return 'staff';
+  return 'default';
+}
+
+const AUDIENCES: Record<Audience, {
+  badge: string; brandTitle: string; brandSubtitle: string;
+  formTitle: string; formSubtitle: string; gradient: string; button: string;
+  Icon: ComponentType<{ className?: string }>; placeholder: string; points: Point[];
+}> = {
+  platform: {
+    badge: 'Platform Console',
+    brandTitle: 'The control plane for every Qlisted restaurant.',
+    brandSubtitle: 'Secure access for platform super admins.',
+    formTitle: 'Platform sign-in',
+    formSubtitle: 'Restricted to Qlisted platform super admins.',
+    gradient: 'from-[#1e293b] to-[#0b1120]',
+    button: 'bg-[#1e293b] hover:bg-[#0f172a] focus:ring-[#1e293b]',
+    Icon: ShieldCheck,
+    placeholder: 'you@qlisted.com',
+    points: [
+      { icon: Store, title: 'Every restaurant', desc: 'Create, suspend, and oversee all tenants.' },
+      { icon: Users, title: 'All users', desc: 'See every account across the platform.' },
+      { icon: CreditCard, title: 'Billing & leads', desc: 'Track revenue, subscriptions, and demo requests.' },
+    ],
+  },
+  admin: {
+    badge: 'Restaurant Dashboard',
+    brandTitle: 'Run your restaurant from one dashboard.',
+    brandSubtitle: 'For owners and managers.',
+    formTitle: 'Restaurant sign-in',
+    formSubtitle: 'For restaurant owners and managers.',
+    gradient: 'from-[#8B4513] to-[#3f2415]',
+    button: 'bg-[#8B4513] hover:bg-[#5C4033] focus:ring-[#8B4513]',
+    Icon: Store,
+    placeholder: 'you@restaurant.com',
+    points: [
+      { icon: ChefHat, title: 'Menus & orders', desc: 'Manage your menu, modifiers, and live orders.' },
+      { icon: Users, title: 'Team', desc: 'Add staff and control what each role can do.' },
+      { icon: CreditCard, title: 'Payments', desc: 'Subscriptions, payouts, and reporting.' },
+    ],
+  },
+  staff: {
+    badge: 'Team',
+    brandTitle: 'Your shift, in sync.',
+    brandSubtitle: 'For kitchen, waiters, and cashiers.',
+    formTitle: 'Staff sign-in',
+    formSubtitle: 'For kitchen, waiters, and cashiers.',
+    gradient: 'from-[#0f766e] to-[#134e4a]',
+    button: 'bg-[#0f766e] hover:bg-[#115e59] focus:ring-[#0f766e]',
+    Icon: Activity,
+    placeholder: 'you@restaurant.com',
+    points: [
+      { icon: ClipboardList, title: 'Live orders', desc: 'See tickets the moment they come in.' },
+      { icon: Activity, title: 'Real-time', desc: 'Kitchen, floor, and cashier stay in sync.' },
+      { icon: ChefHat, title: 'Your station', desc: 'A view built for your role.' },
+    ],
+  },
+  default: {
+    badge: 'Console',
+    brandTitle: 'The console behind every Qlisted restaurant.',
+    brandSubtitle: 'One secure sign-in for super admins, restaurant admins, and staff.',
+    formTitle: 'Sign in',
+    formSubtitle: 'Super admins, restaurant admins, and staff all sign in here.',
+    gradient: 'from-[#8B4513] to-[#3f2415]',
+    button: 'bg-[#8B4513] hover:bg-[#5C4033] focus:ring-[#8B4513]',
+    Icon: UtensilsCrossed,
+    placeholder: 'you@restaurant.com',
+    points: [
+      { icon: ShieldCheck, title: 'Platform oversight', desc: 'Super admins manage every restaurant from one place.' },
+      { icon: Store, title: 'Restaurant management', desc: 'Owners and managers run menus, tables, staff, and settings.' },
+      { icon: Activity, title: 'Live operations', desc: 'Kitchen, waiters, and cashiers stay in sync in real time.' },
+    ],
+  },
+};
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -23,50 +101,50 @@ export function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const a = AUDIENCES[detectAudience()];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const user = await login(email, password);
     if (user) {
-      // One central login for every role — route to the right home.
+      // One auth flow for every role — route to the right home regardless of which
+      // login page (subdomain) they used.
       navigate(homePathForRole(user.role), { replace: true });
     }
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* ── Brand panel ──────────────────────────────────────────────────── */}
-      <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#8B4513] to-[#3f2415] p-12 text-white">
+      {/* ── Brand panel (audience-specific) ──────────────────────────────── */}
+      <div className={`relative hidden lg:flex lg:w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br ${a.gradient} p-12 text-white`}>
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-amber-300/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
 
         <Link to="/" className="relative flex items-center gap-2">
-          <UtensilsCrossed className="h-8 w-8" />
+          <a.Icon className="h-8 w-8" />
           <span className="text-2xl font-bold">Qlisted</span>
-          <span className="ml-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">Console</span>
+          <span className="ml-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">{a.badge}</span>
         </Link>
 
         <div className="relative max-w-md">
-          <h1 className="text-4xl font-bold leading-tight">The console behind every Qlisted restaurant.</h1>
-          <p className="mt-4 text-amber-100/90">
-            One secure sign-in for platform super admins, restaurant admins, and staff.
-          </p>
+          <h1 className="text-4xl font-bold leading-tight">{a.brandTitle}</h1>
+          <p className="mt-4 text-white/80">{a.brandSubtitle}</p>
           <ul className="mt-10 space-y-5">
-            {panelPoints.map((p) => (
+            {a.points.map((p) => (
               <li key={p.title} className="flex gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10">
                   <p.icon className="h-5 w-5" />
                 </span>
                 <div>
                   <div className="font-semibold">{p.title}</div>
-                  <div className="text-sm text-amber-100/80">{p.desc}</div>
+                  <div className="text-sm text-white/70">{p.desc}</div>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="relative text-sm text-amber-100/70">&copy; {new Date().getFullYear()} Qlisted. All rights reserved.</p>
+        <p className="relative text-sm text-white/60">&copy; {new Date().getFullYear()} Qlisted. All rights reserved.</p>
       </div>
 
       {/* ── Form panel ───────────────────────────────────────────────────── */}
@@ -74,15 +152,14 @@ export function SignIn() {
         <div className="mx-auto w-full max-w-md">
           {/* Mobile logo */}
           <Link to="/" className="mb-8 flex items-center justify-center gap-2 lg:hidden">
-            <UtensilsCrossed className="h-8 w-8 text-[#8B4513]" />
+            <a.Icon className="h-8 w-8 text-gray-900" />
             <span className="text-2xl font-bold text-gray-900">Qlisted</span>
+            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600">{a.badge}</span>
           </Link>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">{t('auth.signin')}</h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Super admins, restaurant admins, and staff all sign in here.
-            </p>
+            <h2 className="text-3xl font-bold text-gray-900">{a.formTitle}</h2>
+            <p className="mt-2 text-sm text-gray-500">{a.formSubtitle}</p>
           </div>
 
           {state.error && (
@@ -99,8 +176,8 @@ export function SignIn() {
                 <input
                   id="email" name="email" type="email" autoComplete="email" required
                   value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@restaurant.com"
-                  className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-gray-900 placeholder-gray-400 shadow-sm focus:border-[#8B4513] focus:outline-none focus:ring-1 focus:ring-[#8B4513]"
+                  placeholder={a.placeholder}
+                  className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-gray-900 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-400"
                 />
               </div>
             </div>
@@ -108,7 +185,7 @@ export function SignIn() {
             <div>
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('auth.password')}</label>
-                <Link to="/forgot-password" className="text-xs font-medium text-[#8B4513] hover:text-[#5C4033]">{t('auth.troubleSigningIn')}</Link>
+                <Link to="/forgot-password" className="text-xs font-medium text-gray-500 hover:text-gray-700">{t('auth.troubleSigningIn')}</Link>
               </div>
               <div className="relative mt-1.5">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden />
@@ -116,7 +193,7 @@ export function SignIn() {
                   id="password" name="password" type={showPw ? 'text' : 'password'} autoComplete="current-password" required
                   value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-gray-900 placeholder-gray-400 shadow-sm focus:border-[#8B4513] focus:outline-none focus:ring-1 focus:ring-[#8B4513]"
+                  className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-gray-900 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-400"
                 />
                 <button
                   type="button" onClick={() => setShowPw((v) => !v)}
@@ -130,7 +207,7 @@ export function SignIn() {
 
             <button
               type="submit" disabled={state.loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#8B4513] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#5C4033] focus:outline-none focus:ring-2 focus:ring-[#8B4513] focus:ring-offset-2 disabled:opacity-50"
+              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${a.button}`}
             >
               {state.loading ? <LoadingSpinner /> : <>{t('auth.signin')} <ArrowRight className="h-4 w-4" /></>}
             </button>
@@ -142,7 +219,7 @@ export function SignIn() {
             <Link to="/" className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700">
               <ArrowLeft className="h-4 w-4" /> {t('common.back')}
             </Link>
-            <Link to="/demo" className="font-medium text-[#8B4513] hover:text-[#5C4033]">{t('cta.requestDemo')}</Link>
+            <Link to="/demo" className="font-medium text-gray-600 hover:text-gray-900">{t('cta.requestDemo')}</Link>
           </div>
         </div>
       </div>

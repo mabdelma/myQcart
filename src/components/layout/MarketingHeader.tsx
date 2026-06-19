@@ -40,10 +40,10 @@ export function MarketingHeader() {
               {t('cta.signIn')}
             </Link>
             <Link
-              to="/demo"
+              to="/onboarding"
               className="px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-lg hover:bg-[#5C4033] transition-colors"
             >
-              {t('cta.startTrial')}
+              {t('cta.getStarted')}
             </Link>
           </nav>
 
@@ -74,11 +74,11 @@ export function MarketingHeader() {
               {t('cta.signIn')}
             </Link>
             <Link
-              to="/demo"
+              to="/onboarding"
               onClick={() => setOpen(false)}
               className="block text-center px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-lg"
             >
-              {t('cta.startTrial')}
+              {t('cta.getStarted')}
             </Link>
           </div>
         </div>
