@@ -66,9 +66,20 @@ server {
         try_files $uri =404;
     }
 
+    # The SPA shell + service worker MUST always revalidate, or browsers
+    # heuristically cache index.html/sw.js and keep serving a stale app for days
+    # after a deploy. no-cache = "check freshness every time" (cheap 304s via
+    # ETag) so new builds are picked up on the next load. Hashed /assets/ above
+    # stay immutable, so this costs nothing for the heavy files.
+    location ~* ^/(sw\.js|registerSW\.js|workbox-.*\.js|manifest\.webmanifest|index\.html|offline\.html)$ {
+        add_header Cache-Control "no-cache, must-revalidate";
+        try_files $uri =404;
+    }
+
     # CSP on the SPA HTML page — the API also sets it on /api/ as defence-in-depth.
     # Not at server level to avoid duplicating the API's own CSP on proxied responses.
     location / {
+        add_header Cache-Control "no-cache, must-revalidate";
         add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com; base-uri 'self'; form-action 'self'";
         try_files $uri $uri/ /index.html;
     }
