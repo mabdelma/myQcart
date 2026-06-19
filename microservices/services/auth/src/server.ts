@@ -138,6 +138,40 @@ app.post<{ Body: { token?: string; password?: string } }>("/v1/auth/reset-passwo
   return reply.send({ message: "Password has been reset successfully." });
 });
 
+// Refresh — ported from refreshAccessToken (rotate: revoke old, issue new).
+app.post<{ Body: { refreshToken?: string } }>("/v1/auth/refresh", async (req, reply) => {
+  const rt = req.body?.refreshToken;
+  if (!rt) return reply.code(400).send({ error: "refreshToken required" });
+  const hash = createHash("sha256").update(rt).digest("hex");
+  const s = await pool.query("SELECT id, user_id, expires_at FROM refresh_tokens WHERE token_hash = $1 AND revoked = false LIMIT 1", [hash]);
+  const stored = s.rows[0];
+  if (!stored) return reply.code(401).send({ error: "Invalid refresh token" });
+  if (new Date(stored.expires_at) < new Date()) return reply.code(401).send({ error: "Refresh token expired" });
+  await pool.query("UPDATE refresh_tokens SET revoked = true WHERE id = $1", [stored.id]);
+  const u = await pool.query("SELECT id, name, email, role, tenant_id FROM users WHERE id = $1 LIMIT 1", [stored.user_id]);
+  const user = u.rows[0];
+  if (!user) return reply.code(404).send({ error: "User not found" });
+  const token = signJwt({ sub: user.id, userId: user.id, tenantId: user.tenant_id, role: user.role, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 });
+  const newRt = randomUUID();
+  await pool.query("INSERT INTO refresh_tokens (id, user_id, tenant_id, token_hash, expires_at) VALUES ($1,$2,$3,$4,$5)",
+    [randomUUID(), user.id, user.tenant_id, createHash("sha256").update(newRt).digest("hex"), new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()]);
+  return reply.send({ token, refreshToken: newRt, user: { id: user.id, name: user.name, email: user.email, role: user.role, tenantId: user.tenant_id } });
+});
+
+// Verify email — ported from verifyEmail.
+app.post<{ Body: { token?: string } }>("/v1/auth/verify-email", async (req, reply) => {
+  const token = req.body?.token;
+  if (!token) return reply.code(400).send({ error: "token required" });
+  const hash = createHash("sha256").update(token).digest("hex");
+  const u = await pool.query("SELECT id, email_verified, verification_token_expiry FROM users WHERE verification_token = $1 LIMIT 1", [hash]);
+  const user = u.rows[0];
+  if (!user) return reply.code(400).send({ error: "Invalid verification token" });
+  if (user.email_verified) return reply.send({ message: "Email already verified" });
+  if (!user.verification_token_expiry || new Date(user.verification_token_expiry) < new Date()) return reply.code(400).send({ error: "Verification token has expired. Request a new one." });
+  await pool.query("UPDATE users SET email_verified = true, verification_token = NULL, verification_token_expiry = NULL WHERE id = $1", [user.id]);
+  return reply.send({ message: "Email verified successfully" });
+});
+
 // Demo issuance so downstream services can be integration-tested before full port.
 app.post("/v1/auth/token", async (req) => {
   const b = (req.body || {}) as { sub?: string; role?: string; tenantId?: string | null };
