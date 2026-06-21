@@ -14,6 +14,7 @@ export function TwoFactorSettings() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
 
   async function startSetup() {
     setError(''); setBusy(true);
@@ -27,7 +28,8 @@ export function TwoFactorSettings() {
   async function confirmEnable() {
     setError(''); setBusy(true);
     try {
-      await authApi.enable2fa(code);
+      const r = await authApi.enable2fa(code);
+      setBackupCodes(r.backupCodes || []);
       setEnabled(true); setStep('idle'); setSecret(''); setCode('');
     } catch (e) { setError((e as { message?: string }).message || 'Invalid code'); }
     finally { setBusy(false); }
@@ -37,7 +39,7 @@ export function TwoFactorSettings() {
     setError(''); setBusy(true);
     try {
       await authApi.disable2fa(code);
-      setEnabled(false); setCode('');
+      setEnabled(false); setCode(''); setBackupCodes([]);
     } catch (e) { setError((e as { message?: string }).message || 'Invalid code'); }
     finally { setBusy(false); }
   }
@@ -91,6 +93,25 @@ export function TwoFactorSettings() {
                 {busy ? 'Verifying…' : 'Enable 2FA'}
               </button>
               <button onClick={() => { setStep('idle'); setError(''); }} className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100">Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Just enabled → show single-use recovery codes ONCE */}
+        {enabled && backupCodes.length > 0 && (
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4">
+            <p className="text-sm font-semibold text-amber-900">Save your recovery codes</p>
+            <p className="mb-3 text-xs text-amber-800">Each code works once if you lose your authenticator. Store them somewhere safe — they won't be shown again.</p>
+            <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+              {backupCodes.map((c) => <span key={c} className="rounded bg-white px-2 py-1 text-center tracking-wider">{c}</span>)}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button type="button" onClick={() => { navigator.clipboard?.writeText(backupCodes.join('\n')); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                className="rounded-lg border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100">
+                {copied ? 'Copied ✓' : 'Copy all'}
+              </button>
+              <button type="button" onClick={() => setBackupCodes([])}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100">I've saved them</button>
             </div>
           </div>
         )}

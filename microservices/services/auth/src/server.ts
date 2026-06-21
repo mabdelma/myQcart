@@ -78,7 +78,7 @@ app.post<{ Body: { email?: string; password?: string; totpToken?: string } }>("/
   const { email, password, totpToken } = req.body || {};
   if (!email || !password) return reply.code(400).send(err("email + password required"));
   const r = await pool.query(
-    "SELECT id, name, email, role, tenant_id, password_hash, is_active, totp_secret, totp_enabled FROM users WHERE email = $1 LIMIT 1",
+    "SELECT id, name, email, role, tenant_id, password_hash, is_active, totp_secret, totp_enabled, totp_backup_codes FROM users WHERE email = $1 LIMIT 1",
     [email],
   );
   const u = r.rows[0];
@@ -86,10 +86,21 @@ app.post<{ Body: { email?: string; password?: string; totpToken?: string } }>("/
   if (!u.is_active) return reply.code(403).send(err("Account is disabled"));
   if (!(await bcrypt.compare(password, u.password_hash))) return reply.code(401).send(err("Invalid credentials"));
 
-  // 2FA gate (parity with monolith loginUser) — only for opted-in accounts.
+  // 2FA gate (parity with monolith loginUser) — TOTP or a single-use backup code.
   if (u.totp_enabled && u.totp_secret) {
     if (!totpToken) return reply.send({ twoFactorRequired: true });
-    if (!verifyTotp(u.totp_secret, totpToken)) return reply.code(401).send(err("Invalid 2FA code"));
+    let ok = verifyTotp(u.totp_secret, totpToken);
+    if (!ok && u.totp_backup_codes) {
+      try {
+        const hashes: string[] = JSON.parse(u.totp_backup_codes);
+        const h = createHash("sha256").update(totpToken.trim()).digest("hex");
+        if (hashes.includes(h)) {
+          await pool.query("UPDATE users SET totp_backup_codes = $1 WHERE id = $2", [JSON.stringify(hashes.filter((x) => x !== h)), u.id]);
+          ok = true;
+        }
+      } catch { /* ignore malformed */ }
+    }
+    if (!ok) return reply.code(401).send(err("Invalid 2FA code"));
   }
 
   const token = signJwt({

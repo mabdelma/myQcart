@@ -13,7 +13,7 @@ export const authApi = {
     api.post<{ token: string; user: User }>('/auth/google', { credential }, { skipAuth: true }),
   // TOTP 2FA enrollment (authed)
   setup2fa: () => api.post<{ secret: string; otpauthUrl: string }>('/auth/2fa/setup', {}),
-  enable2fa: (token: string) => api.post<{ enabled: boolean }>('/auth/2fa/enable', { token }),
+  enable2fa: (token: string) => api.post<{ enabled: boolean; backupCodes?: string[] }>('/auth/2fa/enable', { token }),
   disable2fa: (token: string) => api.post<{ enabled: boolean }>('/auth/2fa/disable', { token }),
 };
 

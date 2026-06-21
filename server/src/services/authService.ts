@@ -119,12 +119,15 @@ export async function loginUser(input: LoginInput) {
   }
 
   // 2FA gate: only for accounts that opted in. Password-correct but no/invalid
-  // code → challenge (no token issued); valid code → proceed.
+  // code → challenge (no token issued); a valid TOTP *or* single-use backup code
+  // → proceed.
   if (user.totpEnabled && user.totpSecret) {
     if (!input.totpToken) {
       return { data: { twoFactorRequired: true }, status: 200 as const };
     }
-    if (!verifyTotp(user.totpSecret, input.totpToken)) {
+    const totpOk = verifyTotp(user.totpSecret, input.totpToken);
+    const backupOk = totpOk ? false : await consumeBackupCode(user.id, user.totpBackupCodes, input.totpToken);
+    if (!totpOk && !backupOk) {
       return { error: 'Invalid 2FA code', status: 401 as const };
     }
   }
@@ -566,23 +569,48 @@ export async function setupTotp(c: Context) {
   return { data: { secret, otpauthUrl: otpauthURL(secret, user.email) }, status: 200 as const };
 }
 
-/** Confirm enrollment: the user must prove they can generate a valid code. */
+const hashCode = (code: string) => crypto.createHash('sha256').update(code).digest('hex');
+
+/** 10 single-use recovery codes (format xxxx-xxxx). Returns plaintext once. */
+function generateBackupCodes(): { plain: string[]; hashes: string[] } {
+  const plain = Array.from({ length: 10 }, () => {
+    const raw = crypto.randomBytes(5).toString('hex'); // 10 hex chars
+    return `${raw.slice(0, 5)}-${raw.slice(5)}`;
+  });
+  return { plain, hashes: plain.map(hashCode) };
+}
+
+/** Match a backup code against the stored hashes; if found, consume it (DB update). */
+async function consumeBackupCode(userId: string, stored: string | null, code: string): Promise<boolean> {
+  if (!stored) return false;
+  let hashes: string[];
+  try { hashes = JSON.parse(stored); } catch { return false; }
+  const h = hashCode(code.trim());
+  if (!hashes.includes(h)) return false;
+  const remaining = hashes.filter((x) => x !== h);
+  await db.update(schema.users).set({ totpBackupCodes: JSON.stringify(remaining) }).where(eq(schema.users.id, userId));
+  return true;
+}
+
+/** Confirm enrollment: prove a valid code, then issue single-use backup codes. */
 export async function enableTotp(c: Context, token: string) {
   const user = await authedUser(c);
   if (!user) return { error: 'Authentication required', status: 401 as const };
   if (!user.totpSecret) return { error: 'Start 2FA setup first', status: 400 as const };
   if (!verifyTotp(user.totpSecret, token)) return { error: 'Invalid 2FA code', status: 401 as const };
-  await db.update(schema.users).set({ totpEnabled: true }).where(eq(schema.users.id, user.id));
-  return { data: { enabled: true }, status: 200 as const };
+  const { plain, hashes } = generateBackupCodes();
+  await db.update(schema.users).set({ totpEnabled: true, totpBackupCodes: JSON.stringify(hashes) }).where(eq(schema.users.id, user.id));
+  return { data: { enabled: true, backupCodes: plain }, status: 200 as const };
 }
 
-/** Turn 2FA off — requires a current code to prevent lockout abuse. */
+/** Turn 2FA off — requires a current code (or backup code) to prevent abuse. */
 export async function disableTotp(c: Context, token: string) {
   const user = await authedUser(c);
   if (!user) return { error: 'Authentication required', status: 401 as const };
-  if (user.totpEnabled && user.totpSecret && !verifyTotp(user.totpSecret, token)) {
-    return { error: 'Invalid 2FA code', status: 401 as const };
+  if (user.totpEnabled && user.totpSecret) {
+    const ok = verifyTotp(user.totpSecret, token) || await consumeBackupCode(user.id, user.totpBackupCodes, token);
+    if (!ok) return { error: 'Invalid 2FA code', status: 401 as const };
   }
-  await db.update(schema.users).set({ totpEnabled: false, totpSecret: null }).where(eq(schema.users.id, user.id));
+  await db.update(schema.users).set({ totpEnabled: false, totpSecret: null, totpBackupCodes: null }).where(eq(schema.users.id, user.id));
   return { data: { enabled: false }, status: 200 as const };
 }

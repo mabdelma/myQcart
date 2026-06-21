@@ -52,6 +52,8 @@ export const users = pgTable('users', {
   // totpEnabled gates enforcement at login. Both null/false until the user opts in.
   totpSecret: text('totp_secret'),
   totpEnabled: boolean('totp_enabled').notNull().default(false),
+  // JSON array of sha256-hashed single-use recovery codes (consumed on use).
+  totpBackupCodes: text('totp_backup_codes'),
   joinedAt: text('joined_at').notNull().default(sql`now()`),
   lastActive: text('last_active').notNull().default(sql`now()`),
 });
