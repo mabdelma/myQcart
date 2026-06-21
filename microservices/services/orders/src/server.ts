@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import pg from "pg";
 import Redis from "ioredis";
 import { randomUUID } from "node:crypto";
+import webpush from "web-push";
 import { createLogger, ok, err, verifyHs256, bearer, initSentry, captureError } from "@qlisted/shared";
 
 interface OrderItemInput { menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string | null; modifiers?: string | null }
@@ -154,9 +155,33 @@ app.post<{ Params: { slug: string }; Body: CreateOrderInput }>("/compat/orders/:
   return reply.code(201).send({ id: orderId, items: orderItems, subtotal, tax, serviceCharge, deliveryFee, total, orderType });
 });
 
+// ── Web push on 'ready' (parity with monolith sendPushNotification) ──────────
+const VAPID_PUB = process.env.VAPID_PUBLIC_KEY || "";
+const VAPID_PRIV = process.env.VAPID_PRIVATE_KEY || "";
+if (VAPID_PUB && VAPID_PRIV) {
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:admin@qlisted.com", VAPID_PUB, VAPID_PRIV);
+}
+async function sendReadyPush(tenantId: string, orderId: string): Promise<void> {
+  if (!VAPID_PUB || !VAPID_PRIV) return;
+  try {
+    const subs = await pool.query("SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE tenant_id = $1", [tenantId]);
+    if (!subs.rows.length) return;
+    const payload = JSON.stringify({ title: "Order Ready!", body: `Order #${orderId.slice(0, 8)} is ready for pickup.`, icon: "/icon.svg" });
+    await Promise.allSettled(subs.rows.map(async (s) => {
+      try {
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload);
+      } catch (e: unknown) {
+        const code = e && typeof e === "object" && "statusCode" in e ? (e as { statusCode: number }).statusCode : 0;
+        if (code === 410) await pool.query("DELETE FROM push_subscriptions WHERE endpoint = $1", [s.endpoint]);
+      }
+    }));
+  } catch (e) {
+    log.error({ err: e, orderId }, "ready push failed");
+  }
+}
+
 // Order status update — ported from updateOrderStatus (authed: staff roles).
-// Mirrors the update + both SSE events. Note: 'ready' push notification (web
-// push) still fires from the monolith and isn't ported here.
+// Mirrors the update + both SSE events + the 'ready' web-push notification.
 const STATUSES = ["pending", "preparing", "ready", "delivered", "cancelled"];
 app.patch<{ Params: { slug: string; orderId: string }; Body: { status?: string } }>("/compat/status/:slug/:orderId", async (req, reply) => {
   const claims = verifyHs256(bearer(req.headers.authorization));
@@ -177,6 +202,7 @@ app.patch<{ Params: { slug: string; orderId: string }; Body: { status?: string }
   }
   emitEvent("order_updated", tid, req.params.orderId, { status });
   emitEvent("order_status_changed", tid, req.params.orderId, { status });
+  if (status === "ready") void sendReadyPush(tid, req.params.orderId);
   return reply.send({ success: true });
 });
 
