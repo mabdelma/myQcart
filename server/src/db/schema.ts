@@ -48,6 +48,10 @@ export const users = pgTable('users', {
   verificationTokenExpiry: text('verification_token_expiry'),
   resetToken: text('reset_token'),
   resetTokenExpiry: text('reset_token_expiry'),
+  // TOTP 2FA (RFC 6238). totpSecret holds the pending/active base32 secret;
+  // totpEnabled gates enforcement at login. Both null/false until the user opts in.
+  totpSecret: text('totp_secret'),
+  totpEnabled: boolean('totp_enabled').notNull().default(false),
   joinedAt: text('joined_at').notNull().default(sql`now()`),
   lastActive: text('last_active').notNull().default(sql`now()`),
 });

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { registerUser, loginUser, loginWithRefresh, refreshAccessToken, revokeRefreshToken, verifyEmail, resendVerificationEmail, getCurrentUser, requestPasswordReset, resetPassword, googleLogin, googleEnabled } from '../services/authService.js';
+import { registerUser, loginUser, loginWithRefresh, refreshAccessToken, revokeRefreshToken, verifyEmail, resendVerificationEmail, getCurrentUser, requestPasswordReset, resetPassword, googleLogin, googleEnabled, setupTotp, enableTotp, disableTotp } from '../services/authService.js';
 
 const auth = new Hono();
 
@@ -16,7 +16,10 @@ const registerSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  totpToken: z.string().optional(),
 });
+
+const totpTokenSchema = z.object({ token: z.string().min(6).max(6) });
 
 auth.post('/register', zValidator('json', registerSchema), async (c) => {
   const input = c.req.valid('json');
@@ -133,6 +136,25 @@ auth.get('/me', async (c) => {
   if ('error' in result) {
     return c.json({ error: result.error }, result.status);
   }
+  return c.json(result.data, result.status);
+});
+
+// ── TOTP 2FA enrollment (authed; reached via gateway fall-through) ───────────
+auth.post('/2fa/setup', async (c) => {
+  const result = await setupTotp(c);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data, result.status);
+});
+
+auth.post('/2fa/enable', zValidator('json', totpTokenSchema), async (c) => {
+  const result = await enableTotp(c, c.req.valid('json').token);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data, result.status);
+});
+
+auth.post('/2fa/disable', zValidator('json', totpTokenSchema), async (c) => {
+  const result = await disableTotp(c, c.req.valid('json').token);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
   return c.json(result.data, result.status);
 });
 

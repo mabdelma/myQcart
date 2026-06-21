@@ -112,15 +112,21 @@ export function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [needsTotp, setNeedsTotp] = useState(false);
+  const [totp, setTotp] = useState('');
   const a = AUDIENCES[detectAudience()];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const user = await login(email, password);
-    if (user) {
+    const result = await login(email, password, needsTotp ? totp : undefined);
+    if (result === 'TWO_FACTOR') {
+      setNeedsTotp(true); // password OK — now ask for the authenticator code.
+      return;
+    }
+    if (result) {
       // One auth flow for every role — route to the right home regardless of which
       // login page (subdomain) they used.
-      navigate(homePathForRole(user.role), { replace: true });
+      navigate(homePathForRole(result.role), { replace: true });
     }
   };
 
@@ -216,11 +222,28 @@ export function SignIn() {
               </div>
             </div>
 
+            {needsTotp && (
+              <div>
+                <label htmlFor="totp" className="block text-sm font-medium text-gray-700">Authentication code</label>
+                <div className="relative mt-1.5">
+                  <ShieldCheck className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden />
+                  <input
+                    id="totp" name="totp" inputMode="numeric" autoComplete="one-time-code" required autoFocus
+                    maxLength={6} value={totp}
+                    onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 tracking-[0.4em] text-gray-900 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-gray-500">Enter the 6-digit code from your authenticator app.</p>
+              </div>
+            )}
+
             <button
               type="submit" disabled={state.loading}
               className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${a.button}`}
             >
-              {state.loading ? <LoadingSpinner /> : <>{t('auth.signin')} <ArrowRight className="h-4 w-4" /></>}
+              {state.loading ? <LoadingSpinner /> : <>{needsTotp ? 'Verify' : t('auth.signin')} <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
 

@@ -17,7 +17,7 @@ type AuthAction =
 
 const AuthContext = createContext<{
   state: AuthState;
-  login: (email: string, password: string) => Promise<User | null>;
+  login: (email: string, password: string, totpToken?: string) => Promise<User | 'TWO_FACTOR' | null>;
   loginWithGoogle: (credential: string) => Promise<User | null>;
   logout: () => void;
 } | null>(null);
@@ -56,10 +56,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<User | null> => {
+  const login = useCallback(async (email: string, password: string, totpToken?: string): Promise<User | 'TWO_FACTOR' | null> => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const res = await authApi.login(email, password);
+      const res = await authApi.login(email, password, totpToken);
+      // 2FA-enabled account: password was correct but a code is required.
+      if (res.twoFactorRequired || !res.token) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return 'TWO_FACTOR';
+      }
       localStorage.setItem('token', res.token);
       const me = await authApi.me();
       dispatch({ type: 'AUTH_SUCCESS', payload: { user: me.user, tenant: me.tenant } });

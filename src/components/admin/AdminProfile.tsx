@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { userApi } from '../../lib/api';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
+import { TwoFactorSettings } from './TwoFactorSettings';
 
 export function AdminProfile() {
   const { state } = useAuth();
@@ -130,6 +131,7 @@ export function AdminProfile() {
           )}
         </div>
       </div>
+      <div className="mt-6 -mx-6"><TwoFactorSettings /></div>
     </div>
   );
 }

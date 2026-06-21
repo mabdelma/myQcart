@@ -41,19 +41,56 @@ app.get("/v1/auth/verify", async (req, reply) => {
   return claims ? ok(claims) : reply.code(401).send(err("Invalid token"));
 });
 
+// TOTP (RFC 6238) verify — mirrors the monolith's lib/totp.ts so 2FA is enforced
+// on the live (cut-over) login path too.
+function base32Decode(str: string): Buffer {
+  const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const clean = str.replace(/=+$/g, "").toUpperCase().replace(/\s/g, "");
+  let bits = 0, value = 0;
+  const out: number[] = [];
+  for (const ch of clean) {
+    const idx = B32.indexOf(ch);
+    if (idx === -1) continue;
+    value = (value << 5) | idx; bits += 5;
+    if (bits >= 8) { out.push((value >>> (bits - 8)) & 0xff); bits -= 8; }
+  }
+  return Buffer.from(out);
+}
+function verifyTotp(secretBase32: string, token: string, window = 1): boolean {
+  const t = (token || "").trim();
+  if (!/^\d{6}$/.test(t)) return false;
+  const secret = base32Decode(secretBase32);
+  const counter = Math.floor(Date.now() / 1000 / 30);
+  for (let w = -window; w <= window; w++) {
+    const buf = Buffer.alloc(8);
+    buf.writeBigUInt64BE(BigInt(counter + w));
+    const hmac = createHmac("sha1", secret).update(buf).digest();
+    const off = hmac[hmac.length - 1] & 0xf;
+    const code = (((hmac[off] & 0x7f) << 24) | ((hmac[off + 1] & 0xff) << 16) | ((hmac[off + 2] & 0xff) << 8) | (hmac[off + 3] & 0xff)) % 1_000_000;
+    if (code.toString().padStart(6, "0") === t) return true;
+  }
+  return false;
+}
+
 // Real login — credentials → monolith-compatible JWT. Mirrors loginUser:
 // returns { token, user:{id,name,email,role,tenantId} } with the same status codes.
-app.post<{ Body: { email?: string; password?: string } }>("/v1/auth/login", async (req, reply) => {
-  const { email, password } = req.body || {};
+app.post<{ Body: { email?: string; password?: string; totpToken?: string } }>("/v1/auth/login", async (req, reply) => {
+  const { email, password, totpToken } = req.body || {};
   if (!email || !password) return reply.code(400).send(err("email + password required"));
   const r = await pool.query(
-    "SELECT id, name, email, role, tenant_id, password_hash, is_active FROM users WHERE email = $1 LIMIT 1",
+    "SELECT id, name, email, role, tenant_id, password_hash, is_active, totp_secret, totp_enabled FROM users WHERE email = $1 LIMIT 1",
     [email],
   );
   const u = r.rows[0];
   if (!u) return reply.code(401).send(err("Invalid credentials"));
   if (!u.is_active) return reply.code(403).send(err("Account is disabled"));
   if (!(await bcrypt.compare(password, u.password_hash))) return reply.code(401).send(err("Invalid credentials"));
+
+  // 2FA gate (parity with monolith loginUser) — only for opted-in accounts.
+  if (u.totp_enabled && u.totp_secret) {
+    if (!totpToken) return reply.send({ twoFactorRequired: true });
+    if (!verifyTotp(u.totp_secret, totpToken)) return reply.code(401).send(err("Invalid 2FA code"));
+  }
 
   const token = signJwt({
     sub: u.id,

@@ -30,6 +30,7 @@ export interface User {
   isActive: boolean;
   joinedAt: string;
   lastActive: string;
+  totpEnabled?: boolean;
 }
 
 export interface MenuCategory {

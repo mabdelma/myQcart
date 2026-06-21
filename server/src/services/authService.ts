@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { createToken, verifyToken, getTokenFromRequest } from '../lib/auth.js';
+import { generateTotpSecret, verifyTotp, otpauthURL } from '../lib/totp.js';
 import { createSession, cleanupExpiredSessions } from './sessionService.js';
 import { logger } from '../lib/logger.js';
 import { sendEmail } from '../lib/mail.js';
@@ -20,6 +21,7 @@ export interface RegisterInput {
 export interface LoginInput {
   email: string;
   password: string;
+  totpToken?: string;
 }
 
 export async function registerUser(input: RegisterInput) {
@@ -116,6 +118,17 @@ export async function loginUser(input: LoginInput) {
     return { error: 'Invalid credentials', status: 401 as const };
   }
 
+  // 2FA gate: only for accounts that opted in. Password-correct but no/invalid
+  // code → challenge (no token issued); valid code → proceed.
+  if (user.totpEnabled && user.totpSecret) {
+    if (!input.totpToken) {
+      return { data: { twoFactorRequired: true }, status: 200 as const };
+    }
+    if (!verifyTotp(user.totpSecret, input.totpToken)) {
+      return { error: 'Invalid 2FA code', status: 401 as const };
+    }
+  }
+
   const token = await createToken({
     sub: user.id,
     userId: user.id,
@@ -151,6 +164,8 @@ export async function loginUser(input: LoginInput) {
 export async function loginWithRefresh(input: LoginInput) {
   const userResult = await loginUser(input);
   if ('error' in userResult) return userResult;
+  // 2FA challenge: no user/token yet — pass straight through (no refresh token).
+  if ('twoFactorRequired' in userResult.data) return userResult;
 
   const refreshToken = uuid();
   const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
@@ -511,6 +526,7 @@ export async function getCurrentUser(c: Context) {
         avatar: user.avatar,
         tenantId: user.tenantId,
         joinedAt: user.joinedAt,
+        totpEnabled: user.totpEnabled,
       },
       tenant: tenant
         ? {
@@ -526,4 +542,47 @@ export async function getCurrentUser(c: Context) {
     },
     status: 200 as const,
   };
+}
+
+// ── TOTP 2FA enrollment ─────────────────────────────────────────────────────
+async function authedUser(c: Context) {
+  const token = getTokenFromRequest(c);
+  if (!token) return null;
+  try {
+    const payload = await verifyToken(token);
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, payload.userId)).limit(1);
+    return user || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Generate a fresh secret (stored but NOT yet enabled) + return the otpauth URL. */
+export async function setupTotp(c: Context) {
+  const user = await authedUser(c);
+  if (!user) return { error: 'Authentication required', status: 401 as const };
+  const secret = generateTotpSecret();
+  await db.update(schema.users).set({ totpSecret: secret }).where(eq(schema.users.id, user.id));
+  return { data: { secret, otpauthUrl: otpauthURL(secret, user.email) }, status: 200 as const };
+}
+
+/** Confirm enrollment: the user must prove they can generate a valid code. */
+export async function enableTotp(c: Context, token: string) {
+  const user = await authedUser(c);
+  if (!user) return { error: 'Authentication required', status: 401 as const };
+  if (!user.totpSecret) return { error: 'Start 2FA setup first', status: 400 as const };
+  if (!verifyTotp(user.totpSecret, token)) return { error: 'Invalid 2FA code', status: 401 as const };
+  await db.update(schema.users).set({ totpEnabled: true }).where(eq(schema.users.id, user.id));
+  return { data: { enabled: true }, status: 200 as const };
+}
+
+/** Turn 2FA off — requires a current code to prevent lockout abuse. */
+export async function disableTotp(c: Context, token: string) {
+  const user = await authedUser(c);
+  if (!user) return { error: 'Authentication required', status: 401 as const };
+  if (user.totpEnabled && user.totpSecret && !verifyTotp(user.totpSecret, token)) {
+    return { error: 'Invalid 2FA code', status: 401 as const };
+  }
+  await db.update(schema.users).set({ totpEnabled: false, totpSecret: null }).where(eq(schema.users.id, user.id));
+  return { data: { enabled: false }, status: 200 as const };
 }

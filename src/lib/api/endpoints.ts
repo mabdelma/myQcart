@@ -3,14 +3,18 @@ import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithI
 
 // Auth
 export const authApi = {
-  login: (email: string, password: string) =>
-    api.post<{ token: string; user: User }>('/auth/login', { email, password }, { skipAuth: true }),
+  login: (email: string, password: string, totpToken?: string) =>
+    api.post<{ token?: string; user?: User; twoFactorRequired?: boolean }>('/auth/login', { email, password, totpToken }, { skipAuth: true }),
   register: (data: { tenantSlug: string; name: string; email: string; password: string; role?: string }) =>
     api.post<{ token: string; user: User }>('/auth/register', data, { skipAuth: true }),
   me: () => api.get<{ user: User; tenant: Tenant | null }>('/auth/me'),
   googleStatus: () => api.get<{ enabled: boolean; clientId: string | null }>('/auth/google/status', { skipAuth: true }),
   google: (credential: string) =>
     api.post<{ token: string; user: User }>('/auth/google', { credential }, { skipAuth: true }),
+  // TOTP 2FA enrollment (authed)
+  setup2fa: () => api.post<{ secret: string; otpauthUrl: string }>('/auth/2fa/setup', {}),
+  enable2fa: (token: string) => api.post<{ enabled: boolean }>('/auth/2fa/enable', { token }),
+  disable2fa: (token: string) => api.post<{ enabled: boolean }>('/auth/2fa/disable', { token }),
 };
 
 // Super-admin / platform (all require a super_admin token)
