@@ -308,6 +308,15 @@ export interface TimePoint {
   revenue: number;
 }
 
+export interface AdminSubscription {
+  plan: { id?: string; name?: string } | string | null;
+  status: string;
+  stripeSubscriptionId: string | null;
+  renewDate: string | null;
+  billingEnabled: boolean;
+  usage?: Record<string, number>;
+}
+
 export interface Lead {
   id: string;
   name: string;

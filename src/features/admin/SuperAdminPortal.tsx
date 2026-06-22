@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { adminApi, tenantApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint } from '../../lib/api/types';
+import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint, AdminSubscription } from '../../lib/api/types';
 
 interface Row extends TenantSummary {
   users?: number;
@@ -33,6 +33,8 @@ export function SuperAdminPortal() {
   const [query, setQuery] = useState('');
   const [userQuery, setUserQuery] = useState('');
   const [selected, setSelected] = useState<Row | null>(null);
+  const [sub, setSub] = useState<AdminSubscription | null>(null);
+  const [subBusy, setSubBusy] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: '', slug: '', email: '', adminName: '', adminPassword: '' });
@@ -43,6 +45,26 @@ export function SuperAdminPortal() {
     if (section === 'analytics' && series.length === 0) adminApi.analyticsTimeseries().then((r) => setSeries(r.series)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
+
+  // Load the selected restaurant's subscription for the drill-in drawer.
+  useEffect(() => {
+    setSub(null);
+    if (!selected) return;
+    adminApi.getSubscription(selected.id).then(setSub).catch(() => {});
+  }, [selected]);
+
+  async function cancelSub() {
+    if (!selected) return;
+    setSubBusy(true);
+    try {
+      await adminApi.cancelSubscription(selected.id);
+      setSub((s) => (s ? { ...s, status: 'canceled' } : s));
+    } catch (err) {
+      setError((err as { message?: string }).message || 'Failed to cancel subscription');
+    } finally {
+      setSubBusy(false);
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -453,7 +475,26 @@ export function SuperAdminPortal() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 flex flex-col gap-2">
+            <div className="mt-6 rounded-lg border border-gray-100 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-900">Subscription</h3>
+                {sub && <span className={`px-2 py-0.5 rounded-full text-xs ${sub.status === 'active' || sub.status === 'trialing' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>{sub.status}</span>}
+              </div>
+              {!sub ? <p className="text-sm text-gray-400">Loading…</p> : (
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-500">Plan</span><span className="font-medium text-gray-900">{typeof sub.plan === 'string' ? sub.plan : (sub.plan?.name || sub.plan?.id || 'Free')}</span></div>
+                  {sub.renewDate && <div className="flex justify-between"><span className="text-gray-500">Renews</span><span className="text-gray-900">{new Date(sub.renewDate).toLocaleDateString()}</span></div>}
+                  <div className="flex justify-between"><span className="text-gray-500">Billing</span><span className="text-gray-900">{sub.billingEnabled ? 'Enabled' : 'Off'}</span></div>
+                  {sub.stripeSubscriptionId && (sub.status === 'active' || sub.status === 'trialing') && (
+                    <button onClick={cancelSub} disabled={subBusy} className="mt-2 w-full rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">
+                      {subBusy ? 'Cancelling…' : 'Cancel subscription'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2">
               <a href={`/${selected.slug}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 <ExternalLink className="w-4 h-4" /> Open storefront
               </a>
