@@ -8,7 +8,7 @@ import { KitchenDisplay } from '../../features/staff/KitchenDisplay';
 import { WaiterPanel } from '../../features/staff/WaiterPanel';
 import { NotificationsProvider } from '../../contexts/NotificationsContext';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { ChefHat, ClipboardList } from 'lucide-react';
+import { ChefHat, ClipboardList, CreditCard } from 'lucide-react';
 
 export function StaffPortal() {
   const { state } = useAuth();
@@ -42,11 +42,13 @@ export function StaffPortal() {
 
   if (staffView === 'enhanced') {
     const role = state.user.role;
-    if (role === 'kitchen' || role === 'waiter') {
+    if (role === 'kitchen' || role === 'waiter' || role === 'cashier') {
       const tabs = role === 'kitchen'
         ? [{ id: 'display', label: 'Kitchen Display', icon: ChefHat } as const]
-        : [{ id: 'panel', label: 'Waiter Panel', icon: ClipboardList } as const];
-      const [activeTab, setActiveTab] = useState(tabs[0].id);
+        : role === 'waiter'
+          ? [{ id: 'panel', label: 'Waiter Panel', icon: ClipboardList } as const]
+          : [{ id: 'payments', label: 'Cashier', icon: CreditCard } as const];
+      const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
 
       return (
         <NotificationsProvider role={role}>
@@ -72,6 +74,7 @@ export function StaffPortal() {
             <main className="p-8">
               {activeTab === 'display' && role === 'kitchen' && <KitchenDisplay />}
               {activeTab === 'panel' && role === 'waiter' && <WaiterPanel />}
+              {activeTab === 'payments' && role === 'cashier' && <CashierPanel />}
             </main>
           </div>
         </NotificationsProvider>
