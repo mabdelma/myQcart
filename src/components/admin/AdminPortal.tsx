@@ -27,9 +27,11 @@ import GiftCards from '../../features/admin/GiftCards';
 import TimeTracking from '../../features/admin/TimeTracking';
 import { ReportsPage } from '../../features/admin/ReportsPage';
 import { AssistantPage } from '../../features/admin/AssistantPage';
+import { PaymentLinks } from '../../features/admin/PaymentLinks';
 
 const routes = [
   { path: 'orders', element: <OrderManagement /> },
+  { path: 'payment-links', element: <PaymentLinks /> },
   { path: 'reports', element: <ReportsPage /> },
   { path: 'assistant', element: <AssistantPage /> },
   { path: 'staff', element: <StaffPerformance /> },

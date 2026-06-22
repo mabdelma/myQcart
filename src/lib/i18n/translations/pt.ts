@@ -423,4 +423,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "Toque para encerrar",
   'voice.hint': "Pergunte sobre o cardápio ou o que pedir — é só falar.",
   'review.cta': "Deixe-nos uma avaliação",
+  'payment.roundUp': "Arredondar",
+  'nav.paymentLinks': "Links de pagamento",
+  'paymentLinks.title': "Links de pagamento",
+  'paymentLinks.subtitle': "Crie um link para cobrar catering, eventos ou depósitos.",
+  'paymentLinks.amount': "Valor",
+  'paymentLinks.description': "Descrição",
+  'paymentLinks.descPlaceholder': "ex. Depósito de catering",
+  'paymentLinks.generate': "Gerar link",
+  'paymentLinks.amountError': "Informe um valor válido",
 };

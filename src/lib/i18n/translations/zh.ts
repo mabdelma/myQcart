@@ -423,4 +423,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "点按结束",
   'voice.hint': "询问菜单或点什么——直接说就行。",
   'review.cta': "给我们评价",
+  'payment.roundUp': "凑整",
+  'nav.paymentLinks': "支付链接",
+  'paymentLinks.title': "支付链接",
+  'paymentLinks.subtitle': "创建可分享的链接，用于收取餐饮、活动或定金。",
+  'paymentLinks.amount': "金额",
+  'paymentLinks.description': "描述",
+  'paymentLinks.descPlaceholder': "例如：餐饮定金",
+  'paymentLinks.generate': "生成链接",
+  'paymentLinks.amountError': "请输入有效金额",
 };

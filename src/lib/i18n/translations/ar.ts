@@ -434,4 +434,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "انقر للإنهاء",
   'voice.hint': "اسأل عن القائمة أو ماذا تطلب — فقط تحدث.",
   'review.cta': "اترك لنا تقييماً",
+  'payment.roundUp': "تقريب",
+  'nav.paymentLinks': "روابط الدفع",
+  'paymentLinks.title': "روابط الدفع",
+  'paymentLinks.subtitle': "أنشئ رابطًا قابلًا للمشاركة لتحصيل مدفوعات التموين أو الفعاليات أو العربون.",
+  'paymentLinks.amount': "المبلغ",
+  'paymentLinks.description': "الوصف",
+  'paymentLinks.descPlaceholder': "مثل: عربون تموين",
+  'paymentLinks.generate': "إنشاء رابط",
+  'paymentLinks.amountError': "أدخل مبلغًا صحيحًا",
 };

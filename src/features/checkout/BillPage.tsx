@@ -387,6 +387,19 @@ export function BillPage() {
                   {pct > 0 ? `${pct}%` : t('common.no')}
                 </button>
               ))}
+              {(() => {
+                const roundUpTip = Math.ceil(totalBeforeTip) - totalBeforeTip;
+                const active = customTipAmount !== null && Math.abs(customTipAmount - roundUpTip) < 0.005 && roundUpTip > 0;
+                return (
+                  <button
+                    onClick={() => { setCustomTipAmount(Math.max(0, +roundUpTip.toFixed(2))); setTipPercent(0); }}
+                    disabled={roundUpTip < 0.005}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors disabled:opacity-40 ${active ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  >
+                    {t('payment.roundUp')}
+                  </button>
+                );
+              })()}
             </div>
           </div>
           <div className="flex items-center gap-2 mt-2">

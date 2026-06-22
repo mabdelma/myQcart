@@ -434,4 +434,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "Touchez pour terminer",
   'voice.hint': "Demandez le menu ou quoi commander — parlez, c’est tout.",
   'review.cta': "Laissez-nous un avis",
+  'payment.roundUp': "Arrondir",
+  'nav.paymentLinks': "Liens de paiement",
+  'paymentLinks.title': "Liens de paiement",
+  'paymentLinks.subtitle': "Créez un lien partageable pour encaisser traiteur, événements ou acomptes.",
+  'paymentLinks.amount': "Montant",
+  'paymentLinks.description': "Description",
+  'paymentLinks.descPlaceholder': "ex. Acompte traiteur",
+  'paymentLinks.generate': "Générer le lien",
+  'paymentLinks.amountError': "Saisissez un montant valide",
 };

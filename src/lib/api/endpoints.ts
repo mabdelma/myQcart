@@ -178,6 +178,8 @@ export const paymentApi = {
     api.get<Payment[]>(`/r/${slug}/payments`),
   getPaymentLink: (token: string) =>
     api.get<PaymentLinkResponse>(`/r/payment-links/${token}`, { skipAuth: true }),
+  createLink: (slug: string, data: { amount: number; description?: string }) =>
+    api.post<{ id: string; token: string; url: string }>(`/r/${slug}/payment-links`, data),
 };
 
 // Analytics

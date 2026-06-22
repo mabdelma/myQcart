@@ -423,4 +423,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "Нажмите, чтобы завершить",
   'voice.hint': "Спросите про меню или что заказать — просто говорите.",
   'review.cta': "Оставьте отзыв",
+  'payment.roundUp': "Округлить",
+  'nav.paymentLinks': "Ссылки на оплату",
+  'paymentLinks.title': "Ссылки на оплату",
+  'paymentLinks.subtitle': "Создайте ссылку для оплаты кейтеринга, мероприятий или депозитов.",
+  'paymentLinks.amount': "Сумма",
+  'paymentLinks.description': "Описание",
+  'paymentLinks.descPlaceholder': "напр. Депозит за кейтеринг",
+  'paymentLinks.generate': "Создать ссылку",
+  'paymentLinks.amountError': "Введите корректную сумму",
 };

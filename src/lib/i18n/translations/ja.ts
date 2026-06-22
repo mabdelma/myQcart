@@ -423,4 +423,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "タップで終了",
   'voice.hint': "メニューや注文の相談を — 話しかけてください。",
   'review.cta': "レビューを書く",
+  'payment.roundUp': "切り上げ",
+  'nav.paymentLinks': "支払いリンク",
+  'paymentLinks.title': "支払いリンク",
+  'paymentLinks.subtitle': "ケータリング・イベント・前金の支払いリンクを作成。",
+  'paymentLinks.amount': "金額",
+  'paymentLinks.description': "説明",
+  'paymentLinks.descPlaceholder': "例：ケータリング前金",
+  'paymentLinks.generate': "リンクを作成",
+  'paymentLinks.amountError': "有効な金額を入力してください",
 };

@@ -55,7 +55,8 @@ export type TranslationKey =
   | 'cta.startTrial' | 'cta.learnMore' | 'cta.getStarted' | 'cta.contactUs'
   | 'cta.bookDemo' | 'cta.subscribe' | 'cta.tryForFree' | 'cta.requestDemo'
   | 'cta.signIn' | 'cta.signUp' | 'cta.enableNotifications' | 'cta.notificationDesc' | 'cta.enable'
-  | 'review.cta'
+  | 'review.cta' | 'payment.roundUp' | 'nav.paymentLinks'
+  | 'paymentLinks.title' | 'paymentLinks.subtitle' | 'paymentLinks.amount' | 'paymentLinks.description' | 'paymentLinks.descPlaceholder' | 'paymentLinks.generate' | 'paymentLinks.amountError'
   | 'voice.cta' | 'voice.connecting' | 'voice.listening' | 'voice.speaking' | 'voice.retry' | 'voice.stop' | 'voice.hint'
   | 'promo.title' | 'promo.create' | 'promo.edit' | 'promo.name' | 'promo.type'
   | 'promo.value' | 'promo.percentage' | 'promo.fixed' | 'promo.buyXGetY' | 'promo.happyHour'
@@ -786,4 +787,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "Tap to end",
   'voice.hint': "Ask about the menu or what to order — just speak.",
   'review.cta': "Leave us a review",
+  'payment.roundUp': "Round up",
+  'nav.paymentLinks': "Payment links",
+  'paymentLinks.title': "Payment links",
+  'paymentLinks.subtitle': "Create a shareable link to collect payment for catering, events, or deposits.",
+  'paymentLinks.amount': "Amount",
+  'paymentLinks.description': "Description",
+  'paymentLinks.descPlaceholder': "e.g. Catering deposit",
+  'paymentLinks.generate': "Generate link",
+  'paymentLinks.amountError': "Enter a valid amount",
 };

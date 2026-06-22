@@ -36,6 +36,7 @@ const groups = [
     { id: 'gift-cards', icon: Gift },
   ] },
   { label: 'Account', items: [
+    { id: 'payment-links', icon: CreditCard },
     { id: 'subscription', icon: CreditCard },
     { id: 'branding', icon: Palette },
     { id: 'tax', icon: Percent },
@@ -54,6 +55,7 @@ const tabKeyMap: Record<string, string> = {
   modifiers: 'nav.modifiers',
   tables: 'staff.tables',
   layout: 'layout.title',
+  'payment-links': 'nav.paymentLinks',
   subscription: 'nav.subscription',
   branding: 'nav.branding',
   campaigns: 'nav.promotions',

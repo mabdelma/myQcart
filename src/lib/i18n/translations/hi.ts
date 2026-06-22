@@ -423,4 +423,13 @@ export const translations: Record<TranslationKey, string> = {
   'voice.stop': "समाप्त करने के लिए टैप करें",
   'voice.hint': "मेन्यू या क्या ऑर्डर करें पूछें — बस बोलें।",
   'review.cta': "हमें समीक्षा दें",
+  'payment.roundUp': "राउंड अप",
+  'nav.paymentLinks': "भुगतान लिंक",
+  'paymentLinks.title': "भुगतान लिंक",
+  'paymentLinks.subtitle': "कैटरिंग, इवेंट या डिपॉज़िट के भुगतान के लिए साझा करने योग्य लिंक बनाएं।",
+  'paymentLinks.amount': "राशि",
+  'paymentLinks.description': "विवरण",
+  'paymentLinks.descPlaceholder': "उदा. कैटरिंग डिपॉज़िट",
+  'paymentLinks.generate': "लिंक बनाएं",
+  'paymentLinks.amountError': "मान्य राशि दर्ज करें",
 };
