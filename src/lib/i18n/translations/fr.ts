@@ -433,4 +433,5 @@ export const translations: Record<TranslationKey, string> = {
   'voice.retry': "Touchez pour réessayer",
   'voice.stop': "Touchez pour terminer",
   'voice.hint': "Demandez le menu ou quoi commander — parlez, c’est tout.",
+  'review.cta': "Laissez-nous un avis",
 };

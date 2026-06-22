@@ -422,4 +422,5 @@ export const translations: Record<TranslationKey, string> = {
   'voice.retry': "Нажмите, чтобы повторить",
   'voice.stop': "Нажмите, чтобы завершить",
   'voice.hint': "Спросите про меню или что заказать — просто говорите.",
+  'review.cta': "Оставьте отзыв",
 };

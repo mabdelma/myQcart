@@ -22,6 +22,8 @@ export const tenants = pgTable('tenants', {
   primaryColor: text('primary_color').default('#8B4513'),
   accentColor: text('accent_color').default('#5C4033'),
   faviconUrl: text('favicon_url'),
+  // Post-payment "leave us a review" link (qlub-style review boost).
+  googleReviewUrl: text('google_review_url'),
   customDomain: text('custom_domain'),
   taxRate: doublePrecision('tax_rate').default(0),
   serviceCharge: doublePrecision('service_charge').default(0),

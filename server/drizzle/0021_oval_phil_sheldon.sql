@@ -1,0 +1,1 @@
+ALTER TABLE "tenants" ADD COLUMN "google_review_url" text;

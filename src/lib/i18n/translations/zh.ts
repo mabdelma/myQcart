@@ -422,4 +422,5 @@ export const translations: Record<TranslationKey, string> = {
   'voice.retry': "点按重试",
   'voice.stop': "点按结束",
   'voice.hint': "询问菜单或点什么——直接说就行。",
+  'review.cta': "给我们评价",
 };

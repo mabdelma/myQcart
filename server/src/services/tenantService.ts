@@ -76,13 +76,14 @@ export async function getTenantBySlug(slug: string) {
       coverImage: tenant.coverImage,
       primaryColor: tenant.primaryColor,
       currency: tenant.currency,
+      googleReviewUrl: tenant.googleReviewUrl,
     },
     status: 200 as const,
   };
 }
 
 export async function updateTenantSettings(tenantId: string, body: Record<string, unknown>) {
-  const allowed = ['name', 'phone', 'address', 'currency', 'timezone', 'logoUrl', 'coverImage', 'primaryColor', 'taxRate', 'serviceCharge', 'stripeAccountId'];
+  const allowed = ['name', 'phone', 'address', 'currency', 'timezone', 'logoUrl', 'coverImage', 'primaryColor', 'accentColor', 'taxRate', 'serviceCharge', 'stripeAccountId', 'googleReviewUrl'];
 
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {

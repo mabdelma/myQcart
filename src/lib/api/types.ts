@@ -12,6 +12,7 @@ export interface Tenant {
   primaryColor?: string;
   accentColor?: string;
   faviconUrl?: string;
+  googleReviewUrl?: string;
   customDomain?: string;
   taxRate: number;
   serviceCharge: number;

@@ -422,4 +422,5 @@ export const translations: Record<TranslationKey, string> = {
   'voice.retry': "पुनः प्रयास करें",
   'voice.stop': "समाप्त करने के लिए टैप करें",
   'voice.hint': "मेन्यू या क्या ऑर्डर करें पूछें — बस बोलें।",
+  'review.cta': "हमें समीक्षा दें",
 };

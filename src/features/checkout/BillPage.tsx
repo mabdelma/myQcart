@@ -6,7 +6,7 @@ import { useI18n } from '../../contexts/I18nContext';
 import { useSSE } from '../../hooks/useSSE';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { StripePaymentForm } from '../menu/StripePaymentForm';
-import { Receipt, Plus, Minus, Users, Check, ChevronDown, ChevronUp, X, AlertTriangle } from 'lucide-react';
+import { Receipt, Plus, Minus, Users, Check, ChevronDown, ChevronUp, X, AlertTriangle, Star } from 'lucide-react';
 import { PromoCodeCheckout } from '../loyalty/PromoCodeCheckout';
 import type { Order, OrderItem } from '../../lib/api/types';
 
@@ -165,6 +165,16 @@ export function BillPage() {
         </p>
         {tipAmount > 0 && (
           <p className="text-sm text-gray-400">{t('payment.tip')}: ${tipAmount.toFixed(2)}</p>
+        )}
+        {tenant.googleReviewUrl && (
+          <a
+            href={tenant.googleReviewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mx-auto mt-2 inline-flex items-center gap-2 rounded-full bg-[#8B4513] px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-[#5C4033]"
+          >
+            <Star className="h-5 w-5 fill-current text-amber-300" /> {t('review.cta')}
+          </a>
         )}
         <div className="flex gap-3 justify-center pt-4">
           <Link to={`/r/${slug}/orders`} className="px-6 py-2 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover transition-colors">

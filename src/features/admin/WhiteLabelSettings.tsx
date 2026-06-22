@@ -12,6 +12,7 @@ export function WhiteLabelSettings() {
   const [restaurantName, setRestaurantName] = useState(tenant?.name || '');
   const [favicon, setFavicon] = useState('');
   const [customDomain, setCustomDomain] = useState('');
+  const [googleReviewUrl, setGoogleReviewUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -24,6 +25,7 @@ export function WhiteLabelSettings() {
       setRestaurantName(tenant.name || '');
       setFavicon(tenant.faviconUrl || '');
       setCustomDomain(tenant.customDomain || '');
+      setGoogleReviewUrl(tenant.googleReviewUrl || '');
     }
   }, [tenant]);
 
@@ -38,6 +40,7 @@ export function WhiteLabelSettings() {
         accentColor,
         faviconUrl: favicon || undefined,
         customDomain: customDomain || undefined,
+        googleReviewUrl: googleReviewUrl || undefined,
         name: restaurantName,
       });
       setSaved(true);
@@ -144,6 +147,18 @@ export function WhiteLabelSettings() {
             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
           />
           <p className="text-xs text-gray-500 mt-1">Configure your DNS to point to Qlisted for a custom ordering domain.</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Google review link</label>
+          <input
+            type="text"
+            value={googleReviewUrl}
+            onChange={(e) => setGoogleReviewUrl(e.target.value)}
+            placeholder="https://g.page/r/…/review"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-brand focus:border-brand"
+          />
+          <p className="text-xs text-gray-500 mt-1">Guests who just paid are invited to leave a review here — a proven way to boost ratings. Get the link from your Google Business Profile → Ask for reviews.</p>
         </div>
 
         {error && <div className="bg-red-50 border-l-4 border-red-400 p-3 text-sm text-red-700">{error}</div>}

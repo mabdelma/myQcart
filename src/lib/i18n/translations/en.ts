@@ -55,6 +55,7 @@ export type TranslationKey =
   | 'cta.startTrial' | 'cta.learnMore' | 'cta.getStarted' | 'cta.contactUs'
   | 'cta.bookDemo' | 'cta.subscribe' | 'cta.tryForFree' | 'cta.requestDemo'
   | 'cta.signIn' | 'cta.signUp' | 'cta.enableNotifications' | 'cta.notificationDesc' | 'cta.enable'
+  | 'review.cta'
   | 'voice.cta' | 'voice.connecting' | 'voice.listening' | 'voice.speaking' | 'voice.retry' | 'voice.stop' | 'voice.hint'
   | 'promo.title' | 'promo.create' | 'promo.edit' | 'promo.name' | 'promo.type'
   | 'promo.value' | 'promo.percentage' | 'promo.fixed' | 'promo.buyXGetY' | 'promo.happyHour'
@@ -784,4 +785,5 @@ export const translations: Record<TranslationKey, string> = {
   'voice.retry': "Tap to retry",
   'voice.stop': "Tap to end",
   'voice.hint': "Ask about the menu or what to order — just speak.",
+  'review.cta': "Leave us a review",
 };
