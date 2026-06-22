@@ -3,6 +3,7 @@ import { eq, desc, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { db, schema } from '../db/index.js';
 import { logger } from '../lib/logger.js';
+import { gmtValidate, gmtReportSale } from './gmt-reseller.js';
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -71,6 +72,7 @@ export async function createCheckoutSession(
   planId: string,
   successUrl: string,
   cancelUrl: string,
+  couponCode?: string,
 ) {
   const stripe = getStripe();
   if (!stripe) return { error: 'Billing not configured (no Stripe key)', status: 501 as const };
@@ -78,14 +80,30 @@ export async function createCheckoutSession(
   const price = priceIdFor(planId);
   if (!price) return { error: `Plan "${planId}" has no Stripe price configured`, status: 400 as const };
 
+  // Optional GMT reseller code → one-off discount + tag the order for commission.
+  let stripeCoupon: string | undefined;
+  let gmtCode: string | undefined;
+  if (couponCode?.trim()) {
+    const g = await gmtValidate(couponCode.trim());
+    if (g.valid) {
+      gmtCode = g.code;
+      const sc = await stripe.coupons.create({ percent_off: g.discountPercent, duration: 'once', name: g.code });
+      stripeCoupon = sc.id;
+    } else {
+      return { error: 'Invalid code', status: 400 as const };
+    }
+  }
+
+  const meta = { tenantId: tenant.id, planId, ...(gmtCode ? { gmtCode } : {}) };
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price, quantity: 1 }],
     customer_email: tenant.email,
     success_url: successUrl,
     cancel_url: cancelUrl,
-    metadata: { tenantId: tenant.id, planId },
-    subscription_data: { metadata: { tenantId: tenant.id, planId } },
+    metadata: meta,
+    subscription_data: { metadata: meta },
+    ...(stripeCoupon ? { discounts: [{ coupon: stripeCoupon }] } : {}),
   });
 
   return { data: { url: session.url }, status: 200 as const };
@@ -147,6 +165,16 @@ export async function handleSubscriptionEvent(event: Stripe.Event): Promise<bool
         currentPeriodEnd: periodEnd,
       });
       logger.info({ tenantId, planId }, 'Subscription activated via checkout');
+      // Cross-product: a GMT reseller's code was used → report the sale for commission.
+      if (s.metadata?.gmtCode) {
+        await gmtReportSale({
+          code: s.metadata.gmtCode,
+          amountCents: s.amount_total ?? 0,
+          currency: (s.currency ?? 'usd').toUpperCase(),
+          externalId: s.id,
+          customerRef: tenantId,
+        });
+      }
       return true;
     }
     case 'customer.subscription.updated':

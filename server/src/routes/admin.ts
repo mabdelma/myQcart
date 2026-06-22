@@ -278,7 +278,7 @@ admin.get('/admin/subscriptions/:tenantId', authMiddleware, requireRole('admin',
 admin.post('/admin/subscriptions/:tenantId/checkout', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
   const tenantId = c.req.param('tenantId')!;
   if (!assertTenantAccess(c, tenantId)) return c.json({ error: 'Forbidden' }, 403);
-  const { planId } = await c.req.json() as { planId: string };
+  const { planId, couponCode } = await c.req.json() as { planId: string; couponCode?: string };
 
   const [tenantRecord] = await db.select().from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
   if (!tenantRecord) return c.json({ error: 'Tenant not found' }, 404);
@@ -289,6 +289,7 @@ admin.post('/admin/subscriptions/:tenantId/checkout', authMiddleware, requireRol
     planId,
     `${base}/admin/subscription?status=success`,
     `${base}/admin/subscription?status=cancelled`,
+    couponCode,
   );
   if ('error' in result) return c.json({ error: result.error }, result.status);
   return c.json(result.data);

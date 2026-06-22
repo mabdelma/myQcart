@@ -1,0 +1,4 @@
+services:
+  api:
+    environment:
+      GMT_PRODUCT_KEY: "gmt_prod_ce48c19a720d2befc9ac1eb528861c0c432aa4cd557902ce"
