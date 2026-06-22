@@ -1,0 +1,86 @@
+# Self-hosted observability for the shared VPS:
+#  - Dozzle      → live Docker log viewer (logs.qlisted.com, behind Caddy basic-auth)
+#  - GlitchTip   → Sentry-API-compatible error tracking (errors.qlisted.com)
+# Backends report errors over the internal `gt` + `edge` networks (no public DNS
+# needed for ingestion); the web UIs need errors/logs.qlisted.com DNS A records.
+#
+#   docker compose --env-file .env -f docker-compose.yml up -d
+name: monitoring
+
+networks:
+  edge: { external: true }            # shared Caddy edge
+  gt: {}                              # GlitchTip internal
+
+volumes:
+  gt-pg: {}
+
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    mem_limit: 128m
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [edge]
+
+  gt-postgres:
+    image: postgres:16-alpine
+    container_name: gt-postgres
+    restart: unless-stopped
+    mem_limit: 256m
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+    environment:
+      POSTGRES_USER: glitchtip
+      POSTGRES_PASSWORD: ${GT_PG_PASSWORD}
+      POSTGRES_DB: glitchtip
+    volumes: [gt-pg:/var/lib/postgresql/data]
+    networks: [gt]
+
+  gt-redis:
+    image: redis:7-alpine
+    container_name: gt-redis
+    restart: unless-stopped
+    mem_limit: 128m
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+    networks: [gt]
+
+  glitchtip-migrate:
+    image: glitchtip/glitchtip:latest
+    container_name: glitchtip-migrate
+    command: ./manage.py migrate
+    restart: "no"
+    depends_on: [gt-postgres]
+    environment: &gtenv
+      DATABASE_URL: postgres://glitchtip:${GT_PG_PASSWORD}@gt-postgres:5432/glitchtip
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
+      REDIS_URL: redis://gt-redis:6379/0
+      PORT: "8080"
+      GLITCHTIP_DOMAIN: https://errors.qlisted.com
+      DEFAULT_FROM_EMAIL: errors@qlisted.com
+      EMAIL_URL: consolemail://
+      ENABLE_OPEN_USER_REGISTRATION: "True"
+      CELERY_WORKER_AUTOSCALE: "1,2"
+    networks: [gt]
+
+  glitchtip-web:
+    image: glitchtip/glitchtip:latest
+    container_name: glitchtip-web
+    restart: unless-stopped
+    mem_limit: 640m
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+    depends_on: [gt-postgres, gt-redis]
+    environment: *gtenv
+    networks: [gt, edge]
+
+  glitchtip-worker:
+    image: glitchtip/glitchtip:latest
+    container_name: glitchtip-worker
+    restart: unless-stopped
+    mem_limit: 640m
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+    command: ./bin/run-celery-with-beat.sh
+    depends_on: [gt-postgres, gt-redis]
+    environment: *gtenv
+    networks: [gt]

@@ -35,3 +35,4 @@ server/maildump/
 *.njsproj
 *.sln
 *.sw?
+infra/monitoring/.env
