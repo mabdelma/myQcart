@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { adminApi, tenantApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead } from '../../lib/api/types';
+import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint } from '../../lib/api/types';
 
 interface Row extends TenantSummary {
   users?: number;
@@ -29,6 +29,7 @@ export function SuperAdminPortal() {
   const [section, setSection] = useState<Section>('overview');
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [series, setSeries] = useState<TimePoint[]>([]);
   const [query, setQuery] = useState('');
   const [userQuery, setUserQuery] = useState('');
   const [selected, setSelected] = useState<Row | null>(null);
@@ -39,6 +40,7 @@ export function SuperAdminPortal() {
   useEffect(() => {
     if (section === 'users' && users.length === 0) adminApi.listUsers().then(setUsers).catch(() => {});
     if (section === 'leads' && leads.length === 0) adminApi.listLeads().then(setLeads).catch(() => {});
+    if (section === 'analytics' && series.length === 0) adminApi.analyticsTimeseries().then((r) => setSeries(r.series)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
@@ -121,6 +123,7 @@ export function SuperAdminPortal() {
   const topByOrders = [...rows].sort((a, b) => (b.orders || 0) - (a.orders || 0)).slice(0, 8);
   const maxRevenue = Math.max(1, ...topByRevenue.map((t) => t.revenue || 0));
   const maxOrders = Math.max(1, ...topByOrders.map((t) => t.orders || 0));
+  const maxSeriesRev = Math.max(1, ...series.map((p) => p.revenue));
 
   const cards = [
     { label: 'Restaurants', value: analytics?.tenants ?? 0, icon: Store },
@@ -222,6 +225,26 @@ export function SuperAdminPortal() {
                     <div className={`text-2xl font-bold text-gray-900 ${m.cls || ''}`}>{m.value}</div>
                   </div>
                 ))}
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="font-semibold text-gray-900 mb-4">Revenue — last 30 days</h3>
+                {series.length === 0 ? <p className="text-gray-400 text-sm">Loading…</p> : (
+                  <>
+                    <div className="flex items-end gap-0.5 h-32">
+                      {series.map((p) => (
+                        <div key={p.date} className="flex-1 bg-gray-100 rounded-t flex items-end" title={`${p.date}: ${money(p.revenue)} · ${p.orders} orders`}>
+                          <div className="w-full bg-[#8B4513] rounded-t transition-all" style={{ height: `${(p.revenue / maxSeriesRev) * 100}%` }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-2">
+                      <span>{series[0]?.date}</span>
+                      <span>{series.reduce((s, p) => s + p.orders, 0)} orders · {money(series.reduce((s, p) => s + p.revenue, 0))} in 30d</span>
+                      <span>{series[series.length - 1]?.date}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6">

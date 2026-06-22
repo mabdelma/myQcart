@@ -302,6 +302,12 @@ export interface PlatformUser {
   joinedAt: string | null;
 }
 
+export interface TimePoint {
+  date: string;
+  orders: number;
+  revenue: number;
+}
+
 export interface Lead {
   id: string;
   name: string;

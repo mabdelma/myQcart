@@ -327,4 +327,27 @@ admin.get('/admin/leads', authMiddleware, requireRole('super_admin'), async (c) 
   return c.json(rows);
 });
 
+// Platform-wide daily revenue + orders for the last 30 days (super admin).
+admin.get('/admin/analytics/timeseries', authMiddleware, requireRole('super_admin'), async (c) => {
+  const since = new Date(Date.now() - 30 * 86400000).toISOString();
+  const orderRows = await db
+    .select({ day: sql<string>`substr(${schema.orders.createdAt}, 1, 10)`, orders: sql<number>`count(*)::int` })
+    .from(schema.orders)
+    .where(sql`${schema.orders.createdAt} >= ${since}`)
+    .groupBy(sql`substr(${schema.orders.createdAt}, 1, 10)`);
+  const payRows = await db
+    .select({ day: sql<string>`substr(${schema.payments.createdAt}, 1, 10)`, revenue: sql<number>`coalesce(sum(${schema.payments.amount}), 0)` })
+    .from(schema.payments)
+    .where(and(eq(schema.payments.status, 'paid'), sql`${schema.payments.createdAt} >= ${since}`))
+    .groupBy(sql`substr(${schema.payments.createdAt}, 1, 10)`);
+  const om = new Map(orderRows.map((r) => [r.day, Number(r.orders)]));
+  const pm = new Map(payRows.map((r) => [r.day, Number(r.revenue)]));
+  const series: { date: string; orders: number; revenue: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    series.push({ date: d, orders: om.get(d) || 0, revenue: pm.get(d) || 0 });
+  }
+  return c.json({ series });
+});
+
 export default admin;
