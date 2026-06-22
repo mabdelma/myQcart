@@ -11,6 +11,15 @@ name: qlisted-services
 
 x-svc: &svc
   restart: unless-stopped
+  # Hardening for the shared multi-app VPS: cap memory so one service can't
+  # starve the box, and rotate logs so they can't fill the disk. 512m is generous
+  # headroom for these small Fastify services (~100-150m typical).
+  mem_limit: 512m
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
   healthcheck:
     test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
     interval: 30s
