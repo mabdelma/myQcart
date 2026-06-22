@@ -6,6 +6,7 @@ import { resolveTenant } from '../middleware/tenant.js';
 import { db, schema } from '../db/index.js';
 import { eq, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
+import { redeemPointsForOrder } from '../services/loyaltyService.js';
 
 const loyalty = new Hono();
 
@@ -148,6 +149,27 @@ loyalty.post('/:slug/loyalty/redeem', authMiddleware, requireRole('admin', 'mana
   });
 
   return c.json({ success: true, points: newPoints, discount: points * 0.05 });
+});
+
+const redeemForOrderSchema = z.object({
+  orderId: z.string().min(1),
+  points: z.number().int().positive(),
+});
+
+// Redeem loyalty points as a currency discount applied to a concrete order.
+// Closes the loop the legacy /redeem endpoint leaves open: it not only deducts
+// points but writes the resulting discount onto the order total.
+loyalty.post('/:slug/loyalty/redeem-for-order', authMiddleware, requireRole('admin', 'manager', 'waiter', 'cashier'), resolveTenant, zValidator('json', redeemForOrderSchema), async (c) => {
+  const tenantId = c.get('tenantId') as string;
+  const { orderId, points } = c.req.valid('json');
+
+  const result = await redeemPointsForOrder(tenantId, orderId, points);
+
+  if (result.error) {
+    return c.json({ error: result.error }, result.status);
+  }
+
+  return c.json({ success: true, ...result.data });
 });
 
 export default loyalty;

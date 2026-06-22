@@ -24,6 +24,8 @@ vi.mock('../db/index.js', () => {
     menuItemIngredients: 'menuItemIngredients',
     customers: 'customers',
     webhookIntegrations: 'webhookIntegrations',
+    loyaltySummary: 'loyaltySummary',
+    loyaltyTransactions: 'loyaltyTransactions',
     subscriptionPlans: 'subscriptionPlans',
     tenantSubscriptions: 'tenantSubscriptions',
     printers: 'printers',

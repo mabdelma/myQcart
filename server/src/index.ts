@@ -103,6 +103,7 @@ app.use('/api/r/*', publicLimiter);
 app.use('/api/r/*/payments/create-intent', paymentLimiter);
 app.use('/api/r/*/loyalty/earn', pointsLimiter);
 app.use('/api/r/*/loyalty/redeem', pointsLimiter);
+app.use('/api/r/*/loyalty/redeem-for-order', pointsLimiter);
 app.use('/api/webhooks/*', generalLimiter);
 app.use('/api/admin/*', generalLimiter);
 app.use('/api/demo', publicLimiter);
