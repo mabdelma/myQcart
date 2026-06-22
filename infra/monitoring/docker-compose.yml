@@ -10,6 +10,7 @@ name: monitoring
 networks:
   edge: { external: true }            # shared Caddy edge
   gt: {}                              # GlitchTip internal
+  qcart-prod_default: { external: true }  # so qcart api + services can ship errors internally
 
 volumes:
   gt-pg: {}
@@ -72,7 +73,7 @@ services:
     logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
     depends_on: [gt-postgres, gt-redis]
     environment: *gtenv
-    networks: [gt, edge]
+    networks: [gt, edge, qcart-prod_default]
 
   glitchtip-worker:
     image: glitchtip/glitchtip:latest

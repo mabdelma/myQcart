@@ -29,6 +29,7 @@ x-svc: &svc
   environment:
     AUTH_SECRET: "${AUTH_SECRET:?set AUTH_SECRET (= monolith JWT_SECRET) in .env}"
     LOG_LEVEL: "${LOG_LEVEL:-info}"
+    SENTRY_DSN: "${SENTRY_DSN:-}"
   networks: [qlisted-svc]
 
 services:

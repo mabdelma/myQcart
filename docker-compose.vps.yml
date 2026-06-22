@@ -69,6 +69,7 @@ services:
       NODE_ENV: production
       VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
       VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
+      SENTRY_DSN: "${SENTRY_DSN:-}"
     ports: !reset []
     volumes:
       # Uploaded menu images/logos live on the API container's filesystem
