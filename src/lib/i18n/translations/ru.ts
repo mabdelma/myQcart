@@ -415,4 +415,11 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': 'Страница не найдена',
   'error.sessionExpired': 'Ваша сессия истекла. Пожалуйста, войдите снова.',
   'error.unauthorized': 'У вас нет прав для просмотра этой страницы.',
+  'voice.cta': "Заказать голосом",
+  'voice.connecting': "Подключение…",
+  'voice.listening': "Слушаю…",
+  'voice.speaking': "Говорю…",
+  'voice.retry': "Нажмите, чтобы повторить",
+  'voice.stop': "Нажмите, чтобы завершить",
+  'voice.hint': "Спросите про меню или что заказать — просто говорите.",
 };

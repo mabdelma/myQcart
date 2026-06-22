@@ -415,4 +415,11 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': '页面未找到',
   'error.sessionExpired': '会话已过期。请重新登录。',
   'error.unauthorized': '您无权查看此页面。',
+  'voice.cta': "语音点餐",
+  'voice.connecting': "连接中…",
+  'voice.listening': "正在聆听…",
+  'voice.speaking': "正在回答…",
+  'voice.retry': "点按重试",
+  'voice.stop': "点按结束",
+  'voice.hint': "询问菜单或点什么——直接说就行。",
 };

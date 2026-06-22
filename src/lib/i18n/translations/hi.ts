@@ -415,4 +415,11 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': 'पृष्ठ नहीं मिला',
   'error.sessionExpired': 'आपका सत्र समाप्त हो गया है। कृपया फिर से साइन इन करें।',
   'error.unauthorized': 'आप इस पृष्ठ को देखने के लिए अधिकृत नहीं हैं।',
+  'voice.cta': "आवाज़ से ऑर्डर करें",
+  'voice.connecting': "कनेक्ट हो रहा है…",
+  'voice.listening': "सुन रहा है…",
+  'voice.speaking': "बोल रहा है…",
+  'voice.retry': "पुनः प्रयास करें",
+  'voice.stop': "समाप्त करने के लिए टैप करें",
+  'voice.hint': "मेन्यू या क्या ऑर्डर करें पूछें — बस बोलें।",
 };

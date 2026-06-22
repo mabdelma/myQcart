@@ -426,4 +426,11 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': 'Page non trouvée',
   'error.sessionExpired': 'Votre session a expiré. Veuillez vous reconnecter.',
   'error.unauthorized': 'Vous n\'êtes pas autorisé à voir cette page.',
+  'voice.cta': "Commander à la voix",
+  'voice.connecting': "Connexion…",
+  'voice.listening': "À l’écoute…",
+  'voice.speaking': "Réponse…",
+  'voice.retry': "Touchez pour réessayer",
+  'voice.stop': "Touchez pour terminer",
+  'voice.hint': "Demandez le menu ou quoi commander — parlez, c’est tout.",
 };

@@ -415,4 +415,11 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': 'ページが見つかりません',
   'error.sessionExpired': 'セッションの有効期限が切れました。もう一度ログインしてください。',
   'error.unauthorized': 'このページを表示する権限がありません。',
+  'voice.cta': "音声で注文",
+  'voice.connecting': "接続中…",
+  'voice.listening': "聞いています…",
+  'voice.speaking': "話しています…",
+  'voice.retry': "タップで再試行",
+  'voice.stop': "タップで終了",
+  'voice.hint': "メニューや注文の相談を — 話しかけてください。",
 };

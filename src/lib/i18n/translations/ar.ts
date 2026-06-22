@@ -426,4 +426,11 @@ export const translations: Record<TranslationKey, string> = {
   'error.pageNotFound': 'الصفحة غير موجودة',
   'error.sessionExpired': 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.',
   'error.unauthorized': 'ليس لديك صلاحية لعرض هذه الصفحة.',
+  'voice.cta': "الطلب بالصوت",
+  'voice.connecting': "جارٍ الاتصال…",
+  'voice.listening': "يستمع…",
+  'voice.speaking': "يتحدث…",
+  'voice.retry': "انقر لإعادة المحاولة",
+  'voice.stop': "انقر للإنهاء",
+  'voice.hint': "اسأل عن القائمة أو ماذا تطلب — فقط تحدث.",
 };
