@@ -6,6 +6,7 @@ export { default as orderRoutes } from './orders.js';
 export { default as paymentRoutes, webhookRoutes } from './payments.js';
 export { default as userRoutes } from './users.js';
 export { default as adminRoutes } from './admin.js';
+export { default as adminAuditRoutes } from './adminAudit.js';
 export { default as eventRoutes } from './events.js';
 export { default as uploadRoutes } from './uploads.js';
 export { default as demoRoutes } from './demo.js';

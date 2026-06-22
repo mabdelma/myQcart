@@ -41,6 +41,7 @@ import {
   webhookRoutes,
   userRoutes,
   adminRoutes,
+  adminAuditRoutes,
   eventRoutes,
   uploadRoutes,
   demoRoutes,
@@ -176,6 +177,7 @@ app.route('/api/demo', demoRoutes);
 app.use('/uploads/*', serveStatic({ root: './' }));
 
 app.route('/api', adminRoutes);
+app.route('/api', adminAuditRoutes);
 app.route('/api', groupRoutes);
 app.route('/api', onboardingRoutes);
 

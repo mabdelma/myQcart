@@ -308,6 +308,17 @@ export interface TimePoint {
   revenue: number;
 }
 
+export interface AuditLog {
+  id: string;
+  action: string;
+  resource: string;
+  resourceId: string | null;
+  userName: string | null;
+  tenantName: string | null;
+  ip: string | null;
+  createdAt: string;
+}
+
 export interface AdminSubscription {
   plan: { id?: string; name?: string } | string | null;
   status: string;

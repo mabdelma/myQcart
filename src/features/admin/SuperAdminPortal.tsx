@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut, TrendingUp, Table, Coffee,
-  BookOpen, Mail, BarChart3, Plus, Search, Settings, X, ExternalLink,
+  BookOpen, Mail, BarChart3, Plus, Search, Settings, X, ExternalLink, Activity,
 } from 'lucide-react';
 import { adminApi, tenantApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint, AdminSubscription } from '../../lib/api/types';
+import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog } from '../../lib/api/types';
 
 interface Row extends TenantSummary {
   users?: number;
@@ -17,7 +17,7 @@ interface Row extends TenantSummary {
   storageEstimate?: string;
 }
 
-type Section = 'overview' | 'analytics' | 'restaurants' | 'users' | 'leads' | 'billing' | 'settings';
+type Section = 'overview' | 'analytics' | 'restaurants' | 'users' | 'leads' | 'billing' | 'activity' | 'settings';
 
 export function SuperAdminPortal() {
   const { logout, state } = useAuth();
@@ -30,6 +30,7 @@ export function SuperAdminPortal() {
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [series, setSeries] = useState<TimePoint[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [query, setQuery] = useState('');
   const [userQuery, setUserQuery] = useState('');
   const [selected, setSelected] = useState<Row | null>(null);
@@ -43,6 +44,7 @@ export function SuperAdminPortal() {
     if (section === 'users' && users.length === 0) adminApi.listUsers().then(setUsers).catch(() => {});
     if (section === 'leads' && leads.length === 0) adminApi.listLeads().then(setLeads).catch(() => {});
     if (section === 'analytics' && series.length === 0) adminApi.analyticsTimeseries().then((r) => setSeries(r.series)).catch(() => {});
+    if (section === 'activity' && auditLogs.length === 0) adminApi.listAuditLogs().then(setAuditLogs).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
@@ -131,6 +133,12 @@ export function SuperAdminPortal() {
     }
   }
 
+  // Convert a demo-request lead into a new restaurant: pre-fill + open the create modal.
+  function convertLead(l: Lead) {
+    setForm({ name: l.restaurant, slug: '', email: l.email, adminName: l.name, adminPassword: '' });
+    setShowCreate(true);
+  }
+
   const money = (n?: number) => `$${(n ?? 0).toFixed(2)}`;
   const growthColor = analytics && analytics.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600';
   const growthIcon = analytics && analytics.monthlyGrowth >= 0 ? '▲' : '▼';
@@ -166,6 +174,7 @@ export function SuperAdminPortal() {
     { id: 'users', label: 'Users', icon: Users },
     { id: 'leads', label: 'Leads', icon: Mail },
     { id: 'billing', label: 'Billing', icon: DollarSign },
+    { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -379,7 +388,7 @@ export function SuperAdminPortal() {
                   <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                     <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Restaurant</th>
                     <th className="px-6 py-3 font-medium">Contact</th><th className="px-6 py-3 font-medium">Size</th>
-                    <th className="px-6 py-3 font-medium">Message</th><th className="px-6 py-3 font-medium">Status</th>
+                    <th className="px-6 py-3 font-medium">Message</th><th className="px-6 py-3 font-medium">Status</th><th className="px-6 py-3 font-medium text-right">Action</th>
                   </tr></thead>
                   <tbody className="divide-y divide-gray-100">
                     {leads.map((l) => (
@@ -390,6 +399,7 @@ export function SuperAdminPortal() {
                         <td className="px-6 py-3 text-gray-500">{l.size || '—'}</td>
                         <td className="px-6 py-3 text-gray-600 max-w-md whitespace-pre-wrap">{l.message || <span className="text-gray-400">—</span>}</td>
                         <td className="px-6 py-3"><span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">{l.status}</span></td>
+                        <td className="px-6 py-3 text-right"><button onClick={() => convertLead(l)} className="rounded-lg bg-[#8B4513] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#5C4033]">Convert</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -419,6 +429,34 @@ export function SuperAdminPortal() {
                   <tr className="bg-gray-50 font-semibold"><td className="px-6 py-3">Total</td><td /><td className="px-6 py-3 text-right">{totalOrders}</td><td className="px-6 py-3 text-right">{money(totalRevenue)}</td></tr>
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* ── Activity (audit log) ── */}
+          {section === 'activity' && (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Platform activity ({auditLogs.length})</h2></div>
+              {auditLogs.length === 0 ? <p className="p-6 text-gray-500">No activity recorded yet.</p> : (
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500 text-left"><tr>
+                    <th className="px-6 py-3 font-medium">When</th><th className="px-6 py-3 font-medium">Actor</th>
+                    <th className="px-6 py-3 font-medium">Action</th><th className="px-6 py-3 font-medium">Resource</th>
+                    <th className="px-6 py-3 font-medium">Restaurant</th><th className="px-6 py-3 font-medium">IP</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {auditLogs.map((a) => (
+                      <tr key={a.id}>
+                        <td className="px-6 py-3 text-gray-500 whitespace-nowrap">{new Date(a.createdAt).toLocaleString()}</td>
+                        <td className="px-6 py-3 text-gray-900">{a.userName || '—'}</td>
+                        <td className="px-6 py-3"><span className="px-2 py-0.5 rounded-full text-xs bg-[#F5DEB3] text-[#5C4033]">{a.action}</span></td>
+                        <td className="px-6 py-3 text-gray-500">{a.resource}{a.resourceId ? ` · ${a.resourceId.slice(0, 8)}` : ''}</td>
+                        <td className="px-6 py-3 text-gray-500">{a.tenantName || '—'}</td>
+                        <td className="px-6 py-3 text-gray-400">{a.ip || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 

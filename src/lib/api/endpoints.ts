@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog } from './types';
 
 // Auth
 export const authApi = {
@@ -28,6 +28,7 @@ export const adminApi = {
   listUsers: () => api.get<PlatformUser[]>('/admin/users'),
   listLeads: () => api.get<Lead[]>('/admin/leads'),
   analyticsTimeseries: () => api.get<{ series: TimePoint[] }>('/admin/analytics/timeseries'),
+  listAuditLogs: () => api.get<AuditLog[]>('/admin/audit-logs'),
   getSubscription: (tenantId: string) => api.get<AdminSubscription>(`/admin/subscriptions/${tenantId}`),
   cancelSubscription: (tenantId: string) => api.post<{ success?: boolean }>(`/admin/subscriptions/${tenantId}/cancel`, {}),
 };
