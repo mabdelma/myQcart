@@ -36,3 +36,4 @@ server/maildump/
 *.sln
 *.sw?
 infra/monitoring/.env
+infra/monitoring/dozzle-users.yml

@@ -22,8 +22,13 @@ services:
     restart: unless-stopped
     mem_limit: 128m
     logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+    environment:
+      DOZZLE_AUTH_PROVIDER: simple
+    ports:
+      - "9001:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./dozzle-users.yml:/data/users.yml:ro
     networks: [edge]
 
   gt-postgres:
@@ -58,7 +63,7 @@ services:
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
       REDIS_URL: redis://gt-redis:6379/0
       PORT: "8080"
-      GLITCHTIP_DOMAIN: https://errors.qlisted.com
+      GLITCHTIP_DOMAIN: http://31.97.158.10:9000
       DEFAULT_FROM_EMAIL: errors@qlisted.com
       EMAIL_URL: consolemail://
       ENABLE_OPEN_USER_REGISTRATION: "True"
@@ -73,6 +78,8 @@ services:
     logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
     depends_on: [gt-postgres, gt-redis]
     environment: *gtenv
+    ports:
+      - "9000:8080"
     networks: [gt, edge, qcart-prod_default]
 
   glitchtip-worker:
