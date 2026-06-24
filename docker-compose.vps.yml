@@ -70,12 +70,17 @@ services:
       VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
       VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
       SENTRY_DSN: "${SENTRY_DSN:-}"
+      # Mailbox management via the shared mailcow (reached over `edge`).
+      MAILCOW_API_KEY: "${MAILCOW_API_KEY:-}"
+      MAILCOW_API_HOST: "${MAILCOW_API_HOST:-mailcowdockerized-nginx-mailcow-1}"
+      MAILCOW_API_VHOST: "${MAILCOW_API_VHOST:-mail.entrequipos.com}"
+      MAILCOW_MAIL_DOMAIN: "${MAILCOW_MAIL_DOMAIN:-qlisted.com}"
     ports: !reset []
     volumes:
       # Uploaded menu images/logos live on the API container's filesystem
       # (/app/uploads). Persist them across redeploys.
       - qcart_uploads:/app/uploads
-    networks: [default]
+    networks: [default, edge]
 
   qcart-frontend:
     image: ghcr.io/anomalyco/qcart/frontend:latest

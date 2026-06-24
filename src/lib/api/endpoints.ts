@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox } from './types';
 
 // Auth
 export const authApi = {
@@ -29,6 +29,9 @@ export const adminApi = {
   listLeads: () => api.get<Lead[]>('/admin/leads'),
   analyticsTimeseries: () => api.get<{ series: TimePoint[] }>('/admin/analytics/timeseries'),
   listAuditLogs: () => api.get<AuditLog[]>('/admin/audit-logs'),
+  listMailboxes: () => api.get<{ domain: string; mailboxes: Mailbox[] }>('/admin/mailboxes'),
+  createMailbox: (data: { localPart: string; name?: string; password: string }) => api.post<{ email: string }>('/admin/mailboxes', data),
+  deleteMailbox: (email: string) => api.post<{ deleted: string }>('/admin/mailboxes/delete', { email }),
   getSubscription: (tenantId: string) => api.get<AdminSubscription>(`/admin/subscriptions/${tenantId}`),
   cancelSubscription: (tenantId: string) => api.post<{ success?: boolean }>(`/admin/subscriptions/${tenantId}/cancel`, {}),
 };

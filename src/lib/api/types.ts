@@ -320,6 +320,14 @@ export interface AuditLog {
   createdAt: string;
 }
 
+export interface Mailbox {
+  username: string;
+  name: string;
+  active: boolean;
+  quota: number;
+  messages: number;
+}
+
 export interface AdminSubscription {
   plan: { id?: string; name?: string } | string | null;
   status: string;

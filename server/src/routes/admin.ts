@@ -8,6 +8,7 @@ import { eq, desc, sql, and } from 'drizzle-orm';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { auditLog } from '../middleware/auditLog.js';
 import { logger } from '../lib/logger.js';
+import { listMailboxes, createMailbox, deleteMailbox, MAIL_DOMAIN } from '../services/mailcowService.js';
 import { updateTenantSettings } from '../services/tenantService.js';
 
 const admin = new Hono();
@@ -349,6 +350,31 @@ admin.get('/admin/analytics/timeseries', authMiddleware, requireRole('super_admi
     series.push({ date: d, orders: om.get(d) || 0, revenue: pm.get(d) || 0 });
   }
   return c.json({ series });
+});
+
+// ── Email mailboxes (super admin) — create/list/delete @qlisted.com via mailcow ──
+admin.get('/admin/mailboxes', authMiddleware, requireRole('super_admin'), async (c) => {
+  const result = await listMailboxes();
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json({ domain: MAIL_DOMAIN, mailboxes: result.data });
+});
+
+const mailboxSchema = z.object({
+  localPart: z.string().min(1).max(64),
+  name: z.string().max(100).optional(),
+  password: z.string().min(8).max(128),
+});
+admin.post('/admin/mailboxes', authMiddleware, requireRole('super_admin'), zValidator('json', mailboxSchema), async (c) => {
+  const { localPart, name, password } = c.req.valid('json');
+  const result = await createMailbox(localPart, name || '', password);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data, 201);
+});
+
+admin.post('/admin/mailboxes/delete', authMiddleware, requireRole('super_admin'), zValidator('json', z.object({ email: z.string().email() })), async (c) => {
+  const result = await deleteMailbox(c.req.valid('json').email);
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json(result.data);
 });
 
 export default admin;
