@@ -5,6 +5,7 @@ import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sort
 import { CSS } from '@dnd-kit/utilities';
 import { menuApi, uploadApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import type { MenuItem, MenuCategory, ModifierGroup } from '../../lib/api/types';
 
 const locales = [
@@ -21,6 +22,7 @@ const locales = [
 ];
 
 const SortableItem = React.memo(function SortableItem({ item, onEdit, onDelete }: { item: MenuItem; onEdit: (item: MenuItem) => void; onDelete: (id: string) => void }) {
+  const { t } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
   const style = useMemo(() => ({
@@ -55,7 +57,7 @@ const SortableItem = React.memo(function SortableItem({ item, onEdit, onDelete }
         <span className={`px-2 py-1 rounded-full text-sm ${
           item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
         }`}>
-          {item.available ? 'Available' : 'Unavailable'}
+          {item.available ? t('menu.available') : t('menu.unavailable')}
         </span>
         <div className="flex space-x-2">
           <button onClick={() => onEdit(item)} aria-label="Edit item" className="p-2 text-gray-600 hover:text-indigo-600">
@@ -71,6 +73,7 @@ const SortableItem = React.memo(function SortableItem({ item, onEdit, onDelete }
 });
 
 export function MenuManagement() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -190,28 +193,28 @@ export function MenuManagement() {
     }
   }, [selectedCategory, slug, filteredItems]);
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
-  if (loading) return <div className="p-4 text-gray-500">Loading menu...</div>;
+  if (!slug) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
+  if (loading) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Menu Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('menu.management')}</h2>
         <button
           onClick={() => setEditing({ name: '', price: 0, categoryId: selectedCategory, available: true })}
           className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]"
         >
-          <PlusCircle className="w-5 h-5 mr-2" aria-hidden /> Add Item
+          <PlusCircle className="w-5 h-5 mr-2" aria-hidden /> {t('menu.addItem')}
         </button>
       </div>
 
       {editing && (
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg" role="dialog" aria-label={editing.id ? 'Edit menu item' : 'New menu item'}>
-            <h3 className="text-xl font-semibold mb-4">{editing.id ? 'Edit Item' : 'New Item'}</h3>
+            <h3 className="text-xl font-semibold mb-4">{editing.id ? t('menu.editItem') : t('menu.newItem')}</h3>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label htmlFor="menu-name" className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="menu-name" className="block text-sm font-medium text-gray-700">{t('common.name')}</label>
                 <input
                   id="menu-name"
                   type="text" required
@@ -221,7 +224,7 @@ export function MenuManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="menu-desc" className="block text-sm font-medium text-gray-700">Description</label>
+                <label htmlFor="menu-desc" className="block text-sm font-medium text-gray-700">{t('common.description')}</label>
                 <textarea
                   id="menu-desc"
                   value={editing.description || ''}
@@ -230,7 +233,7 @@ export function MenuManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="menu-image-upload" className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                <label htmlFor="menu-image-upload" className="block text-sm font-medium text-gray-700 mb-1">{t('menu.image')}</label>
                 <div className="flex items-center gap-3">
                   {editing.imageUrl && (
                     <img src={editing.imageUrl} alt="" width="64" height="64" loading="lazy" className="w-16 h-16 rounded object-cover border" />
@@ -250,13 +253,13 @@ export function MenuManagement() {
                     input.click();
                   }}
                     className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">
-                    <Upload className="w-4 h-4 mr-2" aria-hidden /> Upload
+                    <Upload className="w-4 h-4 mr-2" aria-hidden /> {t('menu.upload')}
                   </button>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="menu-price" className="block text-sm font-medium text-gray-700">Price</label>
+                  <label htmlFor="menu-price" className="block text-sm font-medium text-gray-700">{t('common.price')}</label>
                   <input
                     id="menu-price"
                     type="number" step="0.01" min="0" required
@@ -266,7 +269,7 @@ export function MenuManagement() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="menu-category" className="block text-sm font-medium text-gray-700">Category</label>
+                  <label htmlFor="menu-category" className="block text-sm font-medium text-gray-700">{t('menu.category')}</label>
                   <select
                     id="menu-category"
                     value={editing.categoryId || ''}
@@ -286,19 +289,19 @@ export function MenuManagement() {
                   onChange={(e) => setEditing({ ...editing, available: e.target.checked })}
                   className="h-4 w-4 text-[#8B4513] border-gray-300 rounded"
                 />
-                <label htmlFor="menu-avail" className="ml-2 text-sm text-gray-900">Available</label>
+                <label htmlFor="menu-avail" className="ml-2 text-sm text-gray-900">{t('menu.available')}</label>
               </div>
 
               {/* Translations */}
               <details className="border border-gray-200 rounded-lg">
                 <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
-                  <Globe className="w-4 h-4" /> Translations
+                  <Globe className="w-4 h-4" /> {t('menu.translations')}
                 </summary>
                 <div className="px-3 pb-3 space-y-3 border-t border-gray-200 pt-3">
                   {locales.filter((l) => l.code !== 'en').map((locale) => (
                     <div key={locale.code} className="p-3 bg-gray-50 rounded-lg space-y-2">
                       <span className="text-xs font-semibold text-gray-500 uppercase">{locale.label}</span>
-                      <input type="text" placeholder={`Name (${locale.code})`}
+                      <input type="text" placeholder={t('menu.namePlaceholder', { code: locale.code })}
                         value={(editing.translations?.[locale.code] as { name?: string } | undefined)?.name || ''}
                         onChange={(e) => {
                           const tr = editing.translations || {};
@@ -306,7 +309,7 @@ export function MenuManagement() {
                           setEditing({ ...editing, translations: tr });
                         }}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" />
-                      <textarea placeholder={`Description (${locale.code})`}
+                      <textarea placeholder={t('menu.descPlaceholder', { code: locale.code })}
                         value={(editing.translations?.[locale.code] as { description?: string } | undefined)?.description || ''}
                         onChange={(e) => {
                           const tr = editing.translations || {};
@@ -322,7 +325,7 @@ export function MenuManagement() {
               {allModifierGroups.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                    <ToggleLeft className="w-4 h-4" /> Modifier Groups
+                    <ToggleLeft className="w-4 h-4" /> {t('menu.modifierGroups')}
                   </label>
                   <div className="space-y-1 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-2">
                     {allModifierGroups.map((g) => (
@@ -341,7 +344,7 @@ export function MenuManagement() {
                         />
                         <span className="text-sm text-gray-900">{g.name}</span>
                         <span className="text-xs text-gray-400">
-                          ({g.options.length} options)
+                          ({t('menu.optionsCount', { count: g.options.length })})
                         </span>
                       </label>
                     ))}
@@ -351,11 +354,11 @@ export function MenuManagement() {
               <div className="flex justify-end space-x-3">
                 <button type="button" onClick={() => { setEditing(null); setLinkedGroupIds([]); }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit"
                   className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">
-                  Save
+                  {t('common.save')}
                 </button>
               </div>
             </form>
@@ -385,7 +388,7 @@ export function MenuManagement() {
               : 'bg-white text-gray-700 hover:bg-gray-50'
           }`}
         >
-          All
+          {t('menu.categoryAll')}
         </button>
       </div>
 
@@ -400,7 +403,7 @@ export function MenuManagement() {
       </DndContext>
 
       {filteredItems.length === 0 && (
-        <p className="text-center text-gray-500 py-12">No menu items found. Click "Add Item" to create one.</p>
+        <p className="text-center text-gray-500 py-12">{t('menu.noItems')}</p>
       )}
     </div>
   );

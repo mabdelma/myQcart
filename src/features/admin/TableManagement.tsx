@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { PlusCircle, Trash2, QrCode } from 'lucide-react';
 import { tableApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 import { QrCodeModal } from '../../components/ui/QrCodeModal';
 import type { TableData } from '../../lib/api/types';
 
 export function TableManagement() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [tables, setTables] = useState<TableData[]>([]);
@@ -51,43 +53,45 @@ export function TableManagement() {
     return `${window.location.origin}/table/${table.id}/menu?token=${table.qrToken}`;
   }
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
-  if (loading) return <div className="p-4 text-gray-500">Loading tables...</div>;
+  const statusLabel = (s: string) => t(`layout.legend${s.charAt(0).toUpperCase()}${s.slice(1)}` as TranslationKey);
+
+  if (!slug) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
+  if (loading) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Table Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('tables.management')}</h2>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]"
         >
-          <PlusCircle className="w-5 h-5 mr-2" /> Add Table
+          <PlusCircle className="w-5 h-5 mr-2" /> {t('tables.addTable')}
         </button>
       </div>
 
       {showForm && (
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-semibold mb-4">New Table</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('tables.newTable')}</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Table Number</label>
+                <label className="block text-sm font-medium text-gray-700">{t('tables.numberLabel')}</label>
                 <input type="number" min="1" required value={form.number}
                   onChange={(e) => setForm({ ...form, number: parseInt(e.target.value) || 1 })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Capacity</label>
+                <label className="block text-sm font-medium text-gray-700">{t('tables.capacity')}</label>
                 <input type="number" min="1" required value={form.capacity}
                   onChange={(e) => setForm({ ...form, capacity: parseInt(e.target.value) || 2 })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
               </div>
               <div className="flex justify-end space-x-3">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
                 <button type="submit"
-                  className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">Create</button>
+                  className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">{t('common.create')}</button>
               </div>
             </form>
           </div>
@@ -99,8 +103,8 @@ export function TableManagement() {
           <div key={table.id} className="bg-white rounded-lg shadow p-4">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <h3 className="text-lg font-semibold">Table {table.number}</h3>
-                <p className="text-sm text-gray-500">Capacity: {table.capacity}</p>
+                <h3 className="text-lg font-semibold">{t('table.tableNumber', { number: table.number })}</h3>
+                <p className="text-sm text-gray-500">{t('tables.capacity')}: {table.capacity}</p>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 table.status === 'available' ? 'bg-green-100 text-green-800' :
@@ -108,7 +112,7 @@ export function TableManagement() {
                 table.status === 'reserved' ? 'bg-blue-100 text-blue-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {table.status}
+                {statusLabel(table.status)}
               </span>
             </div>
             <div className="flex space-x-2">
@@ -130,13 +134,13 @@ export function TableManagement() {
       </div>
 
       {tables.length === 0 && (
-        <p className="text-center text-gray-500 py-12">No tables yet. Click "Add Table" to create one.</p>
+        <p className="text-center text-gray-500 py-12">{t('tables.noTables')}</p>
       )}
 
       {qrModal && (
         <QrCodeModal
           url={getQRUrl(qrModal)}
-          label={`Table ${qrModal.number}`}
+          label={t('table.tableNumber', { number: qrModal.number })}
           onClose={() => setQrModal(null)}
         />
       )}

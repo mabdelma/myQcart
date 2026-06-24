@@ -2,9 +2,11 @@
 import { PlusCircle, Edit, Trash2, Shield } from 'lucide-react';
 import { userApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 import type { User } from '../../lib/api/types';
 
 export function UserManagement() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [users, setUsers] = useState<User[]>([]);
@@ -66,19 +68,21 @@ export function UserManagement() {
     }
   }
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
-  if (loading) return <div className="p-4 text-gray-500">Loading users...</div>;
+  const roleLabel = (r: string) => t(`staff.${r}` as TranslationKey);
+
+  if (!slug) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
+  if (loading) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('users.management')}</h2>
         <button
           onClick={() => setEditingUser({ name: '', email: '', role: 'waiter', password: '' })}
           className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]"
         >
           <PlusCircle className="w-5 h-5 mr-2" />
-          Add User
+          {t('users.addUser')}
         </button>
       </div>
 
@@ -90,11 +94,11 @@ export function UserManagement() {
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <h3 className="text-xl font-semibold mb-4">
-              {editingUser.id ? 'Edit User' : 'New User'}
+              {editingUser.id ? t('users.editUser') : t('users.newUser')}
             </h3>
             <form onSubmit={saveUser} className="space-y-4">
               <div>
-                <label htmlFor="user-name" className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="user-name" className="block text-sm font-medium text-gray-700">{t('common.name')}</label>
                 <input
                   id="user-name"
                   type="text" required
@@ -104,7 +108,7 @@ export function UserManagement() {
                 />
               </div>
               <div>
-                <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email</label>
+                <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">{t('common.email')}</label>
                 <input
                   id="user-email"
                   type="email" required
@@ -115,7 +119,7 @@ export function UserManagement() {
               </div>
               {!editingUser.id && (
                 <div>
-                  <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Password</label>
+                  <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">{t('users.password')}</label>
                   <input
                     id="user-password"
                     type="password" required
@@ -126,28 +130,28 @@ export function UserManagement() {
                 </div>
               )}
               <div>
-                <label htmlFor="user-role" className="block text-sm font-medium text-gray-700">Role</label>
+                <label htmlFor="user-role" className="block text-sm font-medium text-gray-700">{t('users.role')}</label>
                 <select
                   id="user-role"
                   value={editingUser.role || 'waiter'}
                   onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]"
                 >
-                  <option value="waiter">Waiter</option>
-                  <option value="cashier">Cashier</option>
-                  <option value="kitchen">Kitchen</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
+                  <option value="waiter">{t('staff.waiter')}</option>
+                  <option value="cashier">{t('staff.cashier')}</option>
+                  <option value="kitchen">{t('staff.kitchen')}</option>
+                  <option value="manager">{t('staff.manager')}</option>
+                  <option value="admin">{t('staff.admin')}</option>
                 </select>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
                 <button type="button" onClick={() => setEditingUser(null)}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit"
                   className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">
-                  Save
+                  {t('common.save')}
                 </button>
               </div>
             </form>
@@ -160,11 +164,11 @@ export function UserManagement() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.email')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('users.role')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -188,14 +192,14 @@ export function UserManagement() {
                     : user.role === 'cashier' ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-blue-100 text-blue-800'
                   }`}>
-                    {user.role}
+                    {roleLabel(user.role)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {user.isActive ? 'Active' : 'Inactive'}
+                    {user.isActive ? t('giftCards.active') : t('users.inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -215,7 +219,7 @@ export function UserManagement() {
       </div>
 
       {users.length === 0 && (
-        <p className="text-center text-gray-500 py-12">No users found. Click "Add User" to create one.</p>
+        <p className="text-center text-gray-500 py-12">{t('users.noUsers')}</p>
       )}
     </div>
   );
