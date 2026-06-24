@@ -9,6 +9,7 @@ import { WaiterPanel } from '../../features/staff/WaiterPanel';
 import { NotificationsProvider } from '../../contexts/NotificationsContext';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ChefHat, ClipboardList, CreditCard } from 'lucide-react';
+import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 export function StaffPortal() {
   const { state } = useAuth();
@@ -24,7 +25,9 @@ export function StaffPortal() {
   }
 
   const viewToggle = (
-    <div className="fixed top-4 right-4 z-50 flex gap-1 bg-white rounded-lg shadow-md border border-gray-200 p-1">
+    <div className="fixed top-4 right-4 z-50 flex items-center gap-1 bg-white rounded-lg shadow-md border border-gray-200 p-1">
+      <LanguageSwitcher />
+      <span className="w-px h-5 bg-gray-200" />
       <button
         onClick={() => setStaffView('classic')}
         className={`px-3 py-1.5 text-xs font-medium rounded-md ${staffView === 'classic' ? 'bg-[#8B4513] text-white' : 'text-gray-600 hover:bg-gray-100'}`}

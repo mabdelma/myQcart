@@ -3,6 +3,7 @@ import { User, Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { NotificationsBell } from '../ui/NotificationsBell';
+import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { useI18n } from '../../contexts/I18nContext';
 
 interface HeaderProps {
@@ -47,6 +48,7 @@ export function Header({ username = 'Admin User', onMenuClick }: HeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
           <NotificationsBell />
           
           <div className="flex items-center space-x-2">
