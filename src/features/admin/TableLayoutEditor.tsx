@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { tableApi } from '../../lib/api';
 import type { TableData } from '../../lib/api/types';
 import { Grid3X3, Save, ZoomIn, ZoomOut, Table as TableIcon } from 'lucide-react';
@@ -8,6 +9,7 @@ const GRID_SIZE = 20;
 const TABLE_SIZE = 64;
 
 export function TableLayoutEditor() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [tables, setTables] = useState<TableData[]>([]);
@@ -86,27 +88,27 @@ export function TableLayoutEditor() {
   }
 
   if (!slug) return null;
-  if (loading) return <div className="text-center py-8 text-gray-500">Loading...</div>;
+  if (loading) return <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#5C4033]">Table Layout</h2>
+        <h2 className="text-2xl font-bold text-[#5C4033]">{t('layout.title')}</h2>
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-white rounded-lg border border-gray-200">
-            <button onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
+            <button onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} title={t('layout.zoomOut')}
               className="p-2 text-gray-500 hover:text-gray-700 border-r border-gray-200">
               <ZoomOut className="w-4 h-4" />
             </button>
             <span className="px-3 text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))}
+            <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))} title={t('layout.zoomIn')}
               className="p-2 text-gray-500 hover:text-gray-700 border-l border-gray-200">
               <ZoomIn className="w-4 h-4" />
             </button>
           </div>
           <button onClick={handleSave} disabled={saving}
             className="flex items-center gap-2 px-4 py-2 bg-[#8B4513] text-white rounded-lg hover:bg-[#6B3410] transition-colors disabled:opacity-50">
-            <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Layout'}
+            <Save className="w-4 h-4" /> {saving ? t('layout.saving') : t('layout.save')}
           </button>
         </div>
       </div>
@@ -168,7 +170,7 @@ export function TableLayoutEditor() {
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
               <div className="text-center">
                 <Grid3X3 className="w-12 h-12 mx-auto mb-3" />
-                <p>No tables yet. Add tables from the list view first.</p>
+                <p>{t('layout.noTables')}</p>
               </div>
             </div>
           )}
@@ -176,10 +178,10 @@ export function TableLayoutEditor() {
       </div>
 
       <div className="flex gap-4 text-xs text-gray-500">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-50 border border-green-400 inline-block" /> Available</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-50 border border-orange-400 inline-block" /> Occupied</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-50 border border-blue-400 inline-block" /> Reserved</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-50 border border-gray-300 inline-block" /> Closed</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-50 border border-green-400 inline-block" /> {t('layout.legendAvailable')}</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-50 border border-orange-400 inline-block" /> {t('layout.legendOccupied')}</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-50 border border-blue-400 inline-block" /> {t('layout.legendReserved')}</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-50 border border-gray-300 inline-block" /> {t('layout.legendClosed')}</span>
       </div>
     </div>
   );

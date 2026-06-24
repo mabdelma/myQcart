@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { CalendarDays, CheckCircle, XCircle, Clock, User, Users, Phone, Mail, Edit, Trash2, Table as TableIcon } from 'lucide-react';
 import { reservationApi, tableApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { useI18n } from '../../contexts/I18nContext';
+import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 import type { Reservation, TableData } from '../../lib/api/types';
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'seated', 'cancelled', 'no_show'] as const;
@@ -149,23 +149,25 @@ export function ReservationManagement() {
     return colors[status] || 'bg-gray-100 text-gray-600';
   }
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
+  const statusLabel = (s: string) => t(`reservations.${s === 'no_show' ? 'noShow' : s}` as TranslationKey);
+
+  if (!slug) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Reservations</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('reservations.title')}</h2>
         <div className="flex gap-3 items-center">
           <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
             className="rounded-md border-gray-300 shadow-sm text-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
             className="rounded-md border-gray-300 shadow-sm text-sm focus:border-[#8B4513] focus:ring-[#8B4513]">
-            <option value="">All statuses</option>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+            <option value="">{t('reservations.allStatuses')}</option>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
           </select>
           <button onClick={() => startEdit()}
             className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] text-sm">
-            <CalendarDays className="w-4 h-4 mr-2" /> New Reservation
+            <CalendarDays className="w-4 h-4 mr-2" /> {t('reservations.newReservation')}
           </button>
         </div>
       </div>
@@ -175,9 +177,9 @@ export function ReservationManagement() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading...</div>
+        <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>
       ) : reservations.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">No reservations for this date.</div>
+        <div className="text-center py-12 text-gray-500">{t('reservations.noReservations')}</div>
       ) : (
         <div className="space-y-3">
           {reservations.map((res) => {
@@ -192,8 +194,8 @@ export function ReservationManagement() {
                     <div>
                       <h3 className="font-semibold text-gray-900">{res.customerName}</h3>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
-                        <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{res.partySize} guests</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{res.time} ({res.duration}min)</span>
+                        <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{t('reservations.guests', { count: res.partySize })}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{res.time} ({t('reservations.minutes', { count: res.duration })})</span>
                         {res.customerEmail && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{res.customerEmail}</span>}
                         {res.customerPhone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{res.customerPhone}</span>}
                         {table && <span className="flex items-center gap-1"><TableIcon className="w-3.5 h-3.5" />Table {table.number}</span>}
@@ -205,7 +207,7 @@ export function ReservationManagement() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge(res.status)}`}>
-                      {res.status}
+                      {statusLabel(res.status)}
                     </span>
                   </div>
                 </div>
@@ -216,16 +218,16 @@ export function ReservationManagement() {
                       value={res.tableId || ''}
                       onChange={(e) => e.target.value && handleAssignTable(res.id, e.target.value)}
                       className="text-xs rounded border-gray-200 py-1 focus:border-[#8B4513] focus:ring-[#8B4513]">
-                      <option value="">Assign table...</option>
-                      {tables.filter((t) => t.status === 'available' || t.id === res.tableId).map((t) => (
-                        <option key={t.id} value={t.id}>Table {t.number} (cap. {t.capacity})</option>
+                      <option value="">{t('reservations.assignTable')}</option>
+                      {tables.filter((tb) => tb.status === 'available' || tb.id === res.tableId).map((tb) => (
+                        <option key={tb.id} value={tb.id}>Table {tb.number} (cap. {tb.capacity})</option>
                       ))}
                     </select>
                     <select
                       value={res.status}
                       onChange={(e) => changeStatus(res.id, e.target.value)}
                       className="text-xs rounded border-gray-200 py-1 focus:border-[#8B4513] focus:ring-[#8B4513]">
-                      {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
                     </select>
                   </div>
                   <div className="flex gap-1">
@@ -242,51 +244,51 @@ export function ReservationManagement() {
       {editing && (
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md" role="dialog" aria-label={editingId ? 'Edit reservation' : 'New reservation'}>
-            <h3 className="text-xl font-semibold mb-4">{editingId ? 'Edit Reservation' : 'New Reservation'}</h3>
+            <h3 className="text-xl font-semibold mb-4">{editingId ? t('reservations.edit') : t('reservations.create')}</h3>
             <form onSubmit={saveReservation} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+                <label className="block text-sm font-medium text-gray-700">{t('reservations.customerName')}</label>
                 <input type="text" required value={editing.customerName || ''} onChange={(e) => setEditing({ ...editing, customerName: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('reservations.email')}</label>
                   <input type="email" value={editing.customerEmail || ''} onChange={(e) => setEditing({ ...editing, customerEmail: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('reservations.phone')}</label>
                   <input type="tel" value={editing.customerPhone || ''} onChange={(e) => setEditing({ ...editing, customerPhone: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Party Size</label>
+                <label className="block text-sm font-medium text-gray-700">{t('reservations.partySize')}</label>
                 <input type="number" min="1" required value={editing.partySize || 2} onChange={(e) => setEditing({ ...editing, partySize: parseInt(e.target.value) || 2 })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('reservations.date')}</label>
                   <input type="date" required value={editing.date || filterDate} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Time</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('reservations.time')}</label>
                   <input type="time" required value={editing.time || '19:00'} onChange={(e) => setEditing({ ...editing, time: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Special Requests</label>
+                <label className="block text-sm font-medium text-gray-700">{t('reservations.specialRequests')}</label>
                 <textarea value={editing.specialRequests || ''} onChange={(e) => setEditing({ ...editing, specialRequests: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]" rows={2} />
               </div>
               <div className="flex justify-end space-x-3 pt-2">
                 <button type="button" onClick={resetForm}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">Save</button>
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
+                <button type="submit" className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]">{t('common.save')}</button>
               </div>
             </form>
           </div>
