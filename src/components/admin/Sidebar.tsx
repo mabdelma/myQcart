@@ -1,10 +1,12 @@
 import React from 'react';
-import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette, Tag, Star, CalendarDays, Clock, Percent, Grid3X3, Gift, Timer, FileBarChart, Sparkles } from 'lucide-react';
+import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette, Tag, Star, CalendarDays, Clock, Percent, Grid3X3, Gift, Timer, FileBarChart, Sparkles, X } from 'lucide-react';
 import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  mobileOpen?: boolean;
+  onClose?: () => void;
 }
 
 // Escoutly-style grouped navigation — sections instead of a flat list.
@@ -68,27 +70,31 @@ const tabKeyMap: Record<string, string> = {
   settings: 'common.settings',
 };
 
-export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, mobileOpen = false, onClose }: SidebarProps) {
   const { t } = useI18n();
   const [collapsed, setCollapsed] = React.useState(true);
+  // Collapse is a DESKTOP-only behaviour (hover to expand). On mobile the sidebar
+  // is a full-width off-canvas drawer with labels always visible.
+  const hide = `lg:transition-opacity lg:duration-300 ${collapsed ? 'lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto lg:group-hover:ml-3' : ''}`;
 
   return (
-    <div 
-      className={`${collapsed ? 'w-20' : 'w-64'} bg-[#5C4033] min-h-screen text-white p-4 transition-[width] duration-300 relative group hover:w-64`}
+    <div
+      className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#5C4033] text-white p-4 flex flex-col transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 lg:min-h-screen group lg:hover:w-64 ${collapsed ? 'lg:w-20' : 'lg:w-64'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
     >
-      <div className={`flex items-center mb-8 px-2 ${collapsed ? 'justify-center' : ''}`}>
-        <ChefHat className="w-8 h-8 mr-2" />
-        <span className={`text-xl font-bold transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-          {t('nav.admin')}
-        </span>
+      <div className={`flex items-center justify-between mb-8 px-2 lg:${collapsed ? 'justify-center' : ''}`}>
+        <div className="flex items-center">
+          <ChefHat className="w-8 h-8 mr-2" />
+          <span className={`text-xl font-bold ${hide}`}>{t('nav.admin')}</span>
+        </div>
+        <button onClick={onClose} className="lg:hidden p-1 text-[#F5DEB3]" aria-label="Close menu"><X className="w-5 h-5" /></button>
       </div>
-      
+
       <nav className="space-y-4 overflow-y-auto">
         {groups.map((groupNav) => (
           <div key={groupNav.label} className="space-y-1">
-            <p className={`px-4 text-[10px] font-semibold uppercase tracking-wider text-[#C9A26B] transition-opacity duration-300 ${collapsed ? 'opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto' : 'opacity-100'}`}>
+            <p className={`px-4 text-[10px] font-semibold uppercase tracking-wider text-[#C9A26B] ${collapsed ? 'lg:opacity-0 lg:h-0 lg:group-hover:opacity-100 lg:group-hover:h-auto' : ''}`}>
               {groupNav.label}
             </p>
             {groupNav.items.map((tab) => {
@@ -96,17 +102,15 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center group-hover:justify-start' : ''} px-4 py-2.5 text-sm rounded-lg transition-colors ${
+                  onClick={() => { onTabChange(tab.id); onClose?.(); }}
+                  className={`w-full flex items-center ${collapsed ? 'lg:justify-center lg:group-hover:justify-start' : ''} px-4 py-2.5 text-sm rounded-lg transition-colors ${
                     activeTab === tab.id
                       ? 'bg-[#8B4513] text-white'
                       : 'text-[#F5DEB3] hover:bg-[#6A4B35]'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${collapsed ? '' : 'mr-3'}`} />
-                  <span className={`transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0 group-hover:opacity-100 group-hover:w-auto group-hover:ml-3' : 'opacity-100'}`}>
-                    {t(tabKeyMap[tab.id] as TranslationKey)}
-                  </span>
+                  <Icon className={`w-5 h-5 mr-3 ${collapsed ? 'lg:mr-0' : ''}`} />
+                  <span className={hide}>{t(tabKeyMap[tab.id] as TranslationKey)}</span>
                 </button>
               );
             })}

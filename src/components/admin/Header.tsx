@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { NotificationsBell } from '../ui/NotificationsBell';
@@ -7,9 +7,10 @@ import { useI18n } from '../../contexts/I18nContext';
 
 interface HeaderProps {
   username?: string;
+  onMenuClick?: () => void;
 }
 
-export function Header({ username = 'Admin User' }: HeaderProps) {
+export function Header({ username = 'Admin User', onMenuClick }: HeaderProps) {
   const { t } = useI18n();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const { state, logout } = useAuth();
@@ -22,8 +23,9 @@ export function Header({ username = 'Admin User' }: HeaderProps) {
 
   return (
     <div className="bg-white shadow-sm">
-      <div className="max-w-full px-4 flex justify-between items-center h-16">
-        <div className="relative w-96">
+      <div className="max-w-full px-4 flex justify-between items-center h-16 gap-2">
+        <button onClick={onMenuClick} className="lg:hidden p-2 -ml-2 shrink-0 text-gray-600" aria-label="Open menu"><Menu className="h-6 w-6" /></button>
+        <div className="relative w-full max-w-96">
           <input
             type="text"
             placeholder={t('common.search')}

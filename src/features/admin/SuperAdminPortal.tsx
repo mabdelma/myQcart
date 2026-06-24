@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut, TrendingUp, Table, Coffee,
-  BookOpen, Mail, BarChart3, Plus, Search, Settings, X, ExternalLink, Activity, AtSign, Trash2, Copy, Check,
+  BookOpen, Mail, BarChart3, Plus, Search, Settings, X, ExternalLink, Activity, AtSign, Trash2, Copy, Check, Menu,
 } from 'lucide-react';
 import { adminApi, tenantApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,6 +27,7 @@ export function SuperAdminPortal() {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [section, setSection] = useState<Section>('overview');
+  const [mobileNav, setMobileNav] = useState(false);
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [series, setSeries] = useState<TimePoint[]>([]);
@@ -220,16 +221,22 @@ export function SuperAdminPortal() {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Escoutly-style central sidebar */}
-      <aside className="w-60 shrink-0 bg-[#5C4033] text-white flex flex-col p-4">
-        <div className="flex items-center gap-2 mb-8 px-2">
-          <ShieldCheck className="w-7 h-7" />
-          <span className="text-lg font-bold">Qlisted Central</span>
+      {/* Mobile overlay when the drawer is open */}
+      {mobileNav && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileNav(false)} />}
+
+      {/* Central sidebar — off-canvas drawer on mobile, static on desktop */}
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#5C4033] text-white flex flex-col p-4 transition-transform duration-300 lg:static lg:w-60 lg:shrink-0 lg:translate-x-0 ${mobileNav ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between mb-8 px-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-7 h-7" />
+            <span className="text-lg font-bold">Qlisted Central</span>
+          </div>
+          <button onClick={() => setMobileNav(false)} className="lg:hidden p-1 text-[#F5DEB3]" aria-label="Close menu"><X className="w-5 h-5" /></button>
         </div>
         <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#C9A26B]">Platform</p>
-        <nav className="space-y-1 flex-1">
+        <nav className="space-y-1 flex-1 overflow-y-auto">
           {nav.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setSection(id)}
+            <button key={id} onClick={() => { setSection(id); setMobileNav(false); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-lg transition-colors ${section === id ? 'bg-[#8B4513] text-white' : 'text-[#F5DEB3] hover:bg-[#6A4B35]'}`}>
               <Icon className="w-5 h-5" />{label}
             </button>
@@ -240,20 +247,23 @@ export function SuperAdminPortal() {
         </button>
       </aside>
 
-      <main className="flex-1 overflow-auto">
-        <header className="bg-white border-b border-gray-100 px-8 py-5 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">{nav.find((n) => n.id === section)?.label}</h1>
-            <p className="text-sm text-gray-500">Platform administration · all restaurants</p>
+      <main className="flex-1 min-w-0 overflow-auto">
+        <header className="bg-white border-b border-gray-100 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => setMobileNav(true)} className="lg:hidden p-2 -ml-2 text-gray-600" aria-label="Open menu"><Menu className="w-6 h-6" /></button>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{nav.find((n) => n.id === section)?.label}</h1>
+              <p className="hidden sm:block text-sm text-gray-500">Platform administration · all restaurants</p>
+            </div>
           </div>
           {section === 'restaurants' && (
-            <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 rounded-lg bg-[#8B4513] px-4 py-2 text-sm font-medium text-white hover:bg-[#5C4033]">
-              <Plus className="w-4 h-4" /> New restaurant
+            <button onClick={() => setShowCreate(true)} className="flex shrink-0 items-center gap-2 rounded-lg bg-[#8B4513] px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-[#5C4033]">
+              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New restaurant</span><span className="sm:hidden">New</span>
             </button>
           )}
         </header>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           {error && <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 text-sm text-red-700">{error}</div>}
 
           {/* ── Overview ── */}
@@ -344,7 +354,7 @@ export function SuperAdminPortal() {
                 </div>
               </div>
               {loading ? <p className="p-6 text-gray-500">Loading…</p> : filteredRows.length === 0 ? <p className="p-6 text-gray-500">No restaurants.</p> : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-left">
                     <tr>
                       <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Slug</th>
@@ -372,7 +382,7 @@ export function SuperAdminPortal() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
           )}
@@ -389,7 +399,7 @@ export function SuperAdminPortal() {
                 </div>
               </div>
               {users.length === 0 ? <p className="p-6 text-gray-500">Loading…</p> : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                     <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Email</th>
                     <th className="px-6 py-3 font-medium">Role</th><th className="px-6 py-3 font-medium">Restaurant</th><th className="px-6 py-3 font-medium">Status</th>
@@ -405,7 +415,7 @@ export function SuperAdminPortal() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
           )}
@@ -415,7 +425,7 @@ export function SuperAdminPortal() {
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Leads / demo requests ({leads.length})</h2></div>
               {leads.length === 0 ? <p className="p-6 text-gray-500">No leads yet.</p> : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                     <th className="px-6 py-3 font-medium">Name</th><th className="px-6 py-3 font-medium">Restaurant</th>
                     <th className="px-6 py-3 font-medium">Contact</th><th className="px-6 py-3 font-medium">Size</th>
@@ -434,7 +444,7 @@ export function SuperAdminPortal() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
           )}
@@ -443,7 +453,7 @@ export function SuperAdminPortal() {
           {section === 'billing' && (
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Revenue by restaurant</h2></div>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                   <th className="px-6 py-3 font-medium">Restaurant</th><th className="px-6 py-3 font-medium">Status</th>
                   <th className="px-6 py-3 font-medium text-right">Orders</th><th className="px-6 py-3 font-medium text-right">Revenue</th>
@@ -459,7 +469,7 @@ export function SuperAdminPortal() {
                   ))}
                   <tr className="bg-gray-50 font-semibold"><td className="px-6 py-3">Total</td><td /><td className="px-6 py-3 text-right">{totalOrders}</td><td className="px-6 py-3 text-right">{money(totalRevenue)}</td></tr>
                 </tbody>
-              </table>
+              </table></div>
             </div>
           )}
 
@@ -508,7 +518,7 @@ export function SuperAdminPortal() {
               <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Mailboxes @{mailDomain} ({mailboxes.length})</h2></div>
                 {mailboxes.length === 0 ? <p className="p-6 text-gray-500">No mailboxes yet.</p> : (
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto"><table className="w-full text-sm">
                     <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                       <th className="px-6 py-3 font-medium">Address</th><th className="px-6 py-3 font-medium">Name</th>
                       <th className="px-6 py-3 font-medium">Status</th><th className="px-6 py-3 font-medium text-right">Action</th>
@@ -529,7 +539,7 @@ export function SuperAdminPortal() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 )}
               </div>
             </div>
@@ -540,7 +550,7 @@ export function SuperAdminPortal() {
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Platform activity ({auditLogs.length})</h2></div>
               {auditLogs.length === 0 ? <p className="p-6 text-gray-500">No activity recorded yet.</p> : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-left"><tr>
                     <th className="px-6 py-3 font-medium">When</th><th className="px-6 py-3 font-medium">Actor</th>
                     <th className="px-6 py-3 font-medium">Action</th><th className="px-6 py-3 font-medium">Resource</th>
@@ -558,7 +568,7 @@ export function SuperAdminPortal() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
           )}

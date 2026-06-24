@@ -58,6 +58,8 @@ export function AdminPortal() {
   const navigate = useNavigate();
   const activeTab = location.pathname.split('/')[2] || 'profile';
 
+  const [mobileNav, setMobileNav] = React.useState(false);
+
   const handleTabChange = (tab: string) => {
     navigate(`/admin/${tab}`);
   };
@@ -65,12 +67,13 @@ export function AdminPortal() {
   return (
     <NotificationsProvider role="admin">
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-        
-        <div className="flex-1">
-          <Header />
-          
-          <main className="p-8">
+        {mobileNav && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileNav(false)} />}
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} mobileOpen={mobileNav} onClose={() => setMobileNav(false)} />
+
+        <div className="flex-1 min-w-0">
+          <Header onMenuClick={() => setMobileNav(true)} />
+
+          <main className="p-4 sm:p-8">
             <Routes>
               <Route index element={<Navigate to="analytics" replace />} />
               <Route path="analytics" element={<Analytics />}>
