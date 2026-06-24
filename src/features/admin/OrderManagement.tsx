@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Check, ChefHat, Ban, FileDown } from 'lucide-react';
 import { orderApi, invoiceApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 import type { Order } from '../../lib/api/types';
 
 const statusColors: Record<string, string> = {
@@ -21,6 +22,7 @@ const statusIcons: Record<string, typeof Clock> = {
 };
 
 export function OrderManagement() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [orders, setOrders] = useState<Order[]>([]);
@@ -46,16 +48,18 @@ export function OrderManagement() {
     }
   }
 
-  if (!slug) return <div className="p-4 text-gray-500">Loading tenant...</div>;
-  if (loading) return <div className="p-4 text-gray-500">Loading orders...</div>;
+  const statusLabel = (s: string) => t(`orders.${s}` as TranslationKey);
+
+  if (!slug) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
+  if (loading) return <div className="p-4 text-gray-500">{t('common.loading')}</div>;
 
   const filters = ['', 'pending', 'preparing', 'ready', 'delivered', 'cancelled'];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Order Management</h2>
-        <span className="text-sm text-gray-500">{orders.length} orders</span>
+        <h2 className="text-2xl font-bold text-gray-900">{t('orders.management')}</h2>
+        <span className="text-sm text-gray-500">{t('orders.count', { count: orders.length })}</span>
       </div>
 
       <div className="flex space-x-2 overflow-x-auto pb-2">
@@ -67,7 +71,7 @@ export function OrderManagement() {
               filter === f ? 'bg-[#8B4513] text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            {f || 'All'}
+            {f ? statusLabel(f) : t('menu.categoryAll')}
           </button>
         ))}
       </div>
@@ -80,17 +84,17 @@ export function OrderManagement() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-semibold text-lg">
-                    Order #{order.id.slice(0, 8)}
+                    {t('orders.order')} #{order.id.slice(0, 8)}
                     {order.customerName && <span className="text-gray-500 ml-2">- {order.customerName}</span>}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {order.orderType === 'dine_in' ? `Table ${order.tableId?.slice(0, 8) || '?'}` : order.orderType === 'takeout' ? 'Takeout' : 'Delivery'} · {order.itemCount} items
+                    {order.orderType === 'dine_in' ? `Table ${order.tableId?.slice(0, 8) || '?'}` : order.orderType === 'takeout' ? t('orders.takeout') : t('orders.delivery')} · {order.itemCount} {t('common.items')}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${statusColors[order.status]}`}>
                     <StatusIcon className="w-4 h-4 mr-1" />
-                    {order.status}
+                    {statusLabel(order.status)}
                   </span>
                 </div>
               </div>
@@ -101,30 +105,30 @@ export function OrderManagement() {
                   {order.status === 'pending' && (
                     <button onClick={() => updateStatus(order.id, 'preparing')}
                       className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
-                      Start Preparing
+                      {t('orders.startPreparing')}
                     </button>
                   )}
                   {order.status === 'preparing' && (
                     <button onClick={() => updateStatus(order.id, 'ready')}
                       className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700">
-                      Mark Ready
+                      {t('orders.markReady')}
                     </button>
                   )}
                   {order.status === 'ready' && (
                     <button onClick={() => updateStatus(order.id, 'delivered')}
                       className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700">
-                      Mark Delivered
+                      {t('orders.markDelivered')}
                     </button>
                   )}
                   {(order.status === 'pending' || order.status === 'preparing') && (
                     <button onClick={() => updateStatus(order.id, 'cancelled')}
                       className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700">
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   )}
                   <button onClick={() => invoiceApi.download(slug!, order.id)}
                     className="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 flex items-center gap-1"
-                    title="Download Invoice">
+                    title={t('orders.downloadInvoice')}>
                     <FileDown className="w-4 h-4" /> PDF
                   </button>
                 </div>
@@ -135,7 +139,7 @@ export function OrderManagement() {
       </div>
 
       {orders.length === 0 && (
-        <p className="text-center text-gray-500 py-12">No orders found.</p>
+        <p className="text-center text-gray-500 py-12">{t('orders.noOrders')}</p>
       )}
     </div>
   );
