@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { api, connectApi } from '../../lib/api';
 import type { ConnectAccountStatus, PayoutInfo } from '../../lib/api/types';
 import { CreditCard, Check, ChevronDown, ChevronUp, Loader2, DollarSign, Plus, ExternalLink } from 'lucide-react';
@@ -27,6 +28,7 @@ const PLANS: SubscriptionPlan[] = [
 ];
 
 export function SubscriptionManagement() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
@@ -121,36 +123,36 @@ export function SubscriptionManagement() {
     }
   }
 
-  if (loading) return <div className="text-center py-8 text-gray-500">Loading subscription...</div>;
+  if (loading) return <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>;
   if (error) return <div className="bg-red-50 border-l-4 border-red-400 p-4 text-sm text-red-700">{error}</div>;
 
   const currentPlanId = info?.plan.id || 'starter';
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Subscription & Billing</h2>
+      <h2 className="text-2xl font-bold text-gray-900">{t('sub.title')}</h2>
 
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-4">
           <CreditCard className="w-6 h-6 text-[#8B4513]" />
-          <h3 className="text-lg font-medium">Current Plan</h3>
+          <h3 className="text-lg font-medium">{t('sub.currentPlan')}</h3>
         </div>
         {info && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Plan</p>
+              <p className="text-sm text-gray-500">{t('sub.plan')}</p>
               <p className="text-lg font-bold text-gray-900">{info.plan.name}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Price</p>
+              <p className="text-sm text-gray-500">{t('common.price')}</p>
               <p className="text-lg font-bold text-gray-900">${info.plan.price}/mo</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Renewal</p>
+              <p className="text-sm text-gray-500">{t('sub.renewal')}</p>
               <p className="text-lg font-bold text-gray-900">{new Date(info.renewDate).toLocaleDateString()}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Users</p>
+              <p className="text-sm text-gray-500">{t('sub.users')}</p>
               <p className="text-lg font-bold text-gray-900">{info.usage.users}/{info.plan.usersLimit}</p>
             </div>
           </div>
@@ -158,7 +160,7 @@ export function SubscriptionManagement() {
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium mb-4">Available Plans</h3>
+        <h3 className="text-lg font-medium mb-4">{t('sub.availablePlans')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PLANS.map((plan) => {
             const isCurrent = plan.id === currentPlanId;
@@ -183,7 +185,7 @@ export function SubscriptionManagement() {
                   }`}
                 >
                   {changing ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> :
-                   isCurrent ? 'Current Plan' : isDowngrade ? 'Downgrade' : 'Upgrade'}
+                   isCurrent ? t('sub.currentPlanBtn') : isDowngrade ? t('sub.downgrade') : t('sub.upgrade')}
                 </button>
               </div>
             );
@@ -196,13 +198,13 @@ export function SubscriptionManagement() {
           onClick={() => setShowHistory(!showHistory)}
           className="flex items-center gap-2 text-lg font-medium text-gray-900"
         >
-          Billing History
+          {t('sub.billingHistory')}
           {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
         {showHistory && info && (
           <div className="mt-4 space-y-2">
             {info.billingHistory.length === 0 ? (
-              <p className="text-sm text-gray-500">No billing history available.</p>
+              <p className="text-sm text-gray-500">{t('sub.noBilling')}</p>
             ) : (
               info.billingHistory.map((b) => (
                 <div key={b.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
@@ -221,38 +223,38 @@ export function SubscriptionManagement() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-4">
           <DollarSign className="w-6 h-6 text-[#8B4513]" />
-          <h3 className="text-lg font-medium">Payouts & Stripe Connect</h3>
+          <h3 className="text-lg font-medium">{t('sub.payouts')}</h3>
         </div>
         {connectLoading ? (
-          <p className="text-sm text-gray-500">Loading...</p>
+          <p className="text-sm text-gray-500">{t('common.loading')}</p>
         ) : connectStatus?.connected ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Available Balance</p>
+                <p className="text-sm text-gray-500">{t('sub.availableBalance')}</p>
                 <p className="text-lg font-bold text-gray-900">
                   {balance ? `$${(balance.available.reduce((s, b) => s + b.amount, 0) / 100).toFixed(2)}` : '—'}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Pending Balance</p>
+                <p className="text-sm text-gray-500">{t('sub.pendingBalance')}</p>
                 <p className="text-lg font-bold text-gray-900">
                   {balance ? `$${(balance.pending.reduce((s, b) => s + b.amount, 0) / 100).toFixed(2)}` : '—'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <input type="number" min="1" step="0.01" value={payoutAmount || ''} placeholder="Amount ($)"
+              <input type="number" min="1" step="0.01" value={payoutAmount || ''} placeholder={t('sub.amount')}
                 onChange={(e) => setPayoutAmount(parseFloat(e.target.value) || 0)}
                 className="w-40 rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" />
               <button onClick={handlePayout} disabled={payoutCreating}
                 className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">
-                {payoutCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" /> Payout</>}
+                {payoutCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" /> {t('sub.payout')}</>}
               </button>
             </div>
             {payouts.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Payout History</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">{t('sub.payoutHistory')}</h4>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {payouts.map((p) => (
                     <div key={p.id} className="flex justify-between text-sm py-1 border-b border-gray-100">
@@ -267,18 +269,18 @@ export function SubscriptionManagement() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-gray-500">Connect your Stripe account to receive payouts.</p>
-            <input type="email" placeholder="Email for Stripe account" value={email}
+            <p className="text-sm text-gray-500">{t('sub.connectStripe')}</p>
+            <input type="email" placeholder={t('sub.emailForStripe')} value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="block w-80 rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513] text-sm" />
             <div className="flex gap-2">
               <button onClick={handleCreateAccount}
                 className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] text-sm">
-                <Plus className="w-4 h-4 mr-1" /> Create Account
+                <Plus className="w-4 h-4 mr-1" /> {t('sub.createAccount')}
               </button>
               <button onClick={handleOnboarding}
                 className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm">
-                <ExternalLink className="w-4 h-4 mr-1" /> Complete Onboarding
+                <ExternalLink className="w-4 h-4 mr-1" /> {t('sub.completeOnboarding')}
               </button>
             </div>
           </div>
