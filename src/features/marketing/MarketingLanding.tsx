@@ -236,7 +236,7 @@ export function MarketingLanding() {
                     </li>
                   ))}
                 </ul>
-                <Link to="/demo" className={`block text-center py-3 rounded-lg font-medium transition-colors ${plan.popular ? 'bg-[#8B4513] text-white hover:bg-[#5C4033]' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}>
+                <Link to="/onboarding" className={`block text-center py-3 rounded-lg font-medium transition-colors ${plan.popular ? 'bg-[#8B4513] text-white hover:bg-[#5C4033]' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}>
                   {t('cta.getStarted')}
                 </Link>
               </div>
