@@ -59,4 +59,10 @@ services:
     networks: [qlisted-svc, qcart-prod_default]
 
   notifications:
-    networks: [qlisted-svc, qcart-prod_default]
+    environment:
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_FROM: "${SMTP_FROM:-no-reply@qlisted.com}"
+    networks: [qlisted-svc, qcart-prod_default, edge]
