@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
-export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'de' | 'pt' | 'zh' | 'hi' | 'ru' | 'ja';
+export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'de' | 'pt' | 'zh' | 'hi' | 'ru' | 'ja' | 'it';
 
 export const LOCALE_NAMES: Record<Locale, string> = {
   en: 'English', ar: 'العربية', es: 'Español', fr: 'Français', de: 'Deutsch',
-  pt: 'Português', zh: '中文', hi: 'हिन्दी', ru: 'Русский', ja: '日本語',
+  pt: 'Português', zh: '中文', hi: 'हिन्दी', ru: 'Русский', ja: '日本語', it: 'Italiano',
 };
 
 const RTL_LOCALES: Set<Locale> = new Set(['ar']);
