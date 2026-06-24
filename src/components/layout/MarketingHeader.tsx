@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { UtensilsCrossed, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
+import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 export function MarketingHeader() {
   const { t } = useI18n();
@@ -39,6 +40,7 @@ export function MarketingHeader() {
             >
               {t('cta.signIn')}
             </Link>
+            <LanguageSwitcher />
             <Link
               to="/onboarding"
               className="px-4 py-2 bg-[#8B4513] text-white text-sm font-medium rounded-lg hover:bg-[#5C4033] transition-colors"
@@ -47,9 +49,12 @@ export function MarketingHeader() {
             </Link>
           </nav>
 
-          <button className="md:hidden p-2" onClick={() => setOpen(!open)} aria-label={t('nav.menu')} aria-expanded={open}>
-            {open ? <X className="h-6 w-6" aria-hidden /> : <Menu className="h-6 w-6" aria-hidden />}
-          </button>
+          <div className="flex items-center gap-1 md:hidden">
+            <LanguageSwitcher />
+            <button className="p-2" onClick={() => setOpen(!open)} aria-label={t('nav.menu')} aria-expanded={open}>
+              {open ? <X className="h-6 w-6" aria-hidden /> : <Menu className="h-6 w-6" aria-hidden />}
+            </button>
+          </div>
         </div>
       </div>
 
