@@ -740,4 +740,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "顾客预览",
   'wl.previewDesc': "这是顾客看到的餐厅外观。",
   'wl.yourRestaurant': "您的餐厅",
+  'payment.splitEven': "平均",
+  'payment.splitByItem': "按菜品",
+  'payment.numberOfPeople': "人数",
+  'payment.tapYourItems': "点击您要支付的菜品",
+  'payment.yourShare': "您的份额",
+  'payment.payShare': "支付我的份额",
+  'payment.alreadyPaid': "已支付",
+  'payment.balanceDue': "应付余额",
+  'payment.cardOneOrder': "银行卡支付每次只能结算一个订单的菜品。请选择同一张单的菜品，或用现金支付您的份额。",
 };

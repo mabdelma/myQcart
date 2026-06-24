@@ -27,6 +27,9 @@ export function BillPage() {
   const [tipPercent, setTipPercent] = useState(0);
   const [customTipAmount, setCustomTipAmount] = useState<number | null>(null);
   const [splitCount, setSplitCount] = useState(1);
+  const [splitMode, setSplitMode] = useState<'even' | 'item'>('even');
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [sharePartialAmount, setSharePartialAmount] = useState<number | null>(null);
   const [paying, setPaying] = useState(false);
   const [paidOrderId, setPaidOrderId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'split'>('cash');
@@ -84,7 +87,68 @@ export function BillPage() {
   const totalBeforeTip = subtotal + tax + serviceCharge - discount;
   const tipAmount = customTipAmount !== null ? customTipAmount : totalBeforeTip * (tipPercent / 100);
   const grandTotal = totalBeforeTip + tipAmount;
+  // Amount already settled by earlier partial / split-by-item payments on these orders.
+  const alreadyPaid = unpaidOrders.reduce((s, o) => s + (o.paidAmount || 0), 0);
+  const balanceDue = Math.max(0, grandTotal - alreadyPaid);
   const perPerson = splitCount > 1 ? grandTotal / splitCount : grandTotal;
+
+  // ── Split by item: compute the diner's share from the items they tapped ──
+  const allUnpaidItems = unpaidOrders.flatMap((o) =>
+    (orderItemsMap[o.id] || []).map((it) => ({ ...it, orderId: o.id, lineTotal: it.unitPrice * it.quantity })),
+  );
+  const itemSubtotal = allUnpaidItems
+    .filter((it) => selectedItemIds.has(it.id))
+    .reduce((s, it) => s + it.lineTotal, 0);
+  const subtotalRatio = subtotal > 0 ? itemSubtotal / subtotal : 0;
+  const itemShareBeforeTip = itemSubtotal + (tax + serviceCharge - discount) * subtotalRatio;
+  const itemTip = customTipAmount !== null ? customTipAmount * subtotalRatio : itemShareBeforeTip * (tipPercent / 100);
+  const itemShare = itemShareBeforeTip + itemTip;
+  // Orders touched by the current item selection (card split only supports one order at a time).
+  const affectedOrderIds = unpaidOrders
+    .filter((o) => (orderItemsMap[o.id] || []).some((it) => selectedItemIds.has(it.id)))
+    .map((o) => o.id);
+
+  function toggleItem(id: string) {
+    setSelectedItemIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  // Per-order amount + tip contributions for the selected items (tax/service shared pro-rata).
+  function perOrderContributions(): Record<string, { amount: number; tip: number }> {
+    const byOrder: Record<string, { amount: number; tip: number }> = {};
+    for (const o of unpaidOrders) {
+      const items = (orderItemsMap[o.id] || []).filter((it) => selectedItemIds.has(it.id));
+      if (items.length === 0) continue;
+      const oItemSub = items.reduce((s, it) => s + it.unitPrice * it.quantity, 0);
+      const oRatio = o.subtotal > 0 ? oItemSub / o.subtotal : 0;
+      const amount = oItemSub + (o.tax + o.serviceCharge) * oRatio;
+      const tip = itemSubtotal > 0 ? itemTip * (oItemSub / itemSubtotal) : 0;
+      byOrder[o.id] = { amount: +amount.toFixed(2), tip: +tip.toFixed(2) };
+    }
+    return byOrder;
+  }
+
+  async function payShareCash() {
+    if (!slug || itemSubtotal <= 0) return;
+    setPaying(true);
+    setPaymentError('');
+    closeConfirmModal();
+    try {
+      const contributions = perOrderContributions();
+      for (const [orderId, { amount, tip }] of Object.entries(contributions)) {
+        await paymentApi.recordCash(slug, { orderId, amount, tip });
+      }
+      setSelectedItemIds(new Set());
+      loadOrders();
+    } catch (err) {
+      setPaymentError((err as { message?: string }).message || 'Payment failed. Please try again.');
+    } finally {
+      setPaying(false);
+    }
+  }
 
   function toggleExpand(orderId: string) {
     setExpandedOrders((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
@@ -326,22 +390,34 @@ export function BillPage() {
                   <span>${order.subtotal.toFixed(2)}</span>
                 </div>
               </button>
-              {expandedOrders[order.id] && (
+              {(expandedOrders[order.id] || splitMode === 'item') && (
                 <div className="mt-2 pl-2 border-l-2 border-gray-200 space-y-1">
                   {itemsLoading ? (
                     <p className="text-xs text-gray-400">{t('common.loading')}...</p>
                   ) : (orderItemsMap[order.id] || []).length === 0 ? (
                     <p className="text-xs text-gray-400">{t('common.noResults')}</p>
                   ) : (
-                    (orderItemsMap[order.id] || []).map((item) => (
-                      <div key={item.id} className="flex justify-between text-xs text-gray-600 py-1">
-                        <span>
-                          <span className="text-gray-400 mr-1">{item.quantity}x</span>
-                          {item.name}
-                        </span>
-                        <span>${(item.unitPrice * item.quantity).toFixed(2)}</span>
-                      </div>
-                    ))
+                    (orderItemsMap[order.id] || []).map((item) => {
+                      const checked = selectedItemIds.has(item.id);
+                      return splitMode === 'item' ? (
+                        <label key={item.id} className={`flex items-center justify-between text-xs py-1.5 px-1 rounded cursor-pointer ${checked ? 'bg-brand/10' : 'hover:bg-gray-50'}`}>
+                          <span className="flex items-center gap-2">
+                            <input type="checkbox" checked={checked} onChange={() => toggleItem(item.id)}
+                              className="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand" />
+                            <span className="text-gray-700"><span className="text-gray-400 mr-1">{item.quantity}x</span>{item.name}</span>
+                          </span>
+                          <span className="text-gray-700">${(item.unitPrice * item.quantity).toFixed(2)}</span>
+                        </label>
+                      ) : (
+                        <div key={item.id} className="flex justify-between text-xs text-gray-600 py-1">
+                          <span>
+                            <span className="text-gray-400 mr-1">{item.quantity}x</span>
+                            {item.name}
+                          </span>
+                          <span>${(item.unitPrice * item.quantity).toFixed(2)}</span>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               )}
@@ -421,29 +497,55 @@ export function BillPage() {
           )}
         </div>
 
-        <div className="border-t px-4 py-3">
-          <div className="flex items-center justify-between mb-1">
+        <div className="border-t px-4 py-3 space-y-2">
+          <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">{t('payment.split')}</span>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setSplitCount(Math.max(1, splitCount - 1))}
-                aria-label="Decrease split count"
-                className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50">
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className="w-8 text-center font-medium text-sm flex items-center gap-1">
-                <Users className="w-3 h-3" /> {splitCount}
-              </span>
-              <button onClick={() => setSplitCount(Math.min(20, splitCount + 1))}
-                aria-label="Increase split count"
-                className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center hover:bg-brand-hover">
-                <Plus className="w-3 h-3" />
-              </button>
+            <div className="flex rounded-lg overflow-hidden border border-gray-300 text-xs">
+              {(['even', 'item'] as const).map((m) => (
+                <button key={m} onClick={() => { setSplitMode(m); setSelectedItemIds(new Set()); }}
+                  className={`px-3 py-1 font-medium transition-colors ${splitMode === m ? 'bg-brand text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                  {m === 'even' ? t('payment.splitEven') : t('payment.splitByItem')}
+                </button>
+              ))}
             </div>
           </div>
-          {splitCount > 1 && (
-            <p className="text-sm text-brand font-medium text-right">
-              ${perPerson.toFixed(2)} / {t('payment.split')}
-            </p>
+
+          {splitMode === 'even' ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">{t('payment.numberOfPeople')}</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setSplitCount(Math.max(1, splitCount - 1))}
+                    aria-label="Decrease split count"
+                    className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50">
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="w-8 text-center font-medium text-sm flex items-center gap-1">
+                    <Users className="w-3 h-3" /> {splitCount}
+                  </span>
+                  <button onClick={() => setSplitCount(Math.min(20, splitCount + 1))}
+                    aria-label="Increase split count"
+                    className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center hover:bg-brand-hover">
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              {splitCount > 1 && (
+                <p className="text-sm text-brand font-medium text-right">
+                  ${perPerson.toFixed(2)} / {t('payment.split')}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-gray-500">{t('payment.tapYourItems')}</p>
+              {itemSubtotal > 0 && (
+                <div className="flex justify-between text-sm font-medium">
+                  <span className="text-gray-700">{t('payment.yourShare')}</span>
+                  <span className="text-brand">${itemShare.toFixed(2)}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -462,11 +564,17 @@ export function BillPage() {
         </div>
 
         <div className="border-t-2 border-brand px-4 py-4">
+          {alreadyPaid > 0 && (
+            <div className="flex justify-between text-sm text-green-600 mb-1">
+              <span>{t('payment.alreadyPaid')}</span>
+              <span>-${alreadyPaid.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4">
-            <span className="text-lg font-bold text-gray-900">{t('common.total')}</span>
-            <span className="text-xl font-bold text-brand">${grandTotal.toFixed(2)}</span>
+            <span className="text-lg font-bold text-gray-900">{alreadyPaid > 0 ? t('payment.balanceDue') : t('common.total')}</span>
+            <span className="text-xl font-bold text-brand">${balanceDue.toFixed(2)}</span>
           </div>
-          {splitCount > 1 && (
+          {splitMode === 'even' && splitCount > 1 && (
             <p className="text-sm text-gray-500 text-right -mt-3 mb-3">
               ${perPerson.toFixed(2)} / {t('payment.split')}
             </p>
@@ -484,23 +592,54 @@ export function BillPage() {
                   {paymentError}
                 </div>
               )}
-              {(paymentMethod === 'cash' || paymentMethod === 'split') && (
-                <button onClick={openConfirmModal} disabled={paying}
-                  className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors">
-                  {paying ? `${t('common.loading')}...` : `${t('payment.payFull')} $${grandTotal.toFixed(2)}`}
-                </button>
-              )}
-              {paymentMethod === 'card' && getStripe() && unpaidOrders.length === 1 && (
-                <button onClick={openConfirmModal}
-                  className="w-full py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover transition-colors">
-                  {t('payment.payNow')} ${grandTotal.toFixed(2)}
-                </button>
-              )}
-              {paymentMethod === 'card' && !getStripe() && (
-                <button disabled
-                  className="w-full py-3 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
-                  {t('payment.card')} ({t('common.notAvailable')})
-                </button>
+
+              {/* ── Split by item: pay only the selected items' share ── */}
+              {splitMode === 'item' ? (
+                <>
+                  {(paymentMethod === 'cash' || paymentMethod === 'split') && (
+                    <button onClick={payShareCash} disabled={paying || itemSubtotal <= 0}
+                      className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors">
+                      {paying ? `${t('common.loading')}...` : `${t('payment.payShare')} $${itemShare.toFixed(2)}`}
+                    </button>
+                  )}
+                  {paymentMethod === 'card' && getStripe() && (
+                    affectedOrderIds.length === 1 ? (
+                      <button onClick={() => { setSharePartialAmount(itemShare); setPaidOrderId(affectedOrderIds[0]); }}
+                        disabled={itemSubtotal <= 0}
+                        className="w-full py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors">
+                        {t('payment.payShare')} ${itemShare.toFixed(2)}
+                      </button>
+                    ) : (
+                      <p className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-3">{t('payment.cardOneOrder')}</p>
+                    )
+                  )}
+                  {paymentMethod === 'card' && !getStripe() && (
+                    <button disabled className="w-full py-3 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
+                      {t('payment.card')} ({t('common.notAvailable')})
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  {(paymentMethod === 'cash' || paymentMethod === 'split') && (
+                    <button onClick={openConfirmModal} disabled={paying}
+                      className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors">
+                      {paying ? `${t('common.loading')}...` : `${t('payment.payFull')} $${balanceDue.toFixed(2)}`}
+                    </button>
+                  )}
+                  {paymentMethod === 'card' && getStripe() && unpaidOrders.length === 1 && (
+                    <button onClick={openConfirmModal}
+                      className="w-full py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand-hover transition-colors">
+                      {t('payment.payNow')} ${balanceDue.toFixed(2)}
+                    </button>
+                  )}
+                  {paymentMethod === 'card' && !getStripe() && (
+                    <button disabled
+                      className="w-full py-3 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
+                      {t('payment.card')} ({t('common.notAvailable')})
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -513,9 +652,20 @@ export function BillPage() {
             stripePromise={getStripe()}
             slug={slug}
             orderId={paidOrderId}
-            amount={unpaidOrders.find((o) => o.id === paidOrderId)?.total || 0}
-            onSuccess={() => { handleStripeSuccess(); }}
-            onCancel={() => setPaidOrderId(null)}
+            amount={sharePartialAmount ?? (unpaidOrders.find((o) => o.id === paidOrderId)?.total || 0)}
+            partialAmount={sharePartialAmount ?? undefined}
+            onSuccess={() => {
+              if (sharePartialAmount != null) {
+                // Partial (split-by-item) card payment — clear selection and refresh the balance.
+                setSharePartialAmount(null);
+                setSelectedItemIds(new Set());
+                setPaidOrderId(null);
+                loadOrders();
+              } else {
+                handleStripeSuccess();
+              }
+            }}
+            onCancel={() => { setPaidOrderId(null); setSharePartialAmount(null); }}
           />
         </div>
       )}

@@ -951,4 +951,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "Customer Preview",
   'wl.previewDesc': "This is how your restaurant looks to customers.",
   'wl.yourRestaurant': "Your Restaurant",
+  'payment.splitEven': "Evenly",
+  'payment.splitByItem': "By item",
+  'payment.numberOfPeople': "Number of people",
+  'payment.tapYourItems': "Tap the items you’re paying for",
+  'payment.yourShare': "Your share",
+  'payment.payShare': "Pay my share",
+  'payment.alreadyPaid': "Already paid",
+  'payment.balanceDue': "Balance due",
+  'payment.cardOneOrder': "Card split covers one order’s items at a time. Pick items from a single ticket, or pay your share in cash.",
 };

@@ -16,9 +16,9 @@ const payments = new Hono();
 
 payments.post('/:slug/payments/create-intent', resolveTenant, async (c) => {
   const tenantId = c.get('tenantId');
-  const { orderId, tip } = await c.req.json<{ orderId: string; tip?: number }>();
+  const { orderId, tip, amount } = await c.req.json<{ orderId: string; tip?: number; amount?: number }>();
 
-  const result = await createPaymentIntent(tenantId, orderId, tip);
+  const result = await createPaymentIntent(tenantId, orderId, tip, amount);
   if ('error' in result) {
     return c.json({ error: result.error }, result.status);
   }

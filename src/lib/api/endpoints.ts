@@ -173,7 +173,7 @@ export const userApi = {
 
 // Payments
 export const paymentApi = {
-  createIntent: (slug: string, data: { orderId: string; tip?: number }) =>
+  createIntent: (slug: string, data: { orderId: string; tip?: number; amount?: number }) =>
     api.post<{ clientSecret: string; paymentId: string; amount: number }>(`/r/${slug}/payments/create-intent`, data, { skipAuth: true }),
   recordCash: (slug: string, data: { orderId: string; amount: number; tip?: number }) =>
     api.post<Payment>(`/r/${slug}/payments/cash`, data, { skipAuth: true }),

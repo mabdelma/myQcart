@@ -740,4 +740,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "Kundenvorschau",
   'wl.previewDesc': "So sehen Kunden dein Restaurant.",
   'wl.yourRestaurant': "Dein Restaurant",
+  'payment.splitEven': "Gleichmäßig",
+  'payment.splitByItem': "Nach Artikel",
+  'payment.numberOfPeople': "Anzahl der Personen",
+  'payment.tapYourItems': "Tippe auf die Artikel, die du bezahlst",
+  'payment.yourShare': "Dein Anteil",
+  'payment.payShare': "Meinen Anteil zahlen",
+  'payment.alreadyPaid': "Bereits bezahlt",
+  'payment.balanceDue': "Offener Betrag",
+  'payment.cardOneOrder': "Kartenzahlung deckt jeweils die Artikel einer Bestellung ab. Wähle Artikel eines einzelnen Tickets oder zahle deinen Anteil bar.",
 };

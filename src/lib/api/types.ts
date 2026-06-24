@@ -154,7 +154,8 @@ export interface Order {
   tax: number;
   serviceCharge: number;
   total: number;
-  paymentStatus: 'unpaid' | 'paid' | 'refunded';
+  paymentStatus: 'unpaid' | 'partially_paid' | 'paid' | 'refunded';
+  paidAmount?: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;

@@ -740,4 +740,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "Предпросмотр для клиента",
   'wl.previewDesc': "Так ваш ресторан видят клиенты.",
   'wl.yourRestaurant': "Ваш ресторан",
+  'payment.splitEven': "Поровну",
+  'payment.splitByItem': "По позициям",
+  'payment.numberOfPeople': "Количество человек",
+  'payment.tapYourItems': "Выберите позиции, которые вы оплачиваете",
+  'payment.yourShare': "Ваша доля",
+  'payment.payShare': "Оплатить мою долю",
+  'payment.alreadyPaid': "Уже оплачено",
+  'payment.balanceDue': "К оплате",
+  'payment.cardOneOrder': "Оплата картой покрывает позиции одного заказа за раз. Выберите позиции из одного чека или оплатите свою долю наличными.",
 };

@@ -740,4 +740,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "ग्राहक पूर्वावलोकन",
   'wl.previewDesc': "ग्राहक आपके रेस्तरां को ऐसे देखते हैं।",
   'wl.yourRestaurant': "आपका रेस्तरां",
+  'payment.splitEven': "समान रूप से",
+  'payment.splitByItem': "आइटम अनुसार",
+  'payment.numberOfPeople': "लोगों की संख्या",
+  'payment.tapYourItems': "उन आइटम पर टैप करें जिनके लिए आप भुगतान कर रहे हैं",
+  'payment.yourShare': "आपका हिस्सा",
+  'payment.payShare': "मेरा हिस्सा भुगतान करें",
+  'payment.alreadyPaid': "पहले से भुगतान",
+  'payment.balanceDue': "देय शेष",
+  'payment.cardOneOrder': "कार्ड भुगतान एक बार में एक ऑर्डर के आइटम कवर करता है। एक ही टिकट से आइटम चुनें, या अपना हिस्सा नकद भुगतान करें।",
 };

@@ -740,4 +740,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "顧客プレビュー",
   'wl.previewDesc': "お客様にはレストランがこう表示されます。",
   'wl.yourRestaurant': "あなたのレストラン",
+  'payment.splitEven': "均等",
+  'payment.splitByItem': "商品ごと",
+  'payment.numberOfPeople': "人数",
+  'payment.tapYourItems': "支払う商品をタップ",
+  'payment.yourShare': "あなたの分",
+  'payment.payShare': "自分の分を支払う",
+  'payment.alreadyPaid': "支払い済み",
+  'payment.balanceDue': "未払い残高",
+  'payment.cardOneOrder': "カード決済は一度に1注文の商品のみ対象です。同一伝票の商品を選ぶか、自分の分を現金で支払ってください。",
 };

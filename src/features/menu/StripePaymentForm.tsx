@@ -10,6 +10,8 @@ interface StripePaymentFormProps {
   orderId: string;
   amount: number;
   tip?: number;
+  /** When set, charges only this amount against the order (partial / split-by-item). */
+  partialAmount?: number;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -21,19 +23,19 @@ interface StripePaymentFormProps {
  * mounted with its clientSecret. Redirect methods return to /payment/return;
  * cards confirm inline (no redirect) and call onSuccess directly.
  */
-export function StripePaymentForm({ stripePromise, slug, orderId, amount, tip, onSuccess, onCancel }: StripePaymentFormProps) {
+export function StripePaymentForm({ stripePromise, slug, orderId, amount, tip, partialAmount, onSuccess, onCancel }: StripePaymentFormProps) {
   const { t } = useI18n();
   const [clientSecret, setClientSecret] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    paymentApi.createIntent(slug, { orderId, tip })
+    paymentApi.createIntent(slug, { orderId, tip, amount: partialAmount })
       .then((r) => { if (!cancelled) setClientSecret(r.clientSecret); })
       .catch(() => { if (!cancelled) setError(t('error.generic')); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, orderId, tip]);
+  }, [slug, orderId, tip, partialAmount]);
 
   if (error) return <p className="text-red-600 text-sm">{error}</p>;
   if (!clientSecret || !stripePromise) {

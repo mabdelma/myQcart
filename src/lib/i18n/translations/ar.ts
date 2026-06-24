@@ -751,4 +751,13 @@ export const translations: Record<TranslationKey, string> = {
   'wl.customerPreview': "معاينة العميل",
   'wl.previewDesc': "هكذا يبدو مطعمك للعملاء.",
   'wl.yourRestaurant': "مطعمك",
+  'payment.splitEven': "بالتساوي",
+  'payment.splitByItem': "حسب العنصر",
+  'payment.numberOfPeople': "عدد الأشخاص",
+  'payment.tapYourItems': "اضغط على العناصر التي ستدفع ثمنها",
+  'payment.yourShare': "حصتك",
+  'payment.payShare': "ادفع حصتي",
+  'payment.alreadyPaid': "مدفوع بالفعل",
+  'payment.balanceDue': "الرصيد المستحق",
+  'payment.cardOneOrder': "يغطي الدفع بالبطاقة عناصر طلب واحد في كل مرة. اختر عناصر من تذكرة واحدة أو ادفع حصتك نقداً.",
 };
