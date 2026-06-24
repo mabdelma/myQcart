@@ -749,4 +749,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "Уже оплачено",
   'payment.balanceDue': "К оплате",
   'payment.cardOneOrder': "Оплата картой покрывает позиции одного заказа за раз. Выберите позиции из одного чека или оплатите свою долю наличными.",
+  'category.manage': "Управление категориями",
+  'category.title': "Категории",
+  'category.addCategory': "Добавить категорию",
+  'category.addSubcategory': "Добавить подкатегорию",
+  'category.newCategory': "Название новой категории",
+  'category.newSubcategory': "Новая подкатегория",
+  'category.deleteConfirm': "Удалить эту категорию? Позиции потеряют категорию, но не будут удалены.",
+  'category.empty': "Категорий пока нет. Добавьте первую.",
+  'category.subcategory': "Подкатегория",
 };

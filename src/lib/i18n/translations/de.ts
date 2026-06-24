@@ -749,4 +749,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "Bereits bezahlt",
   'payment.balanceDue': "Offener Betrag",
   'payment.cardOneOrder': "Kartenzahlung deckt jeweils die Artikel einer Bestellung ab. Wähle Artikel eines einzelnen Tickets oder zahle deinen Anteil bar.",
+  'category.manage': "Kategorien verwalten",
+  'category.title': "Kategorien",
+  'category.addCategory': "Kategorie hinzufügen",
+  'category.addSubcategory': "Unterkategorie hinzufügen",
+  'category.newCategory': "Name der neuen Kategorie",
+  'category.newSubcategory': "Neue Unterkategorie",
+  'category.deleteConfirm': "Diese Kategorie löschen? Artikel verlieren ihre Kategorie, werden aber nicht gelöscht.",
+  'category.empty': "Noch keine Kategorien. Füge die erste hinzu.",
+  'category.subcategory': "Unterkategorie",
 };

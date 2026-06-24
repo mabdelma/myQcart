@@ -760,4 +760,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "مدفوع بالفعل",
   'payment.balanceDue': "الرصيد المستحق",
   'payment.cardOneOrder': "يغطي الدفع بالبطاقة عناصر طلب واحد في كل مرة. اختر عناصر من تذكرة واحدة أو ادفع حصتك نقداً.",
+  'category.manage': "إدارة الفئات",
+  'category.title': "الفئات",
+  'category.addCategory': "إضافة فئة",
+  'category.addSubcategory': "إضافة فئة فرعية",
+  'category.newCategory': "اسم الفئة الجديدة",
+  'category.newSubcategory': "فئة فرعية جديدة",
+  'category.deleteConfirm': "حذف هذه الفئة؟ ستفقد العناصر فئتها لكن لن تُحذف.",
+  'category.empty': "لا توجد فئات بعد. أضف أول فئة.",
+  'category.subcategory': "فئة فرعية",
 };

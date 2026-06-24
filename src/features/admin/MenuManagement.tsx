@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical, ToggleLeft, Globe } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, GripVertical, ToggleLeft, Globe, FolderTree } from 'lucide-react';
+import { CategoryManager } from './CategoryManager';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -77,33 +78,40 @@ export function MenuManagement() {
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [allCategories, setAllCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [editing, setEditing] = useState<Partial<MenuItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [allModifierGroups, setAllModifierGroups] = useState<ModifierGroup[]>([]);
   const [linkedGroupIds, setLinkedGroupIds] = useState<string[]>([]);
+  const [showCategories, setShowCategories] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
+  const loadMenu = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const data = await menuApi.getFullMenu(slug);
+      const mainCats = data.categories.filter((c) => c.type === 'main').sort((a, b) => a.sortOrder - b.sortOrder);
+      setCategories(mainCats);
+      setAllCategories(data.categories);
+      setItems(data.items);
+      // Keep the current tab if it still exists, otherwise fall back to the first.
+      setSelectedCategory((cur) => (cur && mainCats.some((c) => c.id === cur)) ? cur : (mainCats[0]?.id ?? ''));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [slug]);
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
-    menuApi.getFullMenu(slug)
-      .then((data) => {
-        const mainCats = data.categories.filter((c) => c.type === 'main').sort((a, b) => a.sortOrder - b.sortOrder);
-        setCategories(mainCats);
-        setItems(data.items);
-        if (mainCats.length > 0 && !selectedCategory) setSelectedCategory(mainCats[0].id);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-    if (slug) {
-      menuApi.getModifierGroups(slug).then((r) => setAllModifierGroups(r.data)).catch(() => {});
-    }
-  }, [slug, selectedCategory]);
+    loadMenu().finally(() => setLoading(false));
+    menuApi.getModifierGroups(slug).then((r) => setAllModifierGroups(r.data)).catch(() => {});
+  }, [slug, loadMenu]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -200,13 +208,30 @@ export function MenuManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">{t('menu.management')}</h2>
-        <button
-          onClick={() => setEditing({ name: '', price: 0, categoryId: selectedCategory, available: true })}
-          className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]"
-        >
-          <PlusCircle className="w-5 h-5 mr-2" aria-hidden /> {t('menu.addItem')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCategories(true)}
+            className="flex items-center px-4 py-2 border border-[#8B4513] text-[#8B4513] rounded-md hover:bg-[#F5DEB3]/30"
+          >
+            <FolderTree className="w-5 h-5 mr-2" aria-hidden /> {t('category.manage')}
+          </button>
+          <button
+            onClick={() => setEditing({ name: '', price: 0, categoryId: selectedCategory, available: true })}
+            className="flex items-center px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033]"
+          >
+            <PlusCircle className="w-5 h-5 mr-2" aria-hidden /> {t('menu.addItem')}
+          </button>
+        </div>
       </div>
+
+      {showCategories && (
+        <CategoryManager
+          slug={slug}
+          categories={allCategories}
+          onChange={loadMenu}
+          onClose={() => setShowCategories(false)}
+        />
+      )}
 
       {editing && (
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
@@ -273,7 +298,7 @@ export function MenuManagement() {
                   <select
                     id="menu-category"
                     value={editing.categoryId || ''}
-                    onChange={(e) => setEditing({ ...editing, categoryId: e.target.value })}
+                    onChange={(e) => setEditing({ ...editing, categoryId: e.target.value, subCategoryId: undefined })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]"
                   >
                     {categories.map((c) => (
@@ -282,6 +307,25 @@ export function MenuManagement() {
                   </select>
                 </div>
               </div>
+              {(() => {
+                const subs = allCategories.filter((c) => c.type === 'sub' && c.parentId === editing.categoryId);
+                return subs.length > 0 ? (
+                  <div>
+                    <label htmlFor="menu-subcategory" className="block text-sm font-medium text-gray-700">{t('category.subcategory')}</label>
+                    <select
+                      id="menu-subcategory"
+                      value={editing.subCategoryId || ''}
+                      onChange={(e) => setEditing({ ...editing, subCategoryId: e.target.value || undefined })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8B4513] focus:ring-[#8B4513]"
+                    >
+                      <option value="">—</option>
+                      {subs.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null;
+              })()}
               <div className="flex items-center">
                 <input
                   type="checkbox" id="menu-avail"

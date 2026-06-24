@@ -760,4 +760,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "Déjà payé",
   'payment.balanceDue': "Solde dû",
   'payment.cardOneOrder': "Le paiement par carte couvre les articles d’une seule commande à la fois. Choisissez des articles d’un seul ticket ou payez votre part en espèces.",
+  'category.manage': "Gérer les catégories",
+  'category.title': "Catégories",
+  'category.addCategory': "Ajouter une catégorie",
+  'category.addSubcategory': "Ajouter une sous-catégorie",
+  'category.newCategory': "Nom de la nouvelle catégorie",
+  'category.newSubcategory': "Nouvelle sous-catégorie",
+  'category.deleteConfirm': "Supprimer cette catégorie ? Les articles perdront leur catégorie mais ne seront pas supprimés.",
+  'category.empty': "Aucune catégorie. Ajoutez la première.",
+  'category.subcategory': "Sous-catégorie",
 };

@@ -749,4 +749,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "Já pago",
   'payment.balanceDue': "Saldo devido",
   'payment.cardOneOrder': "O pagamento com cartão cobre os artigos de um pedido de cada vez. Escolha artigos de um único ticket ou pague a sua parte em dinheiro.",
+  'category.manage': "Gerir categorias",
+  'category.title': "Categorias",
+  'category.addCategory': "Adicionar categoria",
+  'category.addSubcategory': "Adicionar subcategoria",
+  'category.newCategory': "Nome da nova categoria",
+  'category.newSubcategory': "Nova subcategoria",
+  'category.deleteConfirm': "Eliminar esta categoria? Os artigos perderão a categoria mas não serão eliminados.",
+  'category.empty': "Ainda não há categorias. Adicione a primeira.",
+  'category.subcategory': "Subcategoria",
 };

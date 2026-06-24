@@ -749,4 +749,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "已支付",
   'payment.balanceDue': "应付余额",
   'payment.cardOneOrder': "银行卡支付每次只能结算一个订单的菜品。请选择同一张单的菜品，或用现金支付您的份额。",
+  'category.manage': "管理类别",
+  'category.title': "类别",
+  'category.addCategory': "添加类别",
+  'category.addSubcategory': "添加子类别",
+  'category.newCategory': "新类别名称",
+  'category.newSubcategory': "新子类别",
+  'category.deleteConfirm': "删除此类别？其中的菜品将失去类别但不会被删除。",
+  'category.empty': "暂无类别。添加第一个。",
+  'category.subcategory': "子类别",
 };

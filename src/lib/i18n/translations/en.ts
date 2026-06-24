@@ -960,4 +960,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "Already paid",
   'payment.balanceDue': "Balance due",
   'payment.cardOneOrder': "Card split covers one order’s items at a time. Pick items from a single ticket, or pay your share in cash.",
+  'category.manage': "Manage Categories",
+  'category.title': "Categories",
+  'category.addCategory': "Add category",
+  'category.addSubcategory': "Add subcategory",
+  'category.newCategory': "New category name",
+  'category.newSubcategory': "New subcategory",
+  'category.deleteConfirm': "Delete this category? Items in it will lose their category but won’t be deleted.",
+  'category.empty': "No categories yet. Add your first one.",
+  'category.subcategory': "Subcategory",
 };

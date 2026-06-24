@@ -749,4 +749,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "पहले से भुगतान",
   'payment.balanceDue': "देय शेष",
   'payment.cardOneOrder': "कार्ड भुगतान एक बार में एक ऑर्डर के आइटम कवर करता है। एक ही टिकट से आइटम चुनें, या अपना हिस्सा नकद भुगतान करें।",
+  'category.manage': "श्रेणियाँ प्रबंधित करें",
+  'category.title': "श्रेणियाँ",
+  'category.addCategory': "श्रेणी जोड़ें",
+  'category.addSubcategory': "उपश्रेणी जोड़ें",
+  'category.newCategory': "नई श्रेणी का नाम",
+  'category.newSubcategory': "नई उपश्रेणी",
+  'category.deleteConfirm': "इस श्रेणी को हटाएँ? इसके आइटम अपनी श्रेणी खो देंगे लेकिन हटाए नहीं जाएंगे।",
+  'category.empty': "अभी तक कोई श्रेणी नहीं। पहली जोड़ें।",
+  'category.subcategory': "उपश्रेणी",
 };

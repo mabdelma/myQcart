@@ -749,4 +749,13 @@ export const translations: Record<TranslationKey, string> = {
   'payment.alreadyPaid': "支払い済み",
   'payment.balanceDue': "未払い残高",
   'payment.cardOneOrder': "カード決済は一度に1注文の商品のみ対象です。同一伝票の商品を選ぶか、自分の分を現金で支払ってください。",
+  'category.manage': "カテゴリを管理",
+  'category.title': "カテゴリ",
+  'category.addCategory': "カテゴリを追加",
+  'category.addSubcategory': "サブカテゴリを追加",
+  'category.newCategory': "新しいカテゴリ名",
+  'category.newSubcategory': "新しいサブカテゴリ",
+  'category.deleteConfirm': "このカテゴリを削除しますか？商品はカテゴリを失いますが削除されません。",
+  'category.empty': "カテゴリがまだありません。最初のものを追加してください。",
+  'category.subcategory': "サブカテゴリ",
 };

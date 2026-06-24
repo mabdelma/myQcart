@@ -85,7 +85,7 @@ export const menuApi = {
     api.put<{ success: boolean }>(`/r/${slug}/menu/categories/${categoryId}`, data),
   deleteCategory: (slug: string, categoryId: string) =>
     api.delete<{ success: boolean }>(`/r/${slug}/menu/categories/${categoryId}`),
-  createItem: (slug: string, data: { categoryId: string; name: string; price: number; description?: string; imageUrl?: string; available?: boolean; sortOrder?: number; modifiers?: string; taxCategoryId?: string; taxExempt?: boolean }) =>
+  createItem: (slug: string, data: { categoryId: string; subCategoryId?: string; name: string; price: number; description?: string; imageUrl?: string; available?: boolean; sortOrder?: number; modifiers?: string; taxCategoryId?: string; taxExempt?: boolean }) =>
     api.post<MenuItem>(`/r/${slug}/menu/items`, data),
   updateItem: (slug: string, itemId: string, data: Partial<MenuItem>) =>
     api.put<{ success: boolean }>(`/r/${slug}/menu/items/${itemId}`, data),
