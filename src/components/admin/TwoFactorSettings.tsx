@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ShieldCheck, ShieldOff, Copy, Check } from 'lucide-react';
 import { authApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 
 // Self-contained TOTP 2FA enrollment card. Uses /auth/2fa/{setup,enable,disable}.
 export function TwoFactorSettings() {
+  const { t } = useI18n();
   const { state } = useAuth();
   const [enabled, setEnabled] = useState(!!state.user?.totpEnabled);
   const [step, setStep] = useState<'idle' | 'enrolling'>('idle');
@@ -49,12 +51,12 @@ export function TwoFactorSettings() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-3 mb-1">
           {enabled ? <ShieldCheck className="h-6 w-6 text-green-600" /> : <ShieldOff className="h-6 w-6 text-gray-400" />}
-          <h2 className="text-lg font-semibold text-gray-900">Two-factor authentication</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('twofa.title')}</h2>
           <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-            {enabled ? 'Enabled' : 'Disabled'}
+            {enabled ? t('twofa.enabled') : t('twofa.disabled')}
           </span>
         </div>
-        <p className="text-sm text-gray-500 mb-4">Add a one-time code from an authenticator app (Google Authenticator, 1Password, Authy) on top of your password.</p>
+        <p className="text-sm text-gray-500 mb-4">{t('twofa.intro')}</p>
 
         {error && <div className="mb-4 rounded-lg border-l-4 border-red-400 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
@@ -62,7 +64,7 @@ export function TwoFactorSettings() {
         {!enabled && step === 'idle' && (
           <button onClick={startSetup} disabled={busy}
             className="rounded-lg bg-[#8B4513] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#5C4033] disabled:opacity-50">
-            {busy ? 'Starting…' : 'Set up 2FA'}
+            {busy ? t('twofa.starting') : t('twofa.setup')}
           </button>
         )}
 
@@ -70,7 +72,7 @@ export function TwoFactorSettings() {
         {!enabled && step === 'enrolling' && (
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">1. Add this key to your authenticator app</p>
+              <p className="text-sm font-medium text-gray-700 mb-1">{t('twofa.step1')}</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 break-all rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-sm tracking-wider">{secret}</code>
                 <button type="button" onClick={() => { navigator.clipboard?.writeText(secret); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
@@ -78,10 +80,10 @@ export function TwoFactorSettings() {
                   {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                 </button>
               </div>
-              <a href={otpauthUrl} className="mt-1 inline-block text-xs text-[#8B4513] hover:underline">Open in authenticator app</a>
+              <a href={otpauthUrl} className="mt-1 inline-block text-xs text-[#8B4513] hover:underline">{t('twofa.openApp')}</a>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">2. Enter the 6-digit code to confirm</p>
+              <p className="text-sm font-medium text-gray-700 mb-1">{t('twofa.step2')}</p>
               <input inputMode="numeric" maxLength={6} value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="123456"
@@ -90,9 +92,9 @@ export function TwoFactorSettings() {
             <div className="flex gap-2">
               <button onClick={confirmEnable} disabled={busy || code.length !== 6}
                 className="rounded-lg bg-[#8B4513] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#5C4033] disabled:opacity-50">
-                {busy ? 'Verifying…' : 'Enable 2FA'}
+                {busy ? t('twofa.verifying') : t('twofa.enable')}
               </button>
-              <button onClick={() => { setStep('idle'); setError(''); }} className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100">Cancel</button>
+              <button onClick={() => { setStep('idle'); setError(''); }} className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100">{t('common.cancel')}</button>
             </div>
           </div>
         )}
@@ -100,18 +102,18 @@ export function TwoFactorSettings() {
         {/* Just enabled → show single-use recovery codes ONCE */}
         {enabled && backupCodes.length > 0 && (
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4">
-            <p className="text-sm font-semibold text-amber-900">Save your recovery codes</p>
-            <p className="mb-3 text-xs text-amber-800">Each code works once if you lose your authenticator. Store them somewhere safe — they won't be shown again.</p>
+            <p className="text-sm font-semibold text-amber-900">{t('twofa.saveBackup')}</p>
+            <p className="mb-3 text-xs text-amber-800">{t('twofa.backupDesc')}</p>
             <div className="grid grid-cols-2 gap-2 font-mono text-sm">
               {backupCodes.map((c) => <span key={c} className="rounded bg-white px-2 py-1 text-center tracking-wider">{c}</span>)}
             </div>
             <div className="mt-3 flex gap-2">
               <button type="button" onClick={() => { navigator.clipboard?.writeText(backupCodes.join('\n')); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
                 className="rounded-lg border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100">
-                {copied ? 'Copied ✓' : 'Copy all'}
+                {copied ? t('twofa.copied') : t('twofa.copyAll')}
               </button>
               <button type="button" onClick={() => setBackupCodes([])}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100">I've saved them</button>
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100">{t('twofa.savedThem')}</button>
             </div>
           </div>
         )}
@@ -120,7 +122,7 @@ export function TwoFactorSettings() {
         {enabled && (
           <div className="flex flex-wrap items-end gap-2">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Enter a current code to turn off</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('twofa.enterDisable')}</label>
               <input inputMode="numeric" maxLength={6} value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="123456"
@@ -128,7 +130,7 @@ export function TwoFactorSettings() {
             </div>
             <button onClick={disable} disabled={busy || code.length !== 6}
               className="rounded-lg bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">
-              {busy ? 'Disabling…' : 'Disable 2FA'}
+              {busy ? t('twofa.disabling') : t('twofa.disable')}
             </button>
           </div>
         )}

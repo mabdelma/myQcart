@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FileText, Download, DollarSign, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -15,6 +16,7 @@ function thirtyDaysAgo(): string {
 }
 
 export function ScheduledExports() {
+  const { t } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [startDate, setStartDate] = useState(thirtyDaysAgo());
@@ -41,7 +43,7 @@ export function ScheduledExports() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      alert('Failed to export data. Please try again.');
+      alert(t('exports.failed'));
     } finally {
       setExporting(null);
     }
@@ -52,12 +54,12 @@ export function ScheduledExports() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-6">
           <FileText className="w-6 h-6 text-[#8B4513]" />
-          <h3 className="text-lg font-medium">Export Data</h3>
+          <h3 className="text-lg font-medium">{t('exports.title')}</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('promo.startDate')}</label>
             <input
               type="date"
               value={startDate}
@@ -66,7 +68,7 @@ export function ScheduledExports() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('promo.endDate')}</label>
             <input
               type="date"
               value={endDate}
@@ -76,7 +78,7 @@ export function ScheduledExports() {
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 mb-4">Date range applies to Orders and Payments exports. Menu export includes all items regardless of date.</p>
+        <p className="text-xs text-gray-500 mb-4">{t('exports.dateHint')}</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
@@ -85,7 +87,7 @@ export function ScheduledExports() {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033] disabled:opacity-50 transition-colors"
           >
             <Download className="w-5 h-5" />
-            {exporting === 'orders' ? 'Exporting...' : 'Export Orders (CSV)'}
+            {exporting === 'orders' ? t('exports.exporting') : t('exports.exportOrders')}
           </button>
           <button
             onClick={() => handleExport('payments')}
@@ -93,7 +95,7 @@ export function ScheduledExports() {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033] disabled:opacity-50 transition-colors"
           >
             <DollarSign className="w-5 h-5" />
-            {exporting === 'payments' ? 'Exporting...' : 'Export Payments (CSV)'}
+            {exporting === 'payments' ? t('exports.exporting') : t('exports.exportPayments')}
           </button>
           <button
             onClick={() => handleExport('menu')}
@@ -101,7 +103,7 @@ export function ScheduledExports() {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033] disabled:opacity-50 transition-colors"
           >
             <Menu className="w-5 h-5" />
-            {exporting === 'menu' ? 'Exporting...' : 'Export Menu (CSV)'}
+            {exporting === 'menu' ? t('exports.exporting') : t('exports.exportMenu')}
           </button>
         </div>
       </div>

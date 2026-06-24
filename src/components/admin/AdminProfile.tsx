@@ -1,12 +1,14 @@
 ﻿import { useState } from 'react';
 import { User, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { userApi } from '../../lib/api';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { TwoFactorSettings } from './TwoFactorSettings';
 
 export function AdminProfile() {
+  const { t } = useI18n();
   const { state } = useAuth();
   const slug = state.tenant?.slug;
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,7 @@ export function AdminProfile() {
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="admin-profile-name" className="block text-sm font-medium text-gray-700">Name</label>
+                <label htmlFor="admin-profile-name" className="block text-sm font-medium text-gray-700">{t('common.name')}</label>
                 <div className="mt-1 relative">
                   <input id="admin-profile-name" type="text" value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -79,7 +81,7 @@ export function AdminProfile() {
               </div>
 
               <div>
-                <label htmlFor="admin-profile-email" className="block text-sm font-medium text-gray-700">Email</label>
+                <label htmlFor="admin-profile-email" className="block text-sm font-medium text-gray-700">{t('common.email')}</label>
                 <div className="mt-1 relative">
                   <input id="admin-profile-email" type="email" value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -90,10 +92,10 @@ export function AdminProfile() {
 
               <div className="flex justify-end space-x-3 mt-6">
                 <button type="button" onClick={() => setEditing(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
                 <button type="submit" disabled={loading}
                   className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">
-                  {loading ? <LoadingSpinner /> : 'Save Changes'}
+                  {loading ? <LoadingSpinner /> : t('profile.saveChanges')}
                 </button>
               </div>
             </form>
@@ -111,7 +113,7 @@ export function AdminProfile() {
                   setEditing(true);
                 }}
                   className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  Edit Profile
+                  {t('profile.editProfile')}
                 </button>
               </div>
 
@@ -123,7 +125,7 @@ export function AdminProfile() {
                 </div>
                 {state.tenant && (
                   <div className="flex items-center text-gray-500">
-                    <dt className="text-sm">Restaurant: {state.tenant.name}</dt>
+                    <dt className="text-sm">{t('profile.restaurant')}: {state.tenant.name}</dt>
                   </div>
                 )}
               </dl>
