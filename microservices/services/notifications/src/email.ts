@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
  * service no-ops (mirrors the monolith's behaviour when no mailer is set up),
  * so delivery ownership can move here transparently before SMTP exists.
  */
-const FROM = process.env.MAIL_FROM || "Qlisted <noreply@qlisted.com>";
+const FROM = process.env.MAIL_FROM || process.env.SMTP_FROM || "Qlisted <no-reply@qlisted.com>";
 const host = process.env.SMTP_HOST;
 
 const transport = host
