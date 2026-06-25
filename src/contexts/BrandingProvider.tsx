@@ -16,7 +16,7 @@ interface BrandingProviderProps {
   children: ReactNode;
 }
 
-export function BrandingProvider({ primaryColor, accentColor, logoUrl, faviconUrl, children }: BrandingProviderProps) {
+export function BrandingProvider({ primaryColor, accentColor, faviconUrl, children }: BrandingProviderProps) {
   const metaRef = useRef<HTMLMetaElement | null>(null);
   const faviconRef = useRef<HTMLLinkElement | null>(null);
 

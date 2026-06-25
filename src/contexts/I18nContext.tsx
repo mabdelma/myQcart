@@ -180,7 +180,6 @@ async function loadTranslations(locale: Locale): Promise<Record<TranslationKey, 
   return mod.translations;
 }
 
-const FALLBACK_LOCALE: Locale = 'en';
 let fallbackTranslations: Record<TranslationKey, string> | null = null;
 
 export function I18nProvider({ children }: { children: ReactNode }) {

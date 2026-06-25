@@ -769,4 +769,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "高峰时段热力图",
   'analytics.loadError': "加载分析数据失败",
   'analytics.exports': "导出",
+  'nav.viewStorefront': "查看餐厅",
+  'nav.viewStorefrontHint': "打开您的公开点餐页面",
 };

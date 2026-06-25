@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings, LogOut, Menu } from 'lucide-react';
+import { User, Settings, LogOut, Menu, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { NotificationsBell } from '../ui/NotificationsBell';
@@ -48,6 +48,18 @@ export function Header({ username = 'Admin User', onMenuClick }: HeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
+          {state.tenant?.slug && (
+            <a
+              href={`/r/${state.tenant.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              title={t('nav.viewStorefrontHint')}
+              aria-label={t('nav.viewStorefront')}
+              className="flex items-center gap-1.5 rounded-lg border border-[#8B4513] px-2.5 sm:px-3 py-1.5 text-sm font-medium text-[#8B4513] transition-colors hover:bg-[#F5DEB3]/40"
+            >
+              <ExternalLink className="h-4 w-4" /> <span className="hidden sm:inline">{t('nav.viewStorefront')}</span>
+            </a>
+          )}
           <LanguageSwitcher />
           <NotificationsBell />
           

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CalendarDays, CheckCircle, XCircle, Clock, User, Users, Phone, Mail, Edit, Trash2, Table as TableIcon } from 'lucide-react';
+import { CalendarDays, Clock, User, Users, Phone, Mail, Edit, Trash2, Table as TableIcon } from 'lucide-react';
 import { reservationApi, tableApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
@@ -37,7 +37,7 @@ export function ReservationManagement() {
     try {
       const data = await tableApi.list(slug);
       setTables(data);
-    } catch {}
+    } catch { /* tables are optional for the view */ }
   }, [slug]);
 
   useEffect(() => {

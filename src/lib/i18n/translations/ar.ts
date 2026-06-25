@@ -780,4 +780,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "خريطة ساعات الذروة",
   'analytics.loadError': "تعذّر تحميل بيانات التحليلات",
   'analytics.exports': "التصدير",
+  'nav.viewStorefront': "عرض المطعم",
+  'nav.viewStorefrontHint': "افتح صفحة الطلب العامة",
 };

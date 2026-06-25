@@ -40,7 +40,6 @@ export function BillPage() {
   const [orderItemsMap, setOrderItemsMap] = useState<Record<string, OrderItem[]>>({});
   const [itemsLoading, setItemsLoading] = useState(false);
   const [discount, setDiscount] = useState(0);
-  const [promoApplied, setPromoApplied] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
   const loadOrders = useCallback(() => {
@@ -447,8 +446,8 @@ export function BillPage() {
         <PromoCodeCheckout
           slug={slug}
           subtotal={subtotal}
-          onApply={(d) => { setDiscount(d); setPromoApplied(true); }}
-          onRemove={() => { setDiscount(0); setPromoApplied(false); }}
+          onApply={(d) => setDiscount(d)}
+          onRemove={() => setDiscount(0)}
         />
 
         <div className="border-t px-4 py-3">

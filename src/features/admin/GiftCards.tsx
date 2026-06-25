@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { giftCardApi } from '../../lib/api';
 import type { GiftCard } from '../../lib/api/types';
-import { Plus, Gift, Ban, History } from 'lucide-react';
+import { Plus, Gift, Ban } from 'lucide-react';
 
 export default function GiftCards() {
   const { t } = useI18n();
@@ -42,8 +42,8 @@ export default function GiftCards() {
       setShowForm(false);
       setForm({ code: '', initialBalance: 0, expiresAt: '' });
       await load();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to create gift card');
+    } catch (err) {
+      setError((err as { message?: string })?.message || 'Failed to create gift card');
     }
   };
 

@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, User, Users, Phone, CheckCircle, XCircle, Trash2, Bell } from 'lucide-react';
+import { Clock, Users, Phone, CheckCircle, XCircle, Trash2, Bell } from 'lucide-react';
 import { waitlistApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 import type { WaitlistEntry } from '../../lib/api/types';
-
-const STATUS_OPTIONS = ['waiting', 'notified', 'seated', 'cancelled', 'expired'] as const;
 
 export function WaitlistManagement() {
   const { t } = useI18n();

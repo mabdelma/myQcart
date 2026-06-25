@@ -980,4 +980,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "Peak Hours Heatmap",
   'analytics.loadError': "Failed to load analytics data",
   'analytics.exports': "Exports",
+  'nav.viewStorefront': "View restaurant",
+  'nav.viewStorefrontHint': "Open your public ordering page",
 };

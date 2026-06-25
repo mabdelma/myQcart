@@ -769,4 +769,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "Тепловая карта часов пик",
   'analytics.loadError': "Не удалось загрузить аналитику",
   'analytics.exports': "Экспорты",
+  'nav.viewStorefront': "Открыть ресторан",
+  'nav.viewStorefrontHint': "Открыть публичную страницу заказа",
 };

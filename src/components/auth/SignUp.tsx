@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { authApi } from '../../lib/api';
-import type { User } from '../../lib/api/types';
 import { useI18n } from '../../contexts/I18nContext';
 import { AuthLayout } from './AuthLayout';
 import { LoadingSpinner } from '../ui/LoadingSpinner';

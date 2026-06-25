@@ -768,4 +768,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "Mappa delle ore di punta",
   'analytics.loadError': "Impossibile caricare i dati analitici",
   'analytics.exports': "Esportazioni",
+  'nav.viewStorefront': "Vedi ristorante",
+  'nav.viewStorefrontHint': "Apri la tua pagina di ordinazione pubblica",
 };

@@ -35,7 +35,7 @@ function playAlertSound() {
     gain.gain.value = 0.3;
     osc.start();
     osc.stop(ctx.currentTime + 0.15);
-  } catch {}
+  } catch { /* best-effort */ }
 }
 
 function playUrgentSound() {
@@ -52,7 +52,7 @@ function playUrgentSound() {
       osc.start(ctx.currentTime + i * 0.12);
       osc.stop(ctx.currentTime + i * 0.12 + 0.1);
     });
-  } catch {}
+  } catch { /* best-effort */ }
 }
 
 export function OrdersDisplay() {
@@ -157,7 +157,7 @@ export function OrdersDisplay() {
         try {
           const data = JSON.parse(e.data);
           if (data.type?.startsWith('order_')) loadOrders();
-        } catch {}
+        } catch { /* best-effort */ }
       };
       es.onerror = () => {
         es.close();
@@ -220,7 +220,6 @@ export function OrdersDisplay() {
   if (loading) return <OrderListSkeleton />;
   if (error) return <ErrorMessage message={error} />;
 
-  const now = Date.now();
   const grouped = groupOrders();
 
   return (

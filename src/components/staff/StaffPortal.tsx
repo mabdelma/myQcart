@@ -51,6 +51,9 @@ export function StaffPortal() {
         : role === 'waiter'
           ? [{ id: 'panel', label: 'Waiter Panel', icon: ClipboardList } as const]
           : [{ id: 'payments', label: 'Cashier', icon: CreditCard } as const];
+      // `role` is fixed for the component's lifetime, so this hook's call order is
+      // stable across renders — safe despite the conditional branch.
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
 
       return (

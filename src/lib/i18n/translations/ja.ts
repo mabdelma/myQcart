@@ -769,4 +769,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "ピーク時間ヒートマップ",
   'analytics.loadError': "分析データの読み込みに失敗しました",
   'analytics.exports': "エクスポート",
+  'nav.viewStorefront': "レストランを見る",
+  'nav.viewStorefrontHint': "公開注文ページを開く",
 };

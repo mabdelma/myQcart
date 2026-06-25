@@ -42,6 +42,9 @@ export function RestaurantLanding() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  // Must run on every render (before any early return) to satisfy the rules of hooks.
+  const mainCats = useMemo(() => categories.filter((c) => c.type === 'main'), [categories]);
+
   if (loading) return <div className="min-h-screen bg-gray-50"><MenuSkeleton /></div>;
 
   if (!slug || notFound) {
@@ -58,8 +61,6 @@ export function RestaurantLanding() {
       </div>
     );
   }
-
-  const mainCats = useMemo(() => categories.filter((c) => c.type === 'main'), [categories]);
 
   return (
     <BrandingProvider primaryColor={tenant.primaryColor} accentColor={tenant.accentColor} logoUrl={tenant.logoUrl} faviconUrl={tenant.faviconUrl}>

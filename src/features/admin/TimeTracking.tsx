@@ -3,12 +3,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { timeApi } from '../../lib/api';
 import { Clock, LogIn, LogOut, Users } from 'lucide-react';
+import type { TimeEntry } from '../../lib/api/types';
 
 export default function TimeTracking() {
   const { t } = useI18n();
   const { slug } = useAuth();
-  const [active, setActive] = useState<any[]>([]);
-  const [timesheet, setTimesheet] = useState<any[]>([]);
+  const [active, setActive] = useState<TimeEntry[]>([]);
+  const [timesheet, setTimesheet] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'active' | 'history'>('active');
 
@@ -22,7 +23,7 @@ export default function TimeTracking() {
       ]);
       setActive(activeData);
       setTimesheet(timesheetData);
-    } catch {}
+    } catch { /* keep the last good data */ }
     setLoading(false);
   };
 
@@ -59,7 +60,7 @@ export default function TimeTracking() {
         <div className="space-y-2">
           {active.length === 0 ? (
             <p className="text-gray-500">{t('timeTracking.noActive')}</p>
-          ) : active.map((e: any) => (
+          ) : active.map((e: TimeEntry) => (
             <div key={e.id} className="bg-white rounded-lg shadow p-4 flex justify-between items-center">
               <div>
                 <p className="font-medium">{e.userName}</p>
@@ -83,7 +84,7 @@ export default function TimeTracking() {
             <tbody>
               {timesheet.length === 0 ? (
                 <tr><td colSpan={4} className="p-3 text-center text-gray-500">{t('timeTracking.noActive')}</td></tr>
-              ) : timesheet.map((e: any) => (
+              ) : timesheet.map((e: TimeEntry) => (
                 <tr key={e.id} className="border-t border-gray-100">
                   <td className="p-3">{e.userName}</td>
                   <td className="p-3">{new Date(e.clockIn).toLocaleString()}</td>

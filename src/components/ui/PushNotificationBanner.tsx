@@ -18,7 +18,7 @@ export function PushNotificationBanner({ slug }: PushNotificationBannerProps) {
 
   function handleDismiss() {
     setDismissed(true);
-    try { localStorage.setItem('pushBannerDismissed', 'true'); } catch {}
+    try { localStorage.setItem('pushBannerDismissed', 'true'); } catch { /* storage may be unavailable */ }
   }
 
   return (

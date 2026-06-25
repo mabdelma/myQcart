@@ -120,6 +120,10 @@ export function ModifierManagement() {
         </button>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-3 text-sm text-red-700">{error}</div>
+      )}
+
       {editingGroup && (
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md" role="dialog" aria-label={editingGroup.id ? 'Edit modifier group' : 'New modifier group'}>

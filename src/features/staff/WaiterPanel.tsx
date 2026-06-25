@@ -10,7 +10,7 @@ interface TableWithOrder extends TableData {
 }
 
 export function WaiterPanel() {
-  const { state: { tenant, user } } = useAuth();
+  const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [tables, setTables] = useState<TableWithOrder[]>([]);
   const [loading, setLoading] = useState(true);

@@ -17,11 +17,11 @@ export function VerifyEmail() {
       return;
     }
     api.post('/auth/verify-email', { token })
-      .then((res: any) => {
+      .then((res: { message?: string }) => {
         setStatus('success');
         setMessage(res.message || t('auth.verificationSent'));
       })
-      .catch((err: any) => {
+      .catch((err: { error?: string; message?: string }) => {
         setStatus('error');
         setMessage(err?.error || err?.message || t('auth.tokenExpired'));
       });

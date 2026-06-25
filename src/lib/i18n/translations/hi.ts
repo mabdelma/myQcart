@@ -769,4 +769,6 @@ export const translations: Record<TranslationKey, string> = {
   'analytics.peakHours': "व्यस्त समय हीटमैप",
   'analytics.loadError': "विश्लेषण डेटा लोड करने में विफल",
   'analytics.exports': "निर्यात",
+  'nav.viewStorefront': "रेस्तरां देखें",
+  'nav.viewStorefrontHint': "अपना सार्वजनिक ऑर्डरिंग पेज खोलें",
 };

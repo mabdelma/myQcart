@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { analyticsApi, paymentApi, orderApi } from '../../../lib/api';
+import { paymentApi, orderApi } from '../../../lib/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { Payment, Order } from '../../../lib/api/types';
 import { RevenueBreakdown } from './RevenueBreakdown';

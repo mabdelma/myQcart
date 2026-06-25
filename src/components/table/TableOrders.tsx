@@ -55,7 +55,7 @@ export function TableOrders() {
     }
   }
 
-  async function handlePayment(order: Order, method: string) {
+  async function handlePayment(order: Order) {
     setProcessingPayment(true);
     try {
       await orderApi.updateStatus(slug!, order.id, 'delivered');
@@ -202,7 +202,7 @@ export function TableOrders() {
                 Cancel
               </button>
               <button
-                onClick={() => selectedPaymentMethod && handlePayment(payingOrder, selectedPaymentMethod)}
+                onClick={() => selectedPaymentMethod && handlePayment(payingOrder)}
                 disabled={!selectedPaymentMethod || processingPayment}
                 className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50"
               >

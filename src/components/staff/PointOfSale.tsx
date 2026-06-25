@@ -42,7 +42,7 @@ export function PointOfSale() {
         setSelectedCategory(mainCategories[0].id);
       }
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Failed to load menu data');
     } finally {
       setLoading(false);

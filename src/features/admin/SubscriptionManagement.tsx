@@ -58,7 +58,7 @@ export function SubscriptionManagement() {
       if (status) setConnectStatus(status);
       if (bal) setBalance(bal);
       setPayouts(payoutList);
-    } catch {}
+    } catch { /* non-blocking: Connect data is optional */ }
     setConnectLoading(false);
   }, [slug]);
 
@@ -69,7 +69,7 @@ export function SubscriptionManagement() {
     try {
       await connectApi.createAccount(slug, email);
       await loadConnect();
-    } catch {}
+    } catch { /* non-blocking: Connect data is optional */ }
   };
 
   const handleOnboarding = async () => {
@@ -77,7 +77,7 @@ export function SubscriptionManagement() {
     try {
       const { url } = await connectApi.onboardingLink(slug);
       window.open(url, '_blank');
-    } catch {}
+    } catch { /* non-blocking: Connect data is optional */ }
   };
 
   const handlePayout = async () => {
@@ -87,7 +87,7 @@ export function SubscriptionManagement() {
       await connectApi.createPayout(slug, Math.round(payoutAmount * 100));
       setPayoutAmount(0);
       await loadConnect();
-    } catch {}
+    } catch { /* non-blocking: Connect data is optional */ }
     setPayoutCreating(false);
   };
 

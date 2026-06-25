@@ -3,33 +3,6 @@ import { useNavigate, useParams } from 'react-router';
 import { useCart } from '../../contexts/CartContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, MessageCircle } from 'lucide-react';
-import DOMPurify from 'dompurify';
-
-function renderModifiers(modifiers?: string) {
-  if (!modifiers) return null;
-  try {
-    const parsed = JSON.parse(modifiers);
-    if (Array.isArray(parsed)) {
-      return (
-        <div className="mt-1 space-x-1">
-          {parsed.map((m: unknown, i: number) => {
-            const mod = m as Record<string, unknown>;
-            const rawLabel = typeof mod === 'string' ? mod : mod.name && mod.choice ? `${mod.name}: ${mod.choice}` : JSON.stringify(mod);
-            const label = DOMPurify.sanitize(rawLabel);
-            return (
-              <span key={i} className="inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                {label}
-              </span>
-            );
-          })}
-        </div>
-      );
-    }
-    return <span className="text-xs text-gray-500">{modifiers}</span>;
-  } catch {
-    return <span className="text-xs text-gray-500">{modifiers}</span>;
-  }
-}
 
 export function CartPage() {
   const { t } = useI18n();
