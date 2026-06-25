@@ -784,4 +784,6 @@ export const translations: Record<TranslationKey, string> = {
   'nav.restaurantUrl': "O URL do seu restaurante",
   'common.copy': "Copiar",
   'common.copied': "Copiado!",
+  'analytics.hourlyTraffic': "Tráfego por hora",
+  'analytics.orders': "Pedidos",
 };

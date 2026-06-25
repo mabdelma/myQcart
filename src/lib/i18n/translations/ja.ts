@@ -784,4 +784,6 @@ export const translations: Record<TranslationKey, string> = {
   'nav.restaurantUrl': "レストランのURL",
   'common.copy': "コピー",
   'common.copied': "コピーしました！",
+  'analytics.hourlyTraffic': "時間帯別の注文",
+  'analytics.orders': "注文",
 };

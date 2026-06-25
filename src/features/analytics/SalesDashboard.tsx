@@ -6,7 +6,7 @@ import { DollarSign, ShoppingCart, Users, Clock, AlertTriangle, TrendingUp, Cred
 import { StatsCard } from '../../components/admin/StatsCard';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { PeakHoursHeatmap } from './PeakHoursHeatmap';
-import type { AnalyticsSummary, RevenueDataPoint, PeakHour, FinancialAnalytics, CategoryPerformanceItem, TrendingItem } from '../../lib/api/types';
+import type { AnalyticsSummary, RevenueDataPoint, PeakHour, FinancialAnalytics, CategoryPerformanceItem, TrendingItem, HourlyTrafficPoint } from '../../lib/api/types';
 
 export function SalesDashboard() {
   const { t } = useI18n();
@@ -20,19 +20,21 @@ export function SalesDashboard() {
   const [financial, setFinancial] = useState<FinancialAnalytics | null>(null);
   const [categoryPerf, setCategoryPerf] = useState<CategoryPerformanceItem[]>([]);
   const [trending, setTrending] = useState<TrendingItem[]>([]);
+  const [hourly, setHourly] = useState<HourlyTrafficPoint[]>([]);
 
   useEffect(() => {
     if (!slug) return;
     async function loadData() {
       if (!slug) return;
       try {
-        const [summaryData, revenueData, peakData, financialData, categoryData, trendingData] = await Promise.all([
+        const [summaryData, revenueData, peakData, financialData, categoryData, trendingData, hourlyData] = await Promise.all([
           analyticsApi.summary(slug),
           analyticsApi.revenue(slug),
           analyticsApi.peakHours(slug),
           analyticsApi.financial(slug).catch(() => null),
           analyticsApi.categoryPerformance(slug).catch(() => ({ data: [] })),
           analyticsApi.trending(slug).catch(() => ({ data: [] })),
+          analyticsApi.hourlyTraffic(slug).catch(() => ({ data: [] })),
         ]);
         setSummary(summaryData);
         setRevenue(revenueData.daily);
@@ -40,6 +42,7 @@ export function SalesDashboard() {
         setFinancial(financialData);
         setCategoryPerf(categoryData.data);
         setTrending(trendingData.data);
+        setHourly(hourlyData.data);
         setError(null);
       } catch {
         setError(t('analytics.loadError'));
@@ -171,6 +174,30 @@ export function SalesDashboard() {
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">{t('analytics.peakHours')}</h3>
         <PeakHoursHeatmap data={peakHours} />
+      </div>
+
+      {/* Hourly traffic — orders by hour of day */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="flex items-center gap-2 text-lg font-medium text-gray-900 mb-4"><Clock className="w-5 h-5 text-[#8B4513]" /> {t('analytics.hourlyTraffic')}</h3>
+        {hourly.length === 0 ? (
+          <p className="text-gray-500 text-sm">{t('analytics.noData')}</p>
+        ) : (() => {
+          const byHour = new Map(hourly.map((h) => [h.hour, h.orderCount]));
+          const maxOrders = Math.max(...hourly.map((h) => h.orderCount), 1);
+          return (
+            <div className="flex items-end gap-0.5 h-40">
+              {Array.from({ length: 24 }).map((_, h) => {
+                const count = byHour.get(h) || 0;
+                return (
+                  <div key={h} className="flex-1 flex flex-col items-center justify-end h-full" title={`${h}:00 — ${count} ${t('analytics.orders')}`}>
+                    <div className="w-full bg-[#8B4513] rounded-t hover:opacity-80 transition-opacity" style={{ height: `${count > 0 ? Math.max((count / maxOrders) * 100, 4) : 0}%` }} />
+                    {h % 6 === 0 && <span className="text-[10px] text-gray-400 mt-1">{h}:00</span>}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Financial overview — today / week / month */}

@@ -784,4 +784,6 @@ export const translations: Record<TranslationKey, string> = {
   'nav.restaurantUrl': "您的餐厅网址",
   'common.copy': "复制",
   'common.copied': "已复制！",
+  'analytics.hourlyTraffic': "每小时流量",
+  'analytics.orders': "订单",
 };
