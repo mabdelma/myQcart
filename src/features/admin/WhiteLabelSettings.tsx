@@ -187,15 +187,15 @@ export function WhiteLabelSettings() {
               <Palette className="h-6 w-6 text-white" />
             )}
             <span className="text-white font-semibold text-lg">{restaurantName || t('wl.yourRestaurant')}</span>
-            <span className="ml-auto text-white/70 text-xs bg-white/20 px-2 py-1 rounded">Table 1</span>
+            <span className="ml-auto text-white/70 text-xs bg-white/20 px-2 py-1 rounded">{t('table.tableNumber', { number: 1 })}</span>
           </div>
           <div className="p-4 bg-gray-50 flex gap-2 text-sm">
             <span className="px-3 py-1.5 rounded-md font-medium" style={{ backgroundColor: '#F5DEB3', color: primaryColor }}>
-              Menu
+              {t('nav.menu')}
             </span>
-            <span className="px-3 py-1.5 text-gray-400">Cart</span>
-            <span className="px-3 py-1.5 text-gray-400">Orders</span>
-            <span className="px-3 py-1.5 text-gray-400">Bill</span>
+            <span className="px-3 py-1.5 text-gray-400">{t('nav.cart')}</span>
+            <span className="px-3 py-1.5 text-gray-400">{t('nav.orders')}</span>
+            <span className="px-3 py-1.5 text-gray-400">{t('nav.bill')}</span>
           </div>
         </div>
       </div>

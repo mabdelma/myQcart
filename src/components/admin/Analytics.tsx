@@ -1,16 +1,18 @@
 ﻿import { Outlet, useNavigate, useLocation } from 'react-router';
-
-const tabs = [
-  { id: '', label: 'Dashboard' },
-  { id: 'sales', label: 'Reports' },
-  { id: 'exports', label: 'Exports' },
-];
+import { useI18n } from '../../contexts/I18nContext';
 
 export function Analytics() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const pathParts = location.pathname.split('/');
   const activeSub = pathParts[3] || '';
+
+  const tabs = [
+    { id: '', label: t('nav.dashboard') },
+    { id: 'sales', label: t('nav.reports') },
+    { id: 'exports', label: t('analytics.exports') },
+  ];
 
   return (
     <div className="space-y-6">
