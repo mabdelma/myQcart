@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
+import { formatPrice } from '../../lib/pricing';
 import { api, connectApi } from '../../lib/api';
 import type { ConnectAccountStatus, PayoutInfo } from '../../lib/api/types';
 import { CreditCard, Check, ChevronDown, ChevronUp, Loader2, DollarSign, Plus, ExternalLink } from 'lucide-react';
@@ -28,7 +29,7 @@ const PLANS: SubscriptionPlan[] = [
 ];
 
 export function SubscriptionManagement() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
@@ -145,7 +146,7 @@ export function SubscriptionManagement() {
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-sm text-gray-500">{t('common.price')}</p>
-              <p className="text-lg font-bold text-gray-900">${info.plan.price}/mo</p>
+              <p className="text-lg font-bold text-gray-900">{formatPrice(info.plan.price, locale)}{t('pricing.perMonth')}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-sm text-gray-500">{t('sub.renewal')}</p>
@@ -168,7 +169,7 @@ export function SubscriptionManagement() {
             return (
               <div key={plan.id} className={`border rounded-lg p-4 ${isCurrent ? 'border-[#8B4513] bg-[#F5DEB3]/20' : 'border-gray-200'}`}>
                 <h4 className="text-lg font-bold text-gray-900">{plan.name}</h4>
-                <p className="text-2xl font-bold text-[#8B4513] mt-2">${plan.price}<span className="text-sm text-gray-500 font-normal">/mo</span></p>
+                <p className="text-2xl font-bold text-[#8B4513] mt-2">{formatPrice(plan.price, locale)}<span className="text-sm text-gray-500 font-normal">{t('pricing.perMonth')}</span></p>
                 <ul className="mt-3 space-y-1">
                   {plan.features.map((f, i) => (
                     <li key={i} className="text-sm text-gray-600 flex items-center gap-1">
