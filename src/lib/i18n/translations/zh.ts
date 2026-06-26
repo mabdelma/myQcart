@@ -786,4 +786,6 @@ export const translations: Record<TranslationKey, string> = {
   'common.copied': "已复制！",
   'analytics.hourlyTraffic': "每小时流量",
   'analytics.orders': "订单",
+  'pricing.perMonth': "/月",
+  'pricing.fxNote': "以当地货币显示的参考价格 — 结算以美元处理。",
 };

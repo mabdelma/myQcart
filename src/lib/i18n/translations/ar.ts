@@ -797,4 +797,6 @@ export const translations: Record<TranslationKey, string> = {
   'common.copied': "تم النسخ!",
   'analytics.hourlyTraffic': "حركة الطلبات بالساعة",
   'analytics.orders': "الطلبات",
+  'pricing.perMonth': "/شهر",
+  'pricing.fxNote': "السعر تقريبي بعملتك المحلية — تتم الفوترة بالدولار الأمريكي.",
 };

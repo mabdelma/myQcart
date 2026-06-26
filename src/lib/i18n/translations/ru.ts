@@ -786,4 +786,6 @@ export const translations: Record<TranslationKey, string> = {
   'common.copied': "Скопировано!",
   'analytics.hourlyTraffic': "Трафик по часам",
   'analytics.orders': "Заказы",
+  'pricing.perMonth': "/мес",
+  'pricing.fxNote': "Ориентировочная цена в местной валюте — оплата проводится в USD.",
 };

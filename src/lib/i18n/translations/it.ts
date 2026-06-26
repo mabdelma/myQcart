@@ -785,4 +785,6 @@ export const translations: Record<TranslationKey, string> = {
   'common.copied': "Copiato!",
   'analytics.hourlyTraffic': "Traffico orario",
   'analytics.orders': "Ordini",
+  'pricing.perMonth': "/mese",
+  'pricing.fxNote': "Prezzo indicativo nella tua valuta locale — la fatturazione avviene in USD.",
 };

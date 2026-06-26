@@ -1,17 +1,18 @@
 import { useI18n } from '../../contexts/I18nContext';
+import { formatPrice } from '../../lib/pricing';
 import { Link } from 'react-router';
 import { Check } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
 
 export function PricingPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const plans = [
     {
       name: t('marketing.planStarterName'),
-      price: '$29',
-      period: '/month',
+      price: formatPrice(29, locale),
+      period: t('pricing.perMonth'),
       desc: t('pricing.planStarterDesc'),
       features: [
         t('pricing.planStarterFeature0'),
@@ -24,8 +25,8 @@ export function PricingPage() {
     },
     {
       name: t('marketing.planGrowthName'),
-      price: '$79',
-      period: '/month',
+      price: formatPrice(79, locale),
+      period: t('pricing.perMonth'),
       desc: t('pricing.planGrowthDesc'),
       features: [
         t('pricing.planGrowthFeature0'),
@@ -41,8 +42,8 @@ export function PricingPage() {
     },
     {
       name: t('marketing.planEnterpriseName'),
-      price: '$199',
-      period: '/month',
+      price: formatPrice(199, locale),
+      period: t('pricing.perMonth'),
       desc: t('pricing.planEnterpriseDesc'),
       features: [
         t('pricing.planEnterpriseFeature0'),
@@ -124,6 +125,7 @@ export function PricingPage() {
               </div>
             ))}
           </div>
+          {locale !== 'en' && <p className="text-center text-xs text-gray-400 mt-8">{t('pricing.fxNote')}</p>}
         </div>
       </section>
 

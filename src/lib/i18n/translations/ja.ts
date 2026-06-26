@@ -786,4 +786,6 @@ export const translations: Record<TranslationKey, string> = {
   'common.copied': "コピーしました！",
   'analytics.hourlyTraffic': "時間帯別の注文",
   'analytics.orders': "注文",
+  'pricing.perMonth': "/月",
+  'pricing.fxNote': "現地通貨での参考価格です — 請求は米ドルで処理されます。",
 };

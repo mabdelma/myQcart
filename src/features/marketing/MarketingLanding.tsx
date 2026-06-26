@@ -1,4 +1,5 @@
 import { useI18n } from '../../contexts/I18nContext';
+import { formatPrice } from '../../lib/pricing';
 import { Link } from 'react-router';
 import {
   QrCode, CreditCard, Clock, Users, ArrowRight, Shield, BarChart3,
@@ -8,7 +9,7 @@ import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
 
 export function MarketingLanding() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const stats = [
     { value: '300+', label: t('marketing.statRestaurants') },
@@ -33,9 +34,9 @@ export function MarketingLanding() {
   ];
 
   const plans = [
-    { name: t('marketing.planStarterName'), price: '$29', period: '/mo', desc: t('marketing.planStarterDesc'), features: [t('marketing.planStarterFeature0'), t('marketing.planStarterFeature1'), t('marketing.planStarterFeature2'), t('marketing.planStarterFeature3')] },
-    { name: t('marketing.planGrowthName'), price: '$79', period: '/mo', desc: t('marketing.planGrowthDesc'), features: [t('marketing.planGrowthFeature0'), t('marketing.planGrowthFeature1'), t('marketing.planGrowthFeature2'), t('marketing.planGrowthFeature3'), t('marketing.planGrowthFeature4')], popular: true },
-    { name: t('marketing.planEnterpriseName'), price: '$199', period: '/mo', desc: t('marketing.planEnterpriseDesc'), features: [t('marketing.planEnterpriseFeature0'), t('marketing.planEnterpriseFeature1'), t('marketing.planEnterpriseFeature2'), t('marketing.planEnterpriseFeature3'), t('marketing.planEnterpriseFeature4')] },
+    { name: t('marketing.planStarterName'), price: formatPrice(29, locale), period: t('pricing.perMonth'), desc: t('marketing.planStarterDesc'), features: [t('marketing.planStarterFeature0'), t('marketing.planStarterFeature1'), t('marketing.planStarterFeature2'), t('marketing.planStarterFeature3')] },
+    { name: t('marketing.planGrowthName'), price: formatPrice(79, locale), period: t('pricing.perMonth'), desc: t('marketing.planGrowthDesc'), features: [t('marketing.planGrowthFeature0'), t('marketing.planGrowthFeature1'), t('marketing.planGrowthFeature2'), t('marketing.planGrowthFeature3'), t('marketing.planGrowthFeature4')], popular: true },
+    { name: t('marketing.planEnterpriseName'), price: formatPrice(199, locale), period: t('pricing.perMonth'), desc: t('marketing.planEnterpriseDesc'), features: [t('marketing.planEnterpriseFeature0'), t('marketing.planEnterpriseFeature1'), t('marketing.planEnterpriseFeature2'), t('marketing.planEnterpriseFeature3'), t('marketing.planEnterpriseFeature4')] },
   ];
 
   const testimonials = [
@@ -242,6 +243,7 @@ export function MarketingLanding() {
               </div>
             ))}
           </div>
+          {locale !== 'en' && <p className="text-center text-xs text-gray-400 mt-6">{t('pricing.fxNote')}</p>}
         </div>
       </section>
 

@@ -786,4 +786,6 @@ export const translations: Record<TranslationKey, string> = {
   'common.copied': "कॉपी किया!",
   'analytics.hourlyTraffic': "प्रति घंटा ट्रैफ़िक",
   'analytics.orders': "ऑर्डर",
+  'pricing.perMonth': "/माह",
+  'pricing.fxNote': "आपकी स्थानीय मुद्रा में सांकेतिक मूल्य — बिलिंग USD में संसाधित होती है।",
 };
