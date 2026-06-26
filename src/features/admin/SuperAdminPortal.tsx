@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   ShieldCheck, Store, Users, ShoppingBag, DollarSign, LogOut, TrendingUp, Table, Coffee,
-  BookOpen, Mail, BarChart3, Plus, Search, Settings, X, ExternalLink, Activity, AtSign, Trash2, Copy, Check, Menu,
+  BookOpen, Mail, BarChart3, Plus, Search, Settings, X, ExternalLink, Activity, AtSign, Menu,
 } from 'lucide-react';
 import { adminApi, tenantApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox } from '../../lib/api/types';
+import { MailDashboard } from './MailDashboard';
+import type { PlatformAnalytics, TenantSummary, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog } from '../../lib/api/types';
 
 interface Row extends TenantSummary {
   users?: number;
@@ -40,42 +41,12 @@ export function SuperAdminPortal() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: '', slug: '', email: '', adminName: '', adminPassword: '' });
-  const [mailboxes, setMailboxes] = useState<Mailbox[]>([]);
-  const [mailDomain, setMailDomain] = useState('qlisted.com');
-  const [mailErr, setMailErr] = useState('');
-  const [mbBusy, setMbBusy] = useState(false);
-  const [mbForm, setMbForm] = useState({ localPart: '', name: '', password: '' });
-  const [newMailbox, setNewMailbox] = useState('');
-
-  const loadMailboxes = useCallback(() => {
-    adminApi.listMailboxes().then((r) => { setMailboxes(r.mailboxes); setMailDomain(r.domain); setMailErr(''); })
-      .catch((e) => setMailErr((e as { message?: string }).message || 'Email service unavailable'));
-  }, []);
-
-  async function createMailboxFn() {
-    if (!mbForm.localPart || mbForm.password.length < 8) { setMailErr('Address required + password ≥ 8 chars'); return; }
-    setMbBusy(true); setMailErr('');
-    try {
-      const r = await adminApi.createMailbox(mbForm);
-      setNewMailbox(r.email);
-      setMbForm({ localPart: '', name: '', password: '' });
-      loadMailboxes();
-    } catch (e) { setMailErr((e as { message?: string }).message || 'Create failed'); }
-    finally { setMbBusy(false); }
-  }
-  async function deleteMailboxFn(email: string) {
-    setMbBusy(true); setMailErr('');
-    try { await adminApi.deleteMailbox(email); loadMailboxes(); }
-    catch (e) { setMailErr((e as { message?: string }).message || 'Delete failed'); }
-    finally { setMbBusy(false); }
-  }
 
   useEffect(() => {
     if (section === 'users' && users.length === 0) adminApi.listUsers().then(setUsers).catch(() => {});
     if (section === 'leads' && leads.length === 0) adminApi.listLeads().then(setLeads).catch(() => {});
     if (section === 'analytics' && series.length === 0) adminApi.analyticsTimeseries().then((r) => setSeries(r.series)).catch(() => {});
     if (section === 'activity' && auditLogs.length === 0) adminApi.listAuditLogs().then(setAuditLogs).catch(() => {});
-    if (section === 'email' && mailboxes.length === 0) loadMailboxes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
@@ -473,77 +444,7 @@ export function SuperAdminPortal() {
             </div>
           )}
 
-          {/* ── Email mailboxes (mailcow) ── */}
-          {section === 'email' && (
-            <div className="space-y-6">
-              {mailErr && <div className="rounded-lg border-l-4 border-red-400 bg-red-50 p-3 text-sm text-red-700">{mailErr}</div>}
-
-              <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
-                <h2 className="font-semibold text-gray-900">Create mailbox</h2>
-                {newMailbox && (
-                  <div className="rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800 flex items-center gap-2">
-                    <Check className="w-4 h-4" /> Created <span className="font-mono">{newMailbox}</span>
-                  </div>
-                )}
-                <div className="grid sm:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Address</label>
-                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                      <input value={mbForm.localPart} onChange={(e) => setMbForm({ ...mbForm, localPart: e.target.value.replace(/[^a-z0-9._-]/gi, '').toLowerCase() })}
-                        placeholder="sales" className="flex-1 px-3 py-2 text-sm focus:outline-none" />
-                      <span className="px-2 text-sm text-gray-400 bg-gray-50 py-2">@{mailDomain}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Display name</label>
-                    <input value={mbForm.name} onChange={(e) => setMbForm({ ...mbForm, name: e.target.value })}
-                      placeholder="Sales" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Password</label>
-                    <div className="flex gap-1">
-                      <input value={mbForm.password} onChange={(e) => setMbForm({ ...mbForm, password: e.target.value })}
-                        placeholder="≥ 8 chars" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" />
-                      <button type="button" onClick={() => setMbForm({ ...mbForm, password: Math.random().toString(36).slice(2, 12) + 'A1!' })}
-                        className="shrink-0 rounded-md border border-gray-300 px-2 text-xs text-gray-500 hover:bg-gray-50">gen</button>
-                    </div>
-                  </div>
-                  <button onClick={createMailboxFn} disabled={mbBusy}
-                    className="flex items-center gap-2 rounded-lg bg-[#8B4513] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#5C4033] disabled:opacity-50">
-                    <Plus className="w-4 h-4" /> Create
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100"><h2 className="font-semibold text-gray-900">Mailboxes @{mailDomain} ({mailboxes.length})</h2></div>
-                {mailboxes.length === 0 ? <p className="p-6 text-gray-500">No mailboxes yet.</p> : (
-                  <div className="overflow-x-auto"><table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-gray-500 text-left"><tr>
-                      <th className="px-6 py-3 font-medium">Address</th><th className="px-6 py-3 font-medium">Name</th>
-                      <th className="px-6 py-3 font-medium">Status</th><th className="px-6 py-3 font-medium text-right">Action</th>
-                    </tr></thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {mailboxes.map((m) => (
-                        <tr key={m.username}>
-                          <td className="px-6 py-3 font-mono text-gray-900 flex items-center gap-2">{m.username}
-                            <button onClick={() => navigator.clipboard?.writeText(m.username)} className="text-gray-400 hover:text-gray-600" aria-label="Copy"><Copy className="w-3.5 h-3.5" /></button>
-                          </td>
-                          <td className="px-6 py-3 text-gray-500">{m.name || '—'}</td>
-                          <td className="px-6 py-3"><span className={`px-2 py-0.5 rounded-full text-xs ${m.active ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>{m.active ? 'Active' : 'Disabled'}</span></td>
-                          <td className="px-6 py-3 text-right">
-                            <button onClick={() => deleteMailboxFn(m.username)} disabled={mbBusy} className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">
-                              <Trash2 className="w-3.5 h-3.5" /> Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table></div>
-                )}
-              </div>
-            </div>
-          )}
+          {section === "email" && <MailDashboard />}
 
           {/* ── Activity (audit log) ── */}
           {section === 'activity' && (

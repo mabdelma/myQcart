@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias } from './types';
 
 // Auth
 export const authApi = {
@@ -30,8 +30,14 @@ export const adminApi = {
   analyticsTimeseries: () => api.get<{ series: TimePoint[] }>('/admin/analytics/timeseries'),
   listAuditLogs: () => api.get<AuditLog[]>('/admin/audit-logs'),
   listMailboxes: () => api.get<{ domain: string; mailboxes: Mailbox[] }>('/admin/mailboxes'),
-  createMailbox: (data: { localPart: string; name?: string; password: string }) => api.post<{ email: string }>('/admin/mailboxes', data),
+  createMailbox: (data: { localPart: string; name?: string; password: string; quotaMb?: number }) => api.post<{ email: string }>('/admin/mailboxes', data),
   deleteMailbox: (email: string) => api.post<{ deleted: string }>('/admin/mailboxes/delete', { email }),
+  setMailboxPassword: (email: string, password: string) => api.post<{ email: string }>('/admin/mailboxes/password', { email, password }),
+  editMailbox: (data: { email: string; name?: string; quotaMb?: number }) => api.post<{ email: string }>('/admin/mailboxes/edit', data),
+  setMailboxActive: (email: string, active: boolean) => api.post<{ email: string; active: boolean }>('/admin/mailboxes/active', { email, active }),
+  listAliases: () => api.get<{ domain: string; aliases: MailAlias[] }>('/admin/aliases'),
+  createAlias: (data: { address: string; goto: string }) => api.post<{ address: string; goto: string }>('/admin/aliases', data),
+  deleteAlias: (id: number) => api.post<{ deleted: number }>('/admin/aliases/delete', { id }),
   getSubscription: (tenantId: string) => api.get<AdminSubscription>(`/admin/subscriptions/${tenantId}`),
   cancelSubscription: (tenantId: string) => api.post<{ success?: boolean }>(`/admin/subscriptions/${tenantId}/cancel`, {}),
 };

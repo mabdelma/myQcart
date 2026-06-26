@@ -8,7 +8,7 @@ import { eq, desc, sql, and } from 'drizzle-orm';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { auditLog } from '../middleware/auditLog.js';
 import { logger } from '../lib/logger.js';
-import { listMailboxes, createMailbox, deleteMailbox, MAIL_DOMAIN } from '../services/mailcowService.js';
+import { listMailboxes, createMailbox, deleteMailbox, setMailboxPassword, editMailbox, setMailboxActive, listAliases, createAlias, deleteAlias, MAIL_DOMAIN } from '../services/mailcowService.js';
 import { updateTenantSettings } from '../services/tenantService.js';
 
 const admin = new Hono();
@@ -363,10 +363,11 @@ const mailboxSchema = z.object({
   localPart: z.string().min(1).max(64),
   name: z.string().max(100).optional(),
   password: z.string().min(8).max(128),
+  quotaMb: z.number().int().min(64).max(51200).optional(),
 });
 admin.post('/admin/mailboxes', authMiddleware, requireRole('super_admin'), zValidator('json', mailboxSchema), async (c) => {
-  const { localPart, name, password } = c.req.valid('json');
-  const result = await createMailbox(localPart, name || '', password);
+  const { localPart, name, password, quotaMb } = c.req.valid('json');
+  const result = await createMailbox(localPart, name || '', password, quotaMb);
   if ('error' in result) return c.json({ error: result.error }, result.status);
   return c.json(result.data, 201);
 });
@@ -376,5 +377,54 @@ admin.post('/admin/mailboxes/delete', authMiddleware, requireRole('super_admin')
   if ('error' in result) return c.json({ error: result.error }, result.status);
   return c.json(result.data);
 });
+
+// Reset a mailbox password.
+admin.post('/admin/mailboxes/password', authMiddleware, requireRole('super_admin'),
+  zValidator('json', z.object({ email: z.string().email(), password: z.string().min(8).max(128) })), async (c) => {
+    const { email, password } = c.req.valid('json');
+    const result = await setMailboxPassword(email, password);
+    if ('error' in result) return c.json({ error: result.error }, result.status);
+    return c.json(result.data);
+  });
+
+// Edit a mailbox's display name and/or quota (MB).
+admin.post('/admin/mailboxes/edit', authMiddleware, requireRole('super_admin'),
+  zValidator('json', z.object({ email: z.string().email(), name: z.string().max(100).optional(), quotaMb: z.number().int().min(64).max(51200).optional() })), async (c) => {
+    const { email, name, quotaMb } = c.req.valid('json');
+    const result = await editMailbox(email, { name, quotaMb });
+    if ('error' in result) return c.json({ error: result.error }, result.status);
+    return c.json(result.data);
+  });
+
+// Enable / disable a mailbox.
+admin.post('/admin/mailboxes/active', authMiddleware, requireRole('super_admin'),
+  zValidator('json', z.object({ email: z.string().email(), active: z.boolean() })), async (c) => {
+    const { email, active } = c.req.valid('json');
+    const result = await setMailboxActive(email, active);
+    if ('error' in result) return c.json({ error: result.error }, result.status);
+    return c.json(result.data);
+  });
+
+// ── Aliases / forwarders ──
+admin.get('/admin/aliases', authMiddleware, requireRole('super_admin'), async (c) => {
+  const result = await listAliases();
+  if ('error' in result) return c.json({ error: result.error }, result.status);
+  return c.json({ domain: MAIL_DOMAIN, aliases: result.data });
+});
+
+admin.post('/admin/aliases', authMiddleware, requireRole('super_admin'),
+  zValidator('json', z.object({ address: z.string().min(1).max(128), goto: z.string().min(1).max(255) })), async (c) => {
+    const { address, goto } = c.req.valid('json');
+    const result = await createAlias(address, goto);
+    if ('error' in result) return c.json({ error: result.error }, result.status);
+    return c.json(result.data, 201);
+  });
+
+admin.post('/admin/aliases/delete', authMiddleware, requireRole('super_admin'),
+  zValidator('json', z.object({ id: z.number().int() })), async (c) => {
+    const result = await deleteAlias(c.req.valid('json').id);
+    if ('error' in result) return c.json({ error: result.error }, result.status);
+    return c.json(result.data);
+  });
 
 export default admin;

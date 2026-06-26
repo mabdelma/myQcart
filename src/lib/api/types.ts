@@ -325,8 +325,17 @@ export interface Mailbox {
   username: string;
   name: string;
   active: boolean;
-  quota: number;
+  quotaMb: number;
+  usedMb: number;
   messages: number;
+  lastLogin: string | null;
+}
+
+export interface MailAlias {
+  id: number;
+  address: string;
+  goto: string;
+  active: boolean;
 }
 
 export interface AdminSubscription {

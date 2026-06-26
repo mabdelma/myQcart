@@ -57,20 +57,40 @@ const mcSucceeded = (json: unknown) =>
 const mcMessage = (json: unknown) =>
   (Array.isArray(json) && JSON.stringify((json[0] as { msg?: unknown })?.msg)) || 'mailcow error';
 
-export interface MailboxRow { username: string; name: string; active: boolean; quota: number; messages: number }
+export interface MailboxRow {
+  username: string;
+  name: string;
+  active: boolean;
+  quotaMb: number;
+  usedMb: number;
+  messages: number;
+  lastLogin: string | null;
+}
+
+export interface AliasRow { id: number; address: string; goto: string; active: boolean }
+
+// All mailbox writes are scoped to the Qlisted domain — never touch other tenants' mail.
+function inScope(email: string) {
+  return email.toLowerCase().endsWith(`@${MAIL_DOMAIN}`);
+}
 
 export async function listMailboxes() {
   if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
   try {
     const r = await mcRequest('GET', `/api/v1/get/mailbox/all/${MAIL_DOMAIN}`);
     const rows: MailboxRow[] = Array.isArray(r.json)
-      ? (r.json as Record<string, unknown>[]).map((m) => ({
-          username: String(m.username || ''),
-          name: String(m.name || ''),
-          active: m.active === 1 || m.active === '1',
-          quota: Number(m.quota || 0),
-          messages: Number(m.messages || 0),
-        }))
+      ? (r.json as Record<string, unknown>[]).map((m) => {
+          const last = (m.last_imap_login && String(m.last_imap_login)) || (m.last_pop3_login && String(m.last_pop3_login)) || '0';
+          return {
+            username: String(m.username || ''),
+            name: String(m.name || ''),
+            active: m.active === 1 || m.active === '1' || m.active === true,
+            quotaMb: Math.round(Number(m.quota || 0) / 1048576),
+            usedMb: Math.round(Number(m.quota_used || 0) / 1048576),
+            messages: Number(m.messages || 0),
+            lastLogin: last && last !== '0' ? new Date(Number(last) * 1000).toISOString() : null,
+          };
+        })
       : [];
     return { data: rows, status: 200 as const };
   } catch (e) {
@@ -79,14 +99,106 @@ export async function listMailboxes() {
   }
 }
 
-export async function createMailbox(localPart: string, name: string, password: string) {
+export async function setMailboxPassword(email: string, password: string) {
+  if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
+  if (!inScope(email)) return { error: 'Out of scope', status: 403 as const };
+  if (!password || password.length < 8) return { error: 'Password must be at least 8 characters', status: 400 as const };
+  try {
+    const r = await mcRequest('POST', '/api/v1/edit/mailbox', { items: [email], attr: { password, password2: password } });
+    if (!mcSucceeded(r.json)) return { error: mcMessage(r.json), status: 400 as const };
+    return { data: { email }, status: 200 as const };
+  } catch (e) {
+    logger.error({ err: e }, 'mailcow set-password failed');
+    return { error: 'Could not reach the mail server', status: 502 as const };
+  }
+}
+
+export async function editMailbox(email: string, input: { name?: string; quotaMb?: number }) {
+  if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
+  if (!inScope(email)) return { error: 'Out of scope', status: 403 as const };
+  const attr: Record<string, string> = {};
+  if (input.name !== undefined) attr.name = input.name;
+  if (input.quotaMb !== undefined) attr.quota = String(Math.max(64, Math.round(input.quotaMb)));
+  if (Object.keys(attr).length === 0) return { error: 'Nothing to update', status: 400 as const };
+  try {
+    const r = await mcRequest('POST', '/api/v1/edit/mailbox', { items: [email], attr });
+    if (!mcSucceeded(r.json)) return { error: mcMessage(r.json), status: 400 as const };
+    return { data: { email }, status: 200 as const };
+  } catch (e) {
+    logger.error({ err: e }, 'mailcow edit failed');
+    return { error: 'Could not reach the mail server', status: 502 as const };
+  }
+}
+
+export async function setMailboxActive(email: string, active: boolean) {
+  if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
+  if (!inScope(email)) return { error: 'Out of scope', status: 403 as const };
+  try {
+    const r = await mcRequest('POST', '/api/v1/edit/mailbox', { items: [email], attr: { active: active ? '1' : '0' } });
+    if (!mcSucceeded(r.json)) return { error: mcMessage(r.json), status: 400 as const };
+    return { data: { email, active }, status: 200 as const };
+  } catch (e) {
+    logger.error({ err: e }, 'mailcow set-active failed');
+    return { error: 'Could not reach the mail server', status: 502 as const };
+  }
+}
+
+export async function listAliases() {
+  if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
+  try {
+    const r = await mcRequest('GET', '/api/v1/get/alias/all');
+    const rows: AliasRow[] = Array.isArray(r.json)
+      ? (r.json as Record<string, unknown>[])
+          .filter((a) => String(a.address || '').toLowerCase().endsWith(`@${MAIL_DOMAIN}`))
+          .map((a) => ({
+            id: Number(a.id),
+            address: String(a.address || ''),
+            goto: String(a.goto || ''),
+            active: a.active === 1 || a.active === '1' || a.active === true,
+          }))
+      : [];
+    return { data: rows, status: 200 as const };
+  } catch (e) {
+    logger.error({ err: e }, 'mailcow alias list failed');
+    return { error: 'Could not reach the mail server', status: 502 as const };
+  }
+}
+
+export async function createAlias(address: string, goto: string) {
+  if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
+  const addr = address.trim().toLowerCase();
+  if (!addr.endsWith(`@${MAIL_DOMAIN}`)) return { error: 'Alias must be on the Qlisted domain', status: 400 as const };
+  if (!goto.trim()) return { error: 'Destination is required', status: 400 as const };
+  try {
+    const r = await mcRequest('POST', '/api/v1/add/alias', { address: addr, goto: goto.trim(), active: '1' });
+    if (!mcSucceeded(r.json)) return { error: mcMessage(r.json), status: 400 as const };
+    return { data: { address: addr, goto: goto.trim() }, status: 200 as const };
+  } catch (e) {
+    logger.error({ err: e }, 'mailcow alias create failed');
+    return { error: 'Could not reach the mail server', status: 502 as const };
+  }
+}
+
+export async function deleteAlias(id: number) {
+  if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
+  try {
+    const r = await mcRequest('POST', '/api/v1/delete/alias', [id]);
+    if (!mcSucceeded(r.json)) return { error: mcMessage(r.json), status: 400 as const };
+    return { data: { deleted: id }, status: 200 as const };
+  } catch (e) {
+    logger.error({ err: e }, 'mailcow alias delete failed');
+    return { error: 'Could not reach the mail server', status: 502 as const };
+  }
+}
+
+export async function createMailbox(localPart: string, name: string, password: string, quotaMb = 1024) {
   if (!mailEnabled()) return { error: 'Email service not configured', status: 501 as const };
   if (!/^[a-z0-9](?:[a-z0-9._-]{0,62})$/i.test(localPart)) return { error: 'Invalid address', status: 400 as const };
   if (!password || password.length < 8) return { error: 'Password must be at least 8 characters', status: 400 as const };
   try {
     const r = await mcRequest('POST', '/api/v1/add/mailbox', {
       local_part: localPart, domain: MAIL_DOMAIN, name: name || localPart,
-      password, password2: password, quota: '1024', active: '1',
+      password, password2: password, quota: String(Math.max(64, Math.round(quotaMb))), active: '1',
     });
     if (!mcSucceeded(r.json)) return { error: mcMessage(r.json), status: 400 as const };
     return { data: { email: `${localPart}@${MAIL_DOMAIN}` }, status: 200 as const };
