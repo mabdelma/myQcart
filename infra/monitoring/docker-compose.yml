@@ -63,7 +63,10 @@ services:
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
       REDIS_URL: redis://gt-redis:6379/0
       PORT: "8080"
-      GLITCHTIP_DOMAIN: https://errors.qlisted.com
+      # Keep this matching the live setup. Switch to https://errors.qlisted.com
+      # ONLY together with the Caddy vhost (errors.qlisted.com -> glitchtip-web:8080)
+      # + a stack recreate — otherwise GlitchTip rejects the host. See README/ops.
+      GLITCHTIP_DOMAIN: http://31.97.158.10:9000
       DEFAULT_FROM_EMAIL: errors@qlisted.com
       EMAIL_URL: consolemail://
       ENABLE_OPEN_USER_REGISTRATION: "True"
