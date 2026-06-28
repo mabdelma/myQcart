@@ -181,14 +181,33 @@ export async function createRealtimeSession(tenantId: string, tenantName: string
     + `• Recommend ONLY items on the menu below; never invent dishes, prices, or ingredients.\n`
     + `• Help with cravings, budget and dietary needs (vegetarian, vegan, gluten-free, spice, allergens); suggest a pairing or popular add-on when it feels natural, never pushy.\n`
     + `• Detect the language the guest speaks and respond in that SAME language.\n`
-    + `• You cannot place orders or take payment — tell the guest to add items on the on-screen menu and check out.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
+    + `• When the guest wants an item, call the add_to_cart tool with the item's name and quantity, then confirm out loud what you added. Only add items that appear on the menu below.\n`
+    + `• You cannot take payment — after adding items, tell the guest to review their cart and check out on screen.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
+
+  // Tool-calling lets the agent actually add items to the on-screen cart — the
+  // browser executes the tool against the live menu and returns the result.
+  const tools = [
+    {
+      type: 'function',
+      name: 'add_to_cart',
+      description: "Add a menu item to the guest's cart by name. Use the exact item name from the menu.",
+      parameters: {
+        type: 'object',
+        properties: {
+          item_name: { type: 'string', description: 'The menu item name to add' },
+          quantity: { type: 'integer', description: 'How many to add', minimum: 1 },
+        },
+        required: ['item_name'],
+      },
+    },
+  ];
 
   try {
     const res = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        session: { type: 'realtime', model: REALTIME_MODEL, instructions, audio: { output: { voice: 'alloy' } } },
+        session: { type: 'realtime', model: REALTIME_MODEL, instructions, tools, tool_choice: 'auto', audio: { output: { voice: 'alloy' } } },
       }),
     });
     if (!res.ok) {

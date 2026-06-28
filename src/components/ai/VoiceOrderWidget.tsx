@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Loader2, X } from 'lucide-react';
-import { aiApi } from '../../lib/api';
+import { aiApi, menuApi } from '../../lib/api';
 import { useI18n } from '../../contexts/I18nContext';
 import { WaveAvatar } from './WaveAvatar';
+import type { MenuItem } from '../../lib/api/types';
 
 type VoiceState = 'idle' | 'connecting' | 'live' | 'error';
 
@@ -12,26 +13,61 @@ type VoiceState = 'idle' | 'connecting' | 'live' | 'error';
  * reaches the browser). The model has the menu as spoken context. The live UI
  * mirrors Escoutly's immersive voice panel, re-themed to Qlisted's browns.
  */
-export function VoiceOrderWidget({ slug }: { slug: string }) {
+export function VoiceOrderWidget({ slug, onAddItem }: { slug: string; onAddItem?: (item: MenuItem, quantity: number) => void }) {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
   const [state, setState] = useState<VoiceState>('idle');
   const [speaking, setSpeaking] = useState(false);
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
   const micRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const acRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number>(0);
+  const itemsRef = useRef<MenuItem[]>([]);
+  const onAddRef = useRef(onAddItem);
+  onAddRef.current = onAddItem;
 
   useEffect(() => {
     if (!slug) return;
     aiApi.status(slug).then((r) => setEnabled(r.enabled)).catch(() => setEnabled(false));
+    // Cache the menu so the agent's add_to_cart tool can resolve spoken names.
+    menuApi.getFullMenu(slug).then((m) => { itemsRef.current = (m.items || []).filter((i) => i.available); }).catch(() => {});
   }, [slug]);
+
+  // Resolve a spoken item name to a menu item and add it via the parent's cart.
+  function executeAddToCart(name: string, quantity: number) {
+    const q = (name || '').toLowerCase().trim();
+    if (!q) return { ok: false, error: 'No item name given' };
+    const items = itemsRef.current;
+    const item =
+      items.find((i) => i.name.toLowerCase() === q) ||
+      items.find((i) => i.name.toLowerCase().includes(q) || q.includes(i.name.toLowerCase()));
+    if (!item) return { ok: false, error: `No menu item matches "${name}"` };
+    const qty = Math.max(1, Math.floor(quantity) || 1);
+    onAddRef.current?.(item, qty);
+    return { ok: true, added: item.name, quantity: qty, price: item.price };
+  }
+
+  // Handle OpenAI Realtime data-channel events — execute tool calls the agent makes.
+  function handleRealtimeEvent(evt: { type?: string; name?: string; call_id?: string; arguments?: string }) {
+    if (evt.type === 'response.function_call_arguments.done' && evt.call_id && (!evt.name || evt.name === 'add_to_cart')) {
+      let args: { item_name?: string; quantity?: number } = {};
+      try { args = JSON.parse(evt.arguments || '{}'); } catch { /* ignore */ }
+      const result = executeAddToCart(args.item_name || '', args.quantity || 1);
+      const dc = dcRef.current;
+      if (dc && dc.readyState === 'open') {
+        dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: evt.call_id, output: JSON.stringify(result) } }));
+        dc.send(JSON.stringify({ type: 'response.create' }));
+      }
+    }
+  }
 
   function cleanup() {
     cancelAnimationFrame(rafRef.current);
     acRef.current?.close().catch(() => {});
     acRef.current = null;
+    dcRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
     micRef.current?.getTracks().forEach((tr) => tr.stop());
@@ -75,7 +111,9 @@ export function VoiceOrderWidget({ slug }: { slug: string }) {
       };
       const track = mic.getAudioTracks()[0];
       if (track) pc.addTransceiver(track, { direction: 'sendrecv' });
-      pc.createDataChannel('oai-events');
+      const dc = pc.createDataChannel('oai-events');
+      dcRef.current = dc;
+      dc.onmessage = (e) => { try { handleRealtimeEvent(JSON.parse(e.data)); } catch { /* ignore non-JSON */ } };
       pc.onconnectionstatechange = () => {
         const s = pc.connectionState;
         if (s === 'failed' || s === 'disconnected' || s === 'closed') { cleanup(); setState('idle'); }

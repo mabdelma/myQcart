@@ -300,7 +300,7 @@ export function CustomerMenuPage() {
         )}
       </div>
       {slug && <CustomerAiWidget slug={slug} />}
-      {slug && <VoiceOrderWidget slug={slug} />}
+      {slug && <VoiceOrderWidget slug={slug} onAddItem={(item, qty) => { for (let i = 0; i < qty; i++) dispatch({ type: 'ADD', payload: { item } }); }} />}
     </CartCtx.Provider>
   );
 
