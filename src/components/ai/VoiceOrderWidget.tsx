@@ -13,7 +13,14 @@ type VoiceState = 'idle' | 'connecting' | 'live' | 'error';
  * reaches the browser). The model has the menu as spoken context. The live UI
  * mirrors Escoutly's immersive voice panel, re-themed to Qlisted's browns.
  */
-export function VoiceOrderWidget({ slug, onAddItem }: { slug: string; onAddItem?: (item: MenuItem, quantity: number) => void }) {
+type CartLine = { id: string; name: string; quantity: number };
+
+export function VoiceOrderWidget({ slug, onAddItem, onRemoveItem, getCart }: {
+  slug: string;
+  onAddItem?: (item: MenuItem, quantity: number) => void;
+  onRemoveItem?: (itemId: string) => void;
+  getCart?: () => { items: CartLine[]; total: number };
+}) {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
   const [state, setState] = useState<VoiceState>('idle');
@@ -25,17 +32,18 @@ export function VoiceOrderWidget({ slug, onAddItem }: { slug: string; onAddItem?
   const acRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number>(0);
   const itemsRef = useRef<MenuItem[]>([]);
-  const onAddRef = useRef(onAddItem);
-  onAddRef.current = onAddItem;
+  const callNamesRef = useRef<Record<string, string>>({}); // call_id -> tool name
+  const onAddRef = useRef(onAddItem); onAddRef.current = onAddItem;
+  const onRemoveRef = useRef(onRemoveItem); onRemoveRef.current = onRemoveItem;
+  const getCartRef = useRef(getCart); getCartRef.current = getCart;
 
   useEffect(() => {
     if (!slug) return;
     aiApi.status(slug).then((r) => setEnabled(r.enabled)).catch(() => setEnabled(false));
-    // Cache the menu so the agent's add_to_cart tool can resolve spoken names.
+    // Cache the menu so the cart tools can resolve spoken names.
     menuApi.getFullMenu(slug).then((m) => { itemsRef.current = (m.items || []).filter((i) => i.available); }).catch(() => {});
   }, [slug]);
 
-  // Resolve a spoken item name to a menu item and add it via the parent's cart.
   function executeAddToCart(name: string, quantity: number) {
     const q = (name || '').toLowerCase().trim();
     if (!q) return { ok: false, error: 'No item name given' };
@@ -49,12 +57,47 @@ export function VoiceOrderWidget({ slug, onAddItem }: { slug: string; onAddItem?
     return { ok: true, added: item.name, quantity: qty, price: item.price };
   }
 
-  // Handle OpenAI Realtime data-channel events — execute tool calls the agent makes.
-  function handleRealtimeEvent(evt: { type?: string; name?: string; call_id?: string; arguments?: string }) {
-    if (evt.type === 'response.function_call_arguments.done' && evt.call_id && (!evt.name || evt.name === 'add_to_cart')) {
+  function executeRemoveFromCart(name: string) {
+    const q = (name || '').toLowerCase().trim();
+    const cart = getCartRef.current?.();
+    if (!cart || cart.items.length === 0) return { ok: false, error: 'Cart is empty' };
+    const line =
+      cart.items.find((c) => c.name.toLowerCase() === q) ||
+      cart.items.find((c) => c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase()));
+    if (!line) return { ok: false, error: `"${name}" is not in the cart` };
+    onRemoveRef.current?.(line.id);
+    return { ok: true, removed: line.name };
+  }
+
+  function executeReadCart() {
+    const cart = getCartRef.current?.() ?? { items: [], total: 0 };
+    return {
+      ok: true,
+      items: cart.items.map((c) => ({ name: c.name, quantity: c.quantity })),
+      total: Number(cart.total.toFixed(2)),
+      empty: cart.items.length === 0,
+    };
+  }
+
+  function runTool(name: string, args: { item_name?: string; quantity?: number }) {
+    if (name === 'remove_from_cart') return executeRemoveFromCart(args.item_name || '');
+    if (name === 'read_cart') return executeReadCart();
+    return executeAddToCart(args.item_name || '', args.quantity || 1); // default add_to_cart
+  }
+
+  // Handle OpenAI Realtime data-channel events — run tool calls the agent makes.
+  function handleRealtimeEvent(evt: { type?: string; name?: string; call_id?: string; arguments?: string; item?: { type?: string; name?: string; call_id?: string } }) {
+    // The function name arrives on the item; cache it by call_id for the args.done event.
+    if (evt.type === 'response.output_item.added' && evt.item?.type === 'function_call' && evt.item.call_id && evt.item.name) {
+      callNamesRef.current[evt.item.call_id] = evt.item.name;
+      return;
+    }
+    if (evt.type === 'response.function_call_arguments.done' && evt.call_id) {
+      const name = evt.name || callNamesRef.current[evt.call_id] || 'add_to_cart';
       let args: { item_name?: string; quantity?: number } = {};
       try { args = JSON.parse(evt.arguments || '{}'); } catch { /* ignore */ }
-      const result = executeAddToCart(args.item_name || '', args.quantity || 1);
+      const result = runTool(name, args);
+      delete callNamesRef.current[evt.call_id];
       const dc = dcRef.current;
       if (dc && dc.readyState === 'open') {
         dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: evt.call_id, output: JSON.stringify(result) } }));

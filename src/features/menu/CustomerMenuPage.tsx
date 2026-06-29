@@ -300,7 +300,14 @@ export function CustomerMenuPage() {
         )}
       </div>
       {slug && <CustomerAiWidget slug={slug} />}
-      {slug && <VoiceOrderWidget slug={slug} onAddItem={(item, qty) => { for (let i = 0; i < qty; i++) dispatch({ type: 'ADD', payload: { item } }); }} />}
+      {slug && (
+        <VoiceOrderWidget
+          slug={slug}
+          onAddItem={(item, qty) => { for (let i = 0; i < qty; i++) dispatch({ type: 'ADD', payload: { item } }); }}
+          onRemoveItem={(id) => dispatch({ type: 'REMOVE', payload: id })}
+          getCart={() => ({ items: cartState.items.map((c) => ({ id: c.item.id, name: c.item.name, quantity: c.quantity })), total: cartState.total })}
+        />
+      )}
     </CartCtx.Provider>
   );
 

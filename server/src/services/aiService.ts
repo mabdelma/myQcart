@@ -181,11 +181,11 @@ export async function createRealtimeSession(tenantId: string, tenantName: string
     + `• Recommend ONLY items on the menu below; never invent dishes, prices, or ingredients.\n`
     + `• Help with cravings, budget and dietary needs (vegetarian, vegan, gluten-free, spice, allergens); suggest a pairing or popular add-on when it feels natural, never pushy.\n`
     + `• Detect the language the guest speaks and respond in that SAME language.\n`
-    + `• When the guest wants an item, call the add_to_cart tool with the item's name and quantity, then confirm out loud what you added. Only add items that appear on the menu below.\n`
-    + `• You cannot take payment — after adding items, tell the guest to review their cart and check out on screen.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
+    + `• When the guest wants an item, call add_to_cart with the item's name and quantity, then confirm out loud what you added. To take something off, call remove_from_cart. To answer "what's in my order / how much is it", call read_cart and report it. Only add items that appear on the menu below.\n`
+    + `• You cannot take payment — after building the cart, tell the guest to review it and check out on screen.\n\nMENU:\n${menuText || '(menu unavailable)'}`;
 
-  // Tool-calling lets the agent actually add items to the on-screen cart — the
-  // browser executes the tool against the live menu and returns the result.
+  // Tool-calling lets the agent act on the on-screen cart — the browser executes
+  // each tool against the live menu/cart and returns the result.
   const tools = [
     {
       type: 'function',
@@ -199,6 +199,22 @@ export async function createRealtimeSession(tenantId: string, tenantName: string
         },
         required: ['item_name'],
       },
+    },
+    {
+      type: 'function',
+      name: 'remove_from_cart',
+      description: "Remove an item from the guest's cart by name.",
+      parameters: {
+        type: 'object',
+        properties: { item_name: { type: 'string', description: 'The item name to remove' } },
+        required: ['item_name'],
+      },
+    },
+    {
+      type: 'function',
+      name: 'read_cart',
+      description: "Read back what is currently in the guest's cart and the running total.",
+      parameters: { type: 'object', properties: {} },
     },
   ];
 
