@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift } from './types';
 
 // Auth
 export const authApi = {
@@ -346,6 +346,15 @@ export const inventoryApi = {
   update: (slug: string, id: string, data: Partial<{ name: string; unit: string; currentStock: number; minStock: number; costPerUnit: number }>) =>
     api.put<{ success: boolean }>(`/r/${slug}/inventory/${id}`, data),
   delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/inventory/${id}`),
+};
+
+export const schedulingApi = {
+  list: (slug: string, week: string) => api.get<Shift[]>(`/r/${slug}/shifts?week=${week}`),
+  create: (slug: string, data: { userId: string; date: string; startTime: string; endTime: string; role?: string; notes?: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/shifts`, data),
+  update: (slug: string, id: string, data: Partial<{ date: string; startTime: string; endTime: string; role: string; notes: string }>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/shifts/${id}`, data),
+  delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/shifts/${id}`),
 };
 
 export const procurementApi = {

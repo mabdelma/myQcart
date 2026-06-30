@@ -493,6 +493,17 @@ export interface PnLReport {
   byMethod: { method: string; amount: number; count: number }[];
 }
 
+export interface Shift {
+  id: string;
+  userId: string;
+  userName?: string | null;
+  date: string;
+  startTime: string;
+  endTime: string;
+  role?: string | null;
+  notes?: string | null;
+}
+
 export interface StockItem {
   id: string;
   tenantId: string;

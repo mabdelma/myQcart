@@ -819,4 +819,8 @@ export const translations: Record<TranslationKey, string> = {
   'inventory.received': "已收货",
   'inventory.cancelled': "已取消",
   'inventory.draft': "草稿",
+  'scheduling.title': "员工排班",
+  'scheduling.thisWeek': "本周",
+  'scheduling.addShift': "添加班次",
+  'scheduling.staff': "员工",
 };

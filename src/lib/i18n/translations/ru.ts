@@ -819,4 +819,8 @@ export const translations: Record<TranslationKey, string> = {
   'inventory.received': "Получено",
   'inventory.cancelled': "Отменено",
   'inventory.draft': "Черновик",
+  'scheduling.title': "Расписание персонала",
+  'scheduling.thisWeek': "Эта неделя",
+  'scheduling.addShift': "Добавить смену",
+  'scheduling.staff': "Сотрудник",
 };

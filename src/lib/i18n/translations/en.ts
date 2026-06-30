@@ -1030,4 +1030,8 @@ export const translations: Record<TranslationKey, string> = {
   'inventory.received': "Received",
   'inventory.cancelled': "Cancelled",
   'inventory.draft': "Draft",
+  'scheduling.title': "Staff Scheduling",
+  'scheduling.thisWeek': "This week",
+  'scheduling.addShift': "Add shift",
+  'scheduling.staff': "Staff member",
 };

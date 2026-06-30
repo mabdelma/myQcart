@@ -819,4 +819,8 @@ export const translations: Record<TranslationKey, string> = {
   'inventory.received': "प्राप्त",
   'inventory.cancelled': "रद्द",
   'inventory.draft': "मसौदा",
+  'scheduling.title': "स्टाफ शेड्यूलिंग",
+  'scheduling.thisWeek': "इस सप्ताह",
+  'scheduling.addShift': "शिफ्ट जोड़ें",
+  'scheduling.staff': "स्टाफ सदस्य",
 };

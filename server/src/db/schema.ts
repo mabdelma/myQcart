@@ -516,3 +516,16 @@ export const purchaseOrderItems = pgTable('purchase_order_items', {
   quantity: doublePrecision('quantity').notNull().default(1),
   unitCost: doublePrecision('unit_cost').notNull().default(0),
 });
+
+// ── Staff scheduling: shifts (weekly rota) ──────────────────────────────────
+export const shifts = pgTable('shifts', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  userId: text('user_id').notNull().references(() => users.id),
+  date: text('date').notNull(),         // YYYY-MM-DD
+  startTime: text('start_time').notNull(), // HH:MM
+  endTime: text('end_time').notNull(),     // HH:MM
+  role: text('role'),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});

@@ -819,4 +819,8 @@ export const translations: Record<TranslationKey, string> = {
   'inventory.received': "受領済み",
   'inventory.cancelled': "キャンセル",
   'inventory.draft': "下書き",
+  'scheduling.title': "スタッフのシフト",
+  'scheduling.thisWeek': "今週",
+  'scheduling.addShift': "シフトを追加",
+  'scheduling.staff': "スタッフ",
 };
