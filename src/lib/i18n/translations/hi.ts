@@ -828,4 +828,7 @@ export const translations: Record<TranslationKey, string> = {
   'crm.spent': "खर्च",
   'crm.visits': "विज़िट",
   'crm.noCustomers': "अभी तक कोई ग्राहक नहीं।",
+  'crm.emailSegment': "सेगमेंट को ईमेल",
+  'crm.campaignSent': "{sent} ग्राहकों को भेजा गया",
+  'crm.send': "भेजें",
 };

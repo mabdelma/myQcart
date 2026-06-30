@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, X, Crown, UserMinus, Sparkles } from 'lucide-react';
-import { customerApi } from '../../lib/api';
+import { Search, X, Crown, UserMinus, Sparkles, Send } from 'lucide-react';
+import { customerApi, marketingApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatPrice } from '../../lib/pricing';
@@ -20,6 +20,9 @@ export function CustomersPage() {
   const [seg, setSeg] = useState<Segment>('all');
   const [editing, setEditing] = useState<Customer | null>(null);
   const [saving, setSaving] = useState(false);
+  const [campaign, setCampaign] = useState<{ subject: string; message: string } | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sentInfo, setSentInfo] = useState('');
 
   const load = useCallback(async () => {
     if (!slug) return;
@@ -48,6 +51,18 @@ export function CustomersPage() {
     { id: 'new', label: t('crm.new'), icon: Sparkles },
   ];
 
+  async function sendCampaign() {
+    if (!slug || !campaign) return;
+    const target = (seg === 'new' ? 'all' : seg) as 'all' | 'vip' | 'atRisk';
+    setSending(true); setSentInfo('');
+    try {
+      const r = await marketingApi.sendCampaign(slug, { segment: target, subject: campaign.subject, message: campaign.message });
+      setSentInfo(t('crm.campaignSent', { sent: r.sent }));
+      setCampaign(null);
+    } catch (e) { setSentInfo((e as { message?: string }).message || t('error.generic')); }
+    finally { setSending(false); }
+  }
+
   async function save() {
     if (!slug || !editing) return;
     setSaving(true);
@@ -61,12 +76,19 @@ export function CustomersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-gray-900">{t('nav.customers')}</h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('common.search')}
-            className="pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" />
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('common.search')}
+              className="pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" />
+          </div>
+          <button onClick={() => { setSentInfo(''); setCampaign({ subject: '', message: '' }); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
+            <Send className="w-4 h-4" /> {t('crm.emailSegment')}
+          </button>
         </div>
       </div>
+      {sentInfo && <div className="bg-green-50 border-l-4 border-green-400 p-3 text-sm text-green-700">{sentInfo}</div>}
 
       <div className="flex gap-2 flex-wrap">
         {segs.map(({ id, label, icon: Icon }) => (
@@ -127,6 +149,27 @@ export function CustomersPage() {
             <div className="flex justify-end gap-2">
               <button onClick={() => setEditing(null)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
               <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">{t('common.save')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {campaign && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setCampaign(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2"><Send className="w-4 h-4 text-[#8B4513]" /> {t('crm.emailSegment')}</h3>
+              <button onClick={() => setCampaign(null)}><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+            <p className="text-xs text-gray-500">→ {segs.find((s) => s.id === (seg === 'new' ? 'all' : seg))?.label}</p>
+            <input value={campaign.subject} onChange={(e) => setCampaign({ ...campaign, subject: e.target.value })} placeholder={t('contact.formSubject')} className="block w-full rounded-md border-gray-300 text-sm" />
+            <textarea value={campaign.message} onChange={(e) => setCampaign({ ...campaign, message: e.target.value })} rows={5} placeholder={t('contact.formMessage')} className="block w-full rounded-md border-gray-300 text-sm" />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setCampaign(null)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
+              <button onClick={sendCampaign} disabled={sending || !campaign.subject.trim() || !campaign.message.trim()}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">
+                <Send className="w-4 h-4" /> {sending ? `${t('common.loading')}...` : t('crm.send')}
+              </button>
             </div>
           </div>
         </div>

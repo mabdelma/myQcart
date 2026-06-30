@@ -348,6 +348,11 @@ export const inventoryApi = {
   delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/inventory/${id}`),
 };
 
+export const marketingApi = {
+  sendCampaign: (slug: string, data: { segment: 'all' | 'vip' | 'atRisk'; subject: string; message: string }) =>
+    api.post<{ sent: number; total: number }>(`/r/${slug}/marketing/campaign`, data),
+};
+
 export const customerApi = {
   list: (slug: string) => api.get<Customer[]>(`/r/${slug}/customers`),
   create: (slug: string, data: { name: string; email?: string; phone?: string }) =>

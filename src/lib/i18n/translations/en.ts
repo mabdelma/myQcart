@@ -1039,4 +1039,7 @@ export const translations: Record<TranslationKey, string> = {
   'crm.spent': "Spent",
   'crm.visits': "Visits",
   'crm.noCustomers': "No customers yet.",
+  'crm.emailSegment': "Email segment",
+  'crm.campaignSent': "Sent to {sent} customers",
+  'crm.send': "Send",
 };

@@ -56,6 +56,7 @@ import {
   inventoryRoutes,
   procurementRoutes,
   schedulingRoutes,
+  marketingRoutes,
   groupRoutes,
   onboardingRoutes,
   customerRoutes,
@@ -194,6 +195,7 @@ app.route('/api/r', aiRoutes);
 app.route('/api/r', inventoryRoutes);
 app.route('/api/r', procurementRoutes);
 app.route('/api/r', schedulingRoutes);
+app.route('/api/r', marketingRoutes);
 app.route('/api/r', customerRoutes);
 app.route('/api/r', integrationRoutes);
 app.route('/api/r', pushRoutes);

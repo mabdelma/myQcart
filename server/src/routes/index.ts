@@ -21,6 +21,7 @@ export { default as aiRoutes } from './ai.js';
 export { default as inventoryRoutes } from './inventory.js';
 export { default as procurementRoutes } from './procurement.js';
 export { default as schedulingRoutes } from './scheduling.js';
+export { default as marketingRoutes } from './marketing.js';
 export { default as groupRoutes } from './groups.js';
 export { default as onboardingRoutes } from './onboarding.js';
 export { default as customerRoutes } from './customers.js';
