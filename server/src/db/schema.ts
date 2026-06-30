@@ -485,3 +485,34 @@ export const reservations = pgTable('reservations', {
   createdAt: text('created_at').notNull().default(sql`now()`),
   updatedAt: text('updated_at').notNull().default(sql`now()`),
 });
+
+// ── Procurement: suppliers + purchase orders ────────────────────────────────
+export const suppliers = pgTable('suppliers', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  name: text('name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
+export const purchaseOrders = pgTable('purchase_orders', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  supplierId: text('supplier_id').references(() => suppliers.id),
+  status: text('status', { enum: ['draft', 'ordered', 'received', 'cancelled'] }).notNull().default('draft'),
+  total: doublePrecision('total').notNull().default(0),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  receivedAt: text('received_at'),
+});
+
+export const purchaseOrderItems = pgTable('purchase_order_items', {
+  id: text('id').primaryKey(),
+  poId: text('po_id').notNull().references(() => purchaseOrders.id),
+  stockItemId: text('stock_item_id').references(() => stockItems.id),
+  name: text('name').notNull(),
+  quantity: doublePrecision('quantity').notNull().default(1),
+  unitCost: doublePrecision('unit_cost').notNull().default(0),
+});

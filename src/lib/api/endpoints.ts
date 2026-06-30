@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion } from './types';
 
 // Auth
 export const authApi = {
@@ -337,4 +337,26 @@ export const taxCategoryApi = {
     api.put<TaxCategory>(`/r/${slug}/tax-categories/${id}`, data),
   delete: (slug: string, id: string) =>
     api.delete<{ success: boolean }>(`/r/${slug}/tax-categories/${id}`),
+};
+
+export const inventoryApi = {
+  list: (slug: string) => api.get<StockItem[]>(`/r/${slug}/inventory`),
+  create: (slug: string, data: { name: string; unit?: string; currentStock?: number; minStock?: number; costPerUnit?: number }) =>
+    api.post<{ id: string }>(`/r/${slug}/inventory`, data),
+  update: (slug: string, id: string, data: Partial<{ name: string; unit: string; currentStock: number; minStock: number; costPerUnit: number }>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/inventory/${id}`, data),
+  delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/inventory/${id}`),
+};
+
+export const procurementApi = {
+  listSuppliers: (slug: string) => api.get<Supplier[]>(`/r/${slug}/suppliers`),
+  createSupplier: (slug: string, data: { name: string; email?: string; phone?: string; notes?: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/suppliers`, data),
+  deleteSupplier: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/suppliers/${id}`),
+  listOrders: (slug: string) => api.get<PurchaseOrder[]>(`/r/${slug}/purchase-orders`),
+  suggest: (slug: string) => api.get<ReorderSuggestion[]>(`/r/${slug}/purchase-orders/suggest`),
+  createOrder: (slug: string, data: { supplierId?: string | null; notes?: string; items: { stockItemId?: string | null; name: string; quantity: number; unitCost: number }[] }) =>
+    api.post<{ id: string; total: number }>(`/r/${slug}/purchase-orders`, data),
+  receiveOrder: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/purchase-orders/${id}/receive`, {}),
+  cancelOrder: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/purchase-orders/${id}/cancel`, {}),
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette, Tag, Star, CalendarDays, Clock, Percent, Grid3X3, Gift, Timer, FileBarChart, Sparkles, X } from 'lucide-react';
+import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette, Tag, Star, CalendarDays, Clock, Percent, Grid3X3, Gift, Timer, FileBarChart, Sparkles, X, Boxes } from 'lucide-react';
 import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
 
 interface SidebarProps {
@@ -20,6 +20,7 @@ const groups = [
     { id: 'orders', icon: ClipboardList },
     { id: 'tables', icon: Table },
     { id: 'layout', icon: Grid3X3 },
+    { id: 'inventory', icon: Boxes },
     { id: 'reservations', icon: CalendarDays },
     { id: 'waitlist', icon: Clock },
   ] },
@@ -57,6 +58,7 @@ const tabKeyMap: Record<string, string> = {
   modifiers: 'nav.modifiers',
   tables: 'staff.tables',
   layout: 'layout.title',
+  inventory: 'nav.inventory',
   'payment-links': 'nav.paymentLinks',
   subscription: 'nav.subscription',
   branding: 'nav.branding',

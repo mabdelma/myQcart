@@ -493,6 +493,53 @@ export interface PnLReport {
   byMethod: { method: string; amount: number; count: number }[];
 }
 
+export interface StockItem {
+  id: string;
+  tenantId: string;
+  name: string;
+  unit: string;
+  currentStock: number;
+  minStock: number;
+  costPerUnit: number;
+}
+
+export interface Supplier {
+  id: string;
+  tenantId: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  poId: string;
+  stockItemId?: string | null;
+  name: string;
+  quantity: number;
+  unitCost: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplierId?: string | null;
+  status: 'draft' | 'ordered' | 'received' | 'cancelled';
+  total: number;
+  notes?: string | null;
+  createdAt: string;
+  receivedAt?: string | null;
+  items: PurchaseOrderItem[];
+}
+
+export interface ReorderSuggestion {
+  stockItemId: string;
+  name: string;
+  unit: string;
+  quantity: number;
+  unitCost: number;
+}
+
 export interface ForecastInsights {
   forecast: { date: string; dow: string; projected: number }[];
   forecast7Total: number;

@@ -9,6 +9,7 @@ import { UserManagement } from './UserManagement';
 import { NotificationsProvider } from '../../contexts/NotificationsContext';
 import { MenuManagement } from '../../features/admin/MenuManagement';
 import { TableManagement } from '../../features/admin/TableManagement';
+import { InventoryManagement } from '../../features/admin/InventoryManagement';
 import { OrderManagement } from '../../features/admin/OrderManagement';
 import { SettingsPage } from '../../features/admin/SettingsPage';
 import { ModifierManagement } from '../../features/admin/ModifierManagement';
@@ -50,6 +51,7 @@ const routes = [
   { path: 'waitlist', element: <WaitlistManagement /> },
   { path: 'tax', element: <TaxManagement /> },
   { path: 'layout', element: <TableLayoutEditor /> },
+  { path: 'inventory', element: <InventoryManagement /> },
   { path: 'gift-cards', element: <GiftCards /> },
   { path: 'time-tracking', element: <TimeTracking /> }
 ];
