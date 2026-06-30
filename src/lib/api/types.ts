@@ -492,3 +492,13 @@ export interface PnLReport {
   avgOrderValue: number;
   byMethod: { method: string; amount: number; count: number }[];
 }
+
+export interface ForecastInsights {
+  forecast: { date: string; dow: string; projected: number }[];
+  forecast7Total: number;
+  lowStock: { name: string; unit: string; currentStock: number; minStock: number; suggestedReorder: number; estCost: number }[];
+  reorderCost: number;
+  atRisk: { name: string; lastVisit: string | null; totalSpent: number; totalVisits: number }[];
+  topCustomers: { name: string; totalSpent: number; totalVisits: number }[];
+  narrative: string;
+}

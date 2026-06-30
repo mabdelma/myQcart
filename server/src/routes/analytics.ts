@@ -3,8 +3,19 @@ import { db, schema } from '../db/index.js';
 import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { resolveTenant } from '../middleware/tenant.js';
+import { getInsights } from '../services/forecastService.js';
 
 const analytics = new Hono();
+
+// Forecasting & Insights — 7-day revenue forecast, reorder suggestions,
+// churn-risk + top customers, with an optional AI narrative.
+analytics.get('/:slug/analytics/insights', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
+  const tenantId = c.get('tenantId');
+  const [t] = await db.select({ name: schema.tenants.name, currency: schema.tenants.currency })
+    .from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
+  const data = await getInsights(tenantId, t?.name || 'Restaurant', t?.currency || 'USD');
+  return c.json(data);
+});
 
 analytics.get('/:slug/analytics/summary', authMiddleware, requireRole('admin', 'manager'), resolveTenant, async (c) => {
   const tenantId = c.get('tenantId');

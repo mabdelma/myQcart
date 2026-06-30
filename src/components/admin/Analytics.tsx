@@ -11,6 +11,7 @@ export function Analytics() {
   const tabs = [
     { id: '', label: t('nav.dashboard') },
     { id: 'sales', label: t('nav.reports') },
+    { id: 'insights', label: t('analytics.insights') },
     { id: 'exports', label: t('analytics.exports') },
   ];
 

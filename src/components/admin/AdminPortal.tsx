@@ -16,6 +16,7 @@ import { SubscriptionManagement } from '../../features/admin/SubscriptionManagem
 import { WhiteLabelSettings } from '../../features/admin/WhiteLabelSettings';
 import { AnalyticsDashboard } from '../../features/analytics/AnalyticsDashboard';
 import { SalesDashboard } from '../../features/analytics/SalesDashboard';
+import { ForecastInsights } from '../../features/analytics/ForecastInsights';
 import { ScheduledExports } from '../../features/admin/ScheduledExports';
 import { CampaignManagement } from '../../features/admin/CampaignManagement';
 import { LoyaltyManagement } from '../../features/admin/LoyaltyManagement';
@@ -79,6 +80,7 @@ export function AdminPortal() {
               <Route path="analytics" element={<Analytics />}>
                 <Route index element={<AnalyticsDashboard />} />
                 <Route path="sales" element={<SalesDashboard />} />
+                <Route path="insights" element={<ForecastInsights />} />
                 <Route path="exports" element={<ScheduledExports />} />
               </Route>
               {routes.map(({ path, element }) => (

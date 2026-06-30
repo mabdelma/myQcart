@@ -205,6 +205,8 @@ export const analyticsApi = {
     api.get<{ data: PeakHour[] }>(`/r/${slug}/analytics/peak-hours`),
   categoryPerformance: (slug: string) =>
     api.get<{ data: CategoryPerformanceItem[] }>(`/r/${slug}/analytics/category-performance`),
+  insights: (slug: string) =>
+    api.get<import('./types').ForecastInsights>(`/r/${slug}/analytics/insights`),
   trending: (slug: string) =>
     api.get<{ data: TrendingItem[] }>(`/r/${slug}/analytics/trending`),
   recommendations: (slug: string, menuItemId?: string) =>
