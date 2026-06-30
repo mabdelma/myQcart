@@ -2,6 +2,9 @@ import OpenAI from 'openai';
 import { eq, sql } from 'drizzle-orm';
 import { db, schema } from '../db/index.js';
 import { computePnL } from './reportService.js';
+import { getInsights } from './forecastService.js';
+import { getLowStockItems } from './inventoryService.js';
+import { suggestReorder, createPurchaseOrder } from './procurementService.js';
 import { logger } from '../lib/logger.js';
 
 // OpenAI (same provider as the Escoutly app). Override the model with OPENAI_MODEL.
@@ -52,10 +55,45 @@ const adminTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       parameters: { type: 'object', properties: { limit: { type: 'integer', description: 'Max rows (default 10)' } } },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_insights',
+      description: 'Forward-looking insights: 7-day revenue forecast, low-stock reorder suggestions, churn-risk customers, and top customers by lifetime value.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_low_stock',
+      description: 'Stock items at or below their minimum level (need reordering), with current/min quantities and unit cost.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_reorder',
+      description: 'ACTION: create a purchase order that restocks every low-stock item (top up to ~2x minimum). Use only when the user asks you to reorder/restock. Returns the new PO id and total. The order is recorded for the manager to review and receive — no payment is taken.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
 ];
 
-async function runAdminTool(tenantId: string, name: string, input: Record<string, unknown>): Promise<string> {
+async function runAdminTool(tenantId: string, tenantName: string, currency: string, name: string, input: Record<string, unknown>): Promise<string> {
   switch (name) {
+    case 'get_insights':
+      return JSON.stringify(await getInsights(tenantId, tenantName, currency));
+    case 'get_low_stock':
+      return JSON.stringify(await getLowStockItems(tenantId));
+    case 'create_reorder': {
+      const items = await suggestReorder(tenantId);
+      if (items.length === 0) return JSON.stringify({ ok: false, message: 'Nothing is low on stock — no reorder needed.' });
+      const r = await createPurchaseOrder(tenantId, { items: items.map((s) => ({ stockItemId: s.stockItemId, name: s.name, quantity: s.quantity, unitCost: s.unitCost })) });
+      if ('error' in r) return JSON.stringify({ ok: false, error: r.error });
+      return JSON.stringify({ ok: true, purchaseOrderId: r.data.id, total: r.data.total, lines: items.length });
+    }
     case 'get_pnl':
       return JSON.stringify(await computePnL(tenantId, input.start as string | undefined, input.end as string | undefined));
     case 'get_popular_items': {
@@ -93,6 +131,7 @@ export async function adminCopilot(tenantId: string, tenantName: string, currenc
   const system = `You are Qlisted Copilot — the AI operations assistant built into the Qlisted restaurant platform, helping the owner/manager of "${tenantName}" run their restaurant. Currency: ${currency}.\n`
     + `• Always call the provided tools to fetch REAL data (sales, orders, menu, tables, staff, reservations, loyalty) before answering with figures — never invent numbers, names, or dates.\n`
     + `• Be concise, concrete and ACTIONABLE: surface trends, flag problems (slow sellers, low stock, no-shows, drop in revenue), and suggest the next step a busy operator can take right now.\n`
+    + `• You can look ahead with get_insights (revenue forecast, churn-risk customers, reorder needs) and you can ACT: when asked to reorder/restock, call create_reorder to raise a purchase order for everything that's low — then tell the owner the PO id and total so they can review and receive it. Never take payment.\n`
     + `• Format every monetary value in ${currency}; round sensibly and show short totals.\n`
     + `• You can also draft menu descriptions, promo/marketing copy, staff notices, and customer email in this restaurant's voice when asked.\n`
     + `• You ONLY ever have access to this one restaurant's data ("${tenantName}") — never mention or compare other restaurants.\n`
@@ -116,7 +155,7 @@ export async function adminCopilot(tenantId: string, tenantName: string, currenc
         let args: Record<string, unknown> = {};
         try { args = JSON.parse(tc.function.arguments || '{}'); } catch { /* ignore bad args */ }
         let out: string;
-        try { out = await runAdminTool(tenantId, tc.function.name, args); }
+        try { out = await runAdminTool(tenantId, tenantName, currency, tc.function.name, args); }
         catch (e) { out = JSON.stringify({ error: (e as Error).message }); }
         messages.push({ role: 'tool', tool_call_id: tc.id, content: out });
       }
