@@ -517,6 +517,20 @@ export const purchaseOrderItems = pgTable('purchase_order_items', {
   unitCost: doublePrecision('unit_cost').notNull().default(0),
 });
 
+// ── Hotel: rooms + housekeeping ─────────────────────────────────────────────
+export const rooms = pgTable('rooms', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  number: text('number').notNull(),
+  type: text('type'),
+  status: text('status', { enum: ['available', 'occupied', 'cleaning', 'maintenance', 'reserved'] }).notNull().default('available'),
+  floor: text('floor'),
+  guestName: text('guest_name'),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  updatedAt: text('updated_at').notNull().default(sql`now()`),
+});
+
 // ── Staff scheduling: shifts (weekly rota) ──────────────────────────────────
 export const shifts = pgTable('shifts', {
   id: text('id').primaryKey(),

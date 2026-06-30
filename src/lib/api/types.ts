@@ -507,6 +507,31 @@ export interface Customer {
   createdAt: string;
 }
 
+export type RoomStatus = 'available' | 'occupied' | 'cleaning' | 'maintenance' | 'reserved';
+
+export interface Room {
+  id: string;
+  tenantId: string;
+  number: string;
+  type?: string | null;
+  status: RoomStatus;
+  floor?: string | null;
+  guestName?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoomStats {
+  total: number;
+  occupancy: number;
+  available: number;
+  occupied: number;
+  cleaning: number;
+  maintenance: number;
+  reserved: number;
+}
+
 export interface Shift {
   id: string;
   userId: string;

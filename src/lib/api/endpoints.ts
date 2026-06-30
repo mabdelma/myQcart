@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats } from './types';
 
 // Auth
 export const authApi = {
@@ -351,6 +351,18 @@ export const inventoryApi = {
 export const marketingApi = {
   sendCampaign: (slug: string, data: { segment: 'all' | 'vip' | 'atRisk'; subject: string; message: string }) =>
     api.post<{ sent: number; total: number }>(`/r/${slug}/marketing/campaign`, data),
+};
+
+export const hotelApi = {
+  list: (slug: string) => api.get<Room[]>(`/r/${slug}/rooms`),
+  stats: (slug: string) => api.get<RoomStats>(`/r/${slug}/rooms/stats`),
+  create: (slug: string, data: { number: string; type?: string; floor?: string; notes?: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/rooms`, data),
+  update: (slug: string, id: string, data: Partial<{ number: string; type: string; floor: string; notes: string }>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/rooms/${id}`, data),
+  setStatus: (slug: string, id: string, status: RoomStatus, guestName?: string) =>
+    api.post<{ success: boolean }>(`/r/${slug}/rooms/${id}/status`, { status, guestName }),
+  delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/rooms/${id}`),
 };
 
 export const customerApi = {

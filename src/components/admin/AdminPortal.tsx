@@ -12,6 +12,7 @@ import { TableManagement } from '../../features/admin/TableManagement';
 import { InventoryManagement } from '../../features/admin/InventoryManagement';
 import { SchedulingPage } from '../../features/admin/SchedulingPage';
 import { CustomersPage } from '../../features/admin/CustomersPage';
+import { RoomsPage } from '../../features/admin/RoomsPage';
 import { OrderManagement } from '../../features/admin/OrderManagement';
 import { SettingsPage } from '../../features/admin/SettingsPage';
 import { ModifierManagement } from '../../features/admin/ModifierManagement';
@@ -56,6 +57,7 @@ const routes = [
   { path: 'inventory', element: <InventoryManagement /> },
   { path: 'schedule', element: <SchedulingPage /> },
   { path: 'customers', element: <CustomersPage /> },
+  { path: 'rooms', element: <RoomsPage /> },
   { path: 'gift-cards', element: <GiftCards /> },
   { path: 'time-tracking', element: <TimeTracking /> }
 ];
