@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer } from './types';
 
 // Auth
 export const authApi = {
@@ -346,6 +346,14 @@ export const inventoryApi = {
   update: (slug: string, id: string, data: Partial<{ name: string; unit: string; currentStock: number; minStock: number; costPerUnit: number }>) =>
     api.put<{ success: boolean }>(`/r/${slug}/inventory/${id}`, data),
   delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/inventory/${id}`),
+};
+
+export const customerApi = {
+  list: (slug: string) => api.get<Customer[]>(`/r/${slug}/customers`),
+  create: (slug: string, data: { name: string; email?: string; phone?: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/customers`, data),
+  update: (slug: string, id: string, data: Partial<{ name: string; email: string; phone: string; notes: string }>) =>
+    api.put<{ success: boolean }>(`/r/${slug}/customers/${id}`, data),
 };
 
 export const schedulingApi = {

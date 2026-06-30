@@ -493,6 +493,20 @@ export interface PnLReport {
   byMethod: { method: string; amount: number; count: number }[];
 }
 
+export interface Customer {
+  id: string;
+  tenantId: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  loyaltyPoints: number;
+  totalVisits: number;
+  totalSpent: number;
+  lastVisit?: string | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
 export interface Shift {
   id: string;
   userId: string;

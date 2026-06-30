@@ -834,4 +834,9 @@ export const translations: Record<TranslationKey, string> = {
   'scheduling.thisWeek': "Cette semaine",
   'scheduling.addShift': "Ajouter un créneau",
   'scheduling.staff': "Membre du personnel",
+  'crm.vip': "VIP",
+  'crm.new': "Nouveaux",
+  'crm.spent': "Dépensé",
+  'crm.visits': "Visites",
+  'crm.noCustomers': "Aucun client.",
 };

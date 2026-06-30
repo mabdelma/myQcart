@@ -823,4 +823,9 @@ export const translations: Record<TranslationKey, string> = {
   'scheduling.thisWeek': "今週",
   'scheduling.addShift': "シフトを追加",
   'scheduling.staff': "スタッフ",
+  'crm.vip': "VIP",
+  'crm.new': "新規",
+  'crm.spent': "利用額",
+  'crm.visits': "来店",
+  'crm.noCustomers': "顧客はまだいません。",
 };
