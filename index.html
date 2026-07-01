@@ -26,6 +26,46 @@
     <meta name="twitter:title" content="Qlisted — The operating system for hospitality" />
     <meta name="twitter:description" content="QR ordering, payments, inventory, staff, guests, forecasting, hotels, and an AI copilot that acts — one intelligent system for restaurants and hotels." />
     <meta name="twitter:image" content="https://qlisted.com/icon.svg" />
+
+    <!-- Structured data (schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://qlisted.com/#organization",
+          "name": "Qlisted",
+          "url": "https://qlisted.com/",
+          "logo": "https://qlisted.com/icon.svg",
+          "description": "The AI-native operating system for hospitality, for restaurants and hotels.",
+          "parentOrganization": { "@type": "Organization", "name": "Grand Minds Technology" },
+          "contactPoint": [
+            { "@type": "ContactPoint", "email": "support@qlisted.com", "contactType": "customer support" }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://qlisted.com/#website",
+          "name": "Qlisted",
+          "url": "https://qlisted.com/",
+          "publisher": { "@id": "https://qlisted.com/#organization" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Qlisted",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "description": "QR ordering, payments, inventory, staff scheduling, CRM, forecasting, hotel rooms, and an AI copilot that acts.",
+          "offers": [
+            { "@type": "Offer", "name": "Starter", "price": "29", "priceCurrency": "USD", "category": "monthly subscription" },
+            { "@type": "Offer", "name": "Growth", "price": "79", "priceCurrency": "USD", "category": "monthly subscription" },
+            { "@type": "Offer", "name": "Enterprise", "price": "199", "priceCurrency": "USD", "category": "monthly subscription" }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
