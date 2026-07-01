@@ -893,4 +893,9 @@ export const translations: Record<TranslationKey, string> = {
   'about.builtByBody': "Qlisted 由 Grand Minds Technology 设计并拥有，为养育和接待世界的行业打造实用软件。",
   'features.groupOperations': "运营",
   'features.groupGrowth': "增长营收",
+  'cookie.title': "Cookie",
+  'cookie.message': "我们使用必要 Cookie 来运行 Qlisted，并使用可选 Cookie 来改进它。您可以接受全部，或仅保留必要的。",
+  'cookie.accept': "接受全部",
+  'cookie.decline': "仅必要",
+  'cookie.learnMore': "了解更多",
 };

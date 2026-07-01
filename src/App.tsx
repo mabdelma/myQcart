@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { homePathForRole } from './lib/roleRoutes';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import { CookieConsent } from './components/ui/CookieConsent';
 import { MenuSkeleton } from './components/ui/MenuSkeleton';
 import { CartSkeleton } from './components/ui/CartSkeleton';
 
@@ -159,6 +160,7 @@ function App() {
           <Route path="*" element={<RestaurantLanding />} />
         </Routes>
         </Suspense>
+        <CookieConsent />
       </BrowserRouter>
     </AuthProvider>
     </I18nProvider>

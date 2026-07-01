@@ -893,4 +893,9 @@ export const translations: Record<TranslationKey, string> = {
   'about.builtByBody': "Qlisted को Grand Minds Technology ने डिज़ाइन किया है और इसका स्वामित्व उसी के पास है, जो दुनिया को खिलाने और ठहराने वाले व्यवसायों के लिए व्यावहारिक सॉफ़्टवेयर बनाती है।",
   'features.groupOperations': "संचालन",
   'features.groupGrowth': "आमदनी बढ़ाएं",
+  'cookie.title': "कुकीज़",
+  'cookie.message': "हम Qlisted को चलाने के लिए ज़रूरी कुकीज़ और उसे बेहतर बनाने के लिए वैकल्पिक कुकीज़ का उपयोग करते हैं। सभी स्वीकारें या केवल ज़रूरी रखें।",
+  'cookie.accept': "सभी स्वीकारें",
+  'cookie.decline': "केवल ज़रूरी",
+  'cookie.learnMore': "और जानें",
 };

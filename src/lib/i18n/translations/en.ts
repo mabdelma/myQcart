@@ -1104,4 +1104,9 @@ export const translations: Record<TranslationKey, string> = {
   'about.builtByBody': "Qlisted is designed and owned by Grand Minds Technology, building practical software for the businesses that feed and host the world.",
   'features.groupOperations': "Operations",
   'features.groupGrowth': "Grow revenue",
+  'cookie.title': "Cookies",
+  'cookie.message': "We use essential cookies to run Qlisted and optional ones to improve it. Accept all, or keep only what's necessary.",
+  'cookie.accept': "Accept all",
+  'cookie.decline': "Necessary only",
+  'cookie.learnMore': "Learn more",
 };

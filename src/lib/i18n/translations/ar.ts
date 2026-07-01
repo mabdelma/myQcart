@@ -904,4 +904,9 @@ export const translations: Record<TranslationKey, string> = {
   'about.builtByBody': "Qlisted مصمّمة ومملوكة لشركة Grand Minds Technology، التي تبني برمجيات عملية للأعمال التي تُطعم العالم وتستضيفه.",
   'features.groupOperations': "العمليات",
   'features.groupGrowth': "نمِّ الإيرادات",
+  'cookie.title': "ملفات تعريف الارتباط",
+  'cookie.message': "نستخدم ملفات تعريف ارتباط أساسية لتشغيل Qlisted وأخرى اختيارية لتحسينه. اقبل الكل أو أبقِ الضرورية فقط.",
+  'cookie.accept': "قبول الكل",
+  'cookie.decline': "الضرورية فقط",
+  'cookie.learnMore': "اعرف المزيد",
 };

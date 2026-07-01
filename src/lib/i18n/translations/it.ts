@@ -892,4 +892,9 @@ export const translations: Record<TranslationKey, string> = {
   'about.builtByBody': "Qlisted è progettata e di proprietà di Grand Minds Technology, che crea software pratico per le imprese che nutrono e ospitano il mondo.",
   'features.groupOperations': "Operatività",
   'features.groupGrowth': "Aumenta i ricavi",
+  'cookie.title': "Cookie",
+  'cookie.message': "Usiamo cookie essenziali per far funzionare Qlisted e altri facoltativi per migliorarlo. Accetta tutti o mantieni solo quelli necessari.",
+  'cookie.accept': "Accetta tutti",
+  'cookie.decline': "Solo necessari",
+  'cookie.learnMore': "Scopri di più",
 };

@@ -893,4 +893,9 @@ export const translations: Record<TranslationKey, string> = {
   'about.builtByBody': "Qlistedは、世界を養い、もてなす事業のための実用的なソフトウェアを手がける Grand Minds Technology が設計・運営しています。",
   'features.groupOperations': "オペレーション",
   'features.groupGrowth': "売上を伸ばす",
+  'cookie.title': "Cookie",
+  'cookie.message': "Qlistedはサービスのために必須のCookieを、改善のために任意のCookieを使用します。すべてを受け入れるか、必要なものだけを残せます。",
+  'cookie.accept': "すべて受け入れる",
+  'cookie.decline': "必要なもののみ",
+  'cookie.learnMore': "詳細",
 };
