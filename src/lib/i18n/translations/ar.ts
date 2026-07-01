@@ -858,4 +858,13 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.status.reserved': "محجوزة",
   'hotel.status.cleaning': "تنظيف",
   'hotel.status.maintenance': "صيانة",
+  'marketing.aiBadge': "جديد · مساعد الذكاء الاصطناعي",
+  'marketing.aiTitle': "تعرّف على المدير الذكي الذي ينجز المهام الروتينية",
+  'marketing.aiDesc': "اسأل عن المبيعات، واكتشف ما أوشك على النفاد، وأعد تعبئة المخزون، أو راسل عملاءك الدائمين — بلغة طبيعية. مساعد Qlisted لا يكتفي بالتقارير، بل ينفّذ.",
+  'marketing.aiItem1': "يتنبأ بإيرادات الأسبوع القادم ويرصد العملاء المعرضين للتسرّب",
+  'marketing.aiItem2': "يراقب المخزون ويعدّ أوامر الشراء عند انخفاضه",
+  'marketing.aiItem3': "يجيب عن “كيف كان أداؤنا هذا الأسبوع؟” في ثوانٍ، وبأي لغة",
+  'marketing.aiChatUser': "هل ينقصنا شيء لعطلة نهاية الأسبوع؟",
+  'marketing.aiChatBot': "٣ أصناف تحت الحد الأدنى. أعددت أمر شراء بقيمة 214 € — هل أرسله؟",
+  'marketing.aiChatPlaceholder': "اسأل أي شيء عن عملك…",
 };

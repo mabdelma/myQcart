@@ -847,4 +847,13 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.status.reserved': "已预订",
   'hotel.status.cleaning': "清洁中",
   'hotel.status.maintenance': "维护中",
+  'marketing.aiBadge': "全新 · AI 副驾",
+  'marketing.aiTitle': "认识替你搞定杂务的 AI 经理",
+  'marketing.aiDesc': "用自然语言询问销售、发现即将缺货的商品、补充库存，或联系常客。Qlisted 的副驾不只是汇报，它还会动手。",
+  'marketing.aiItem1': "预测下周营收，并标记有流失风险的常客",
+  'marketing.aiItem2': "监控库存，缺货时自动草拟采购单",
+  'marketing.aiItem3': "几秒内回答“本周业绩如何？”，支持任意语言",
+  'marketing.aiChatUser': "周末有什么快不够了吗？",
+  'marketing.aiChatBot': "有 3 项低于安全库存。我已草拟一张 €214 的采购单 — 需要我发送吗？",
+  'marketing.aiChatPlaceholder': "关于你的业务，尽管问…",
 };

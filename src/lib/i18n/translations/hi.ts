@@ -847,4 +847,13 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.status.reserved': "आरक्षित",
   'hotel.status.cleaning': "सफाई",
   'hotel.status.maintenance': "रखरखाव",
+  'marketing.aiBadge': "नया · AI कोपायलट",
+  'marketing.aiTitle': "उस AI मैनेजर से मिलिए जो रोज़मर्रा के काम संभालता है",
+  'marketing.aiDesc': "बिक्री के बारे में पूछें, कम होते सामान को पहचानें, स्टॉक भरें या अपने नियमित ग्राहकों को संदेश भेजें — सामान्य भाषा में। Qlisted का कोपायलट सिर्फ़ रिपोर्ट नहीं करता, वह काम करता है।",
+  'marketing.aiItem1': "अगले हफ़्ते की आमदनी का अनुमान लगाता है और छूटने के जोखिम वाले ग्राहकों को चिह्नित करता है",
+  'marketing.aiItem2': "इन्वेंट्री पर नज़र रखता है और स्टॉक कम होने पर खरीद ऑर्डर तैयार करता है",
+  'marketing.aiItem3': "“इस हफ़्ते कैसा रहा?” का जवाब सेकंडों में, किसी भी भाषा में देता है",
+  'marketing.aiChatUser': "क्या वीकेंड के लिए कुछ कम पड़ रहा है?",
+  'marketing.aiChatBot': "3 चीज़ें न्यूनतम से कम हैं। मैंने €214 का खरीद ऑर्डर तैयार किया है — भेज दूं?",
+  'marketing.aiChatPlaceholder': "अपने कारोबार के बारे में कुछ भी पूछें…",
 };

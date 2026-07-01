@@ -847,4 +847,13 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.status.reserved': "予約済み",
   'hotel.status.cleaning': "清掃中",
   'hotel.status.maintenance': "メンテナンス",
+  'marketing.aiBadge': "新機能 · AIコパイロット",
+  'marketing.aiTitle': "雑務をこなすAIマネージャー",
+  'marketing.aiDesc': "売上をたずね、在庫切れ間近の品を見つけ、補充し、常連客にメッセージを送る — すべて自然な言葉で。Qlistedのコパイロットは報告するだけでなく、実行します。",
+  'marketing.aiItem1': "翌週の売上を予測し、離れそうな常連客を知らせます",
+  'marketing.aiItem2': "在庫を監視し、少なくなると発注書を作成します",
+  'marketing.aiItem3': "「今週の調子は？」に数秒で、どの言語でも回答します",
+  'marketing.aiChatUser': "週末に足りなくなりそうなものはある？",
+  'marketing.aiChatBot': "3品が基準を下回っています。214ユーロの発注書を用意しました — 送信しますか？",
+  'marketing.aiChatPlaceholder': "ビジネスについて何でも聴いてください…",
 };

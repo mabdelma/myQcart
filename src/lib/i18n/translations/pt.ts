@@ -847,4 +847,13 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.status.reserved': "Reservado",
   'hotel.status.cleaning': "Limpeza",
   'hotel.status.maintenance': "Manutenção",
+  'marketing.aiBadge': "Novo · Copiloto IA",
+  'marketing.aiTitle': "Conheça o gestor com IA que faz o trabalho pesado",
+  'marketing.aiDesc': "Fragen Sie nach Umsätzen, erkennen Sie zur Neige gehende Artikel, füllen Sie Bestände auf oder schreiben Sie Ihren Stammgästen — in natürlicher Sprache. Der Copilot von Qlisted berichtet nicht nur, er handelt.",
+  'marketing.aiItem1': "Prevê a receita da próxima semana e sinaliza clientes em risco de abandono",
+  'marketing.aiItem2': "Vigia o inventário e prepara ordens de compra quando o stock baixa",
+  'marketing.aiItem3': "Responde “como corremos esta semana?” em segundos, em qualquer idioma",
+  'marketing.aiChatUser': "Falta-nos alguma coisa para o fim de semana?",
+  'marketing.aiChatBot': "Há 3 artigos abaixo do mínimo. Preparei uma ordem de compra de 214 € — quer que a envie?",
+  'marketing.aiChatPlaceholder': "Pergunte qualquer coisa sobre o seu negócio…",
 };

@@ -3,7 +3,7 @@ import { formatPrice } from '../../lib/pricing';
 import { Link } from 'react-router';
 import {
   QrCode, CreditCard, Clock, Users, ArrowRight, Shield, BarChart3,
-  Check, Star, Zap, Utensils, ChevronDown,
+  Check, Star, Zap, Utensils, ChevronDown, Sparkles, Bot, Send,
 } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
@@ -182,6 +182,32 @@ export function MarketingLanding() {
         </div>
       </section>
 
+      {/* ── AI copilot ──────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-28 bg-gradient-to-b from-white to-amber-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-14 items-center">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-[#8B4513]/10 text-[#8B4513] mb-6">
+              <Sparkles className="h-3.5 w-3.5 fill-current" /> {t('marketing.aiBadge')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{t('marketing.aiTitle')}</h2>
+            <p className="text-lg text-gray-600 mb-8">{t('marketing.aiDesc')}</p>
+            <ul className="space-y-4">
+              {[t('marketing.aiItem1'), t('marketing.aiItem2'), t('marketing.aiItem3')].map((b) => (
+                <li key={b} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#8B4513]/10">
+                    <Check className="h-4 w-4 text-[#8B4513]" />
+                  </span>
+                  <span className="text-gray-700">{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="w-full max-w-md lg:justify-self-end">
+            <AiChatMockup />
+          </div>
+        </div>
+      </section>
+
       {/* ── Testimonials ────────────────────────────────────────────────── */}
       <section className="py-20 md:py-28 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -341,6 +367,40 @@ function PhoneMockup() {
   );
 }
 
+/* ── CSS-only AI copilot chat mockup ──────────────────────────────────────── */
+function AiChatMockup() {
+  const { t } = useI18n();
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xl">
+      <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#8B4513] text-white">
+          <Sparkles className="h-4 w-4" />
+        </span>
+        <span className="text-sm font-semibold text-gray-900">{t('marketing.aiBadge')}</span>
+      </div>
+      <div className="space-y-3">
+        <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-[#8B4513] px-4 py-2.5 text-sm text-white">
+          {t('marketing.aiChatUser')}
+        </div>
+        <div className="flex max-w-[92%] items-start gap-2">
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[#8B4513]">
+            <Bot className="h-4 w-4" />
+          </span>
+          <div className="rounded-2xl rounded-bl-sm bg-gray-100 px-4 py-2.5 text-sm text-gray-800">
+            {t('marketing.aiChatBot')}
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2">
+        <span className="flex-1 truncate text-sm text-gray-400">{t('marketing.aiChatPlaceholder')}</span>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#8B4513] text-white">
+          <Send className="h-3.5 w-3.5" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* ── CSS-only dashboard mockup ────────────────────────────────────────────── */
 function DashboardMockup() {
   const { t } = useI18n();
@@ -351,7 +411,7 @@ function DashboardMockup() {
         <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
         <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-        <span className="ml-3 text-xs text-gray-400">qcart.app/dashboard</span>
+        <span className="ml-3 text-xs text-gray-400">qlisted.com/dashboard</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         {[{ l: t('marketing.statTodaySales'), v: '$1,284' }, { l: t('marketing.statOrders'), v: '96' }, { l: t('marketing.statAvgTicket'), v: '$13.4' }].map((k) => (

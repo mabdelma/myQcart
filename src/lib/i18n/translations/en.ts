@@ -1058,4 +1058,13 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.status.reserved': "Reserved",
   'hotel.status.cleaning': "Cleaning",
   'hotel.status.maintenance': "Maintenance",
+  'marketing.aiBadge': "New · AI copilot",
+  'marketing.aiTitle': "Meet the AI manager that runs the busywork",
+  'marketing.aiDesc': "Ask about sales, spot what's running low, reorder stock, or message your regulars — in plain language. Qlisted's copilot doesn't just report, it acts.",
+  'marketing.aiItem1': "Forecasts next week's revenue and flags regulars at risk of churning",
+  'marketing.aiItem2': "Watches inventory and drafts purchase orders when stock runs low",
+  'marketing.aiItem3': "Answers “how did we do this week?” in seconds, in any language",
+  'marketing.aiChatUser': "Are we low on anything for the weekend?",
+  'marketing.aiChatBot': "3 items are below par. I've drafted a €214 purchase order — want me to send it?",
+  'marketing.aiChatPlaceholder': "Ask anything about your business…",
 };
