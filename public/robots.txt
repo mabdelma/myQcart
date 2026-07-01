@@ -1,0 +1,25 @@
+# Qlisted — https://qlisted.com
+User-agent: *
+Allow: /$
+Allow: /features
+Allow: /pricing
+Allow: /about
+Allow: /contact
+Allow: /demo
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /refunds
+
+# Private / app areas — no need to index
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /staff
+Disallow: /signin
+Disallow: /onboarding
+Disallow: /pay/
+Disallow: /payment/
+Disallow: /r/
+Disallow: /table/
+
+Sitemap: https://qlisted.com/sitemap.xml

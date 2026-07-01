@@ -13,6 +13,7 @@ export function OnboardingWizard() {
 
   const [tenantInfo, setTenantInfo] = useState({ name: '', slug: '', email: '', phone: '' });
   const [adminInfo, setAdminInfo] = useState({ name: '', password: '' });
+  const [agreed, setAgreed] = useState(false);
   const [result, setResult] = useState<{ tenantSlug: string; adminEmail: string } | null>(null);
 
   async function handleSubmit() {
@@ -99,10 +100,20 @@ export function OnboardingWizard() {
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="Min 6 characters" />
             </div>
+            <label className="flex items-start gap-2 text-sm text-gray-600">
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#8B4513] focus:ring-[#8B4513]" />
+              <span>
+                I agree to the{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-[#8B4513] hover:underline">Terms of Service</a>{' '}
+                and{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-[#8B4513] hover:underline">Privacy Policy</a>.
+              </span>
+            </label>
             <div className="flex space-x-3">
               <button onClick={() => setStep('tenant')}
                 className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-md hover:bg-gray-300">Back</button>
-              <button onClick={handleSubmit} disabled={!adminInfo.name || !adminInfo.password || loading}
+              <button onClick={handleSubmit} disabled={!adminInfo.name || !adminInfo.password || !agreed || loading}
                 className="flex-1 bg-[#8B4513] text-white py-2 rounded-md hover:bg-[#5C4033] disabled:opacity-50">
                 {loading ? 'Creating...' : 'Complete Setup'}
               </button>
