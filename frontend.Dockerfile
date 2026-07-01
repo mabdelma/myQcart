@@ -4,6 +4,9 @@ COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 COPY tsconfig*.json vite.config.ts index.html ./
 COPY src/ ./src/
+# Vite's publicDir — static assets copied verbatim to the site root at build
+# time (robots.txt, sitemap.xml, icons, offline.html, push-handler.js).
+COPY public/ ./public/
 
 # Vite inlines VITE_* vars into the JS bundle AT BUILD TIME. The Stripe
 # publishable key must therefore be passed as a build arg here, or checkout
