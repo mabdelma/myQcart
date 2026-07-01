@@ -891,4 +891,6 @@ export const translations: Record<TranslationKey, string> = {
   'about.value3Desc': "Preferimos que o sistema faça o trabalho a dar-lhe mais um painel para ler. A IA age, consigo no comando.",
   'about.builtByTitle': "Criado pela Grand Minds Technology",
   'about.builtByBody': "A Qlisted é concebida e detida pela Grand Minds Technology, que cria software prático para os negócios que alimentam e alojam o mundo.",
+  'features.groupOperations': "Operações",
+  'features.groupGrowth': "Aumente a receita",
 };

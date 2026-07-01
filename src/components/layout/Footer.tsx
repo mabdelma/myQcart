@@ -5,15 +5,15 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <UtensilsCrossed className="h-6 w-6 text-[#8B4513]" />
               <span className="text-lg font-bold text-white">Qlisted</span>
             </div>
             <p className="text-sm text-gray-400 max-w-md">
-              Digital ordering and payment platform for modern restaurants.
-              Let your customers browse menus, order, and pay from their phones.
+              The AI-native operating system for hospitality — ordering, payments,
+              operations, and guests, for restaurants and hotels alike.
             </p>
           </div>
           <div>
@@ -29,6 +29,15 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link to="/about" className="text-sm hover:text-white transition-colors">About</Link></li>
               <li><Link to="/contact" className="text-sm hover:text-white transition-colors">Contact</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li><Link to="/privacy" className="text-sm hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="text-sm hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/cookies" className="text-sm hover:text-white transition-colors">Cookie Policy</Link></li>
+              <li><Link to="/refunds" className="text-sm hover:text-white transition-colors">Refunds</Link></li>
             </ul>
           </div>
         </div>

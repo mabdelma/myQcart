@@ -26,6 +26,10 @@ const MarketingLanding = lazy(() => import('./features/marketing/MarketingLandin
 const PricingPage = lazy(() => import('./features/marketing/PricingPage').then(m => ({ default: m.PricingPage })));
 const FeaturesPage = lazy(() => import('./features/marketing/FeaturesPage').then(m => ({ default: m.FeaturesPage })));
 const AboutPage = lazy(() => import('./features/marketing/AboutPage').then(m => ({ default: m.AboutPage })));
+const PrivacyPage = lazy(() => import('./features/marketing/legal/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('./features/marketing/legal/TermsPage').then(m => ({ default: m.TermsPage })));
+const CookiePolicyPage = lazy(() => import('./features/marketing/legal/CookiePolicyPage').then(m => ({ default: m.CookiePolicyPage })));
+const RefundPolicyPage = lazy(() => import('./features/marketing/legal/RefundPolicyPage').then(m => ({ default: m.RefundPolicyPage })));
 const ContactPage = lazy(() => import('./features/marketing/ContactPage').then(m => ({ default: m.ContactPage })));
 const DemoPage = lazy(() => import('./features/marketing/DemoPage').then(m => ({ default: m.DemoPage })));
 const TableFlowLayout = lazy(() => import('./features/restaurant/TableFlowLayout').then(m => ({ default: m.TableFlowLayout })));
@@ -113,6 +117,10 @@ function App() {
           <Route path="/pricing" element={<RouteErrorBoundary name="pricing"><PricingPage /></RouteErrorBoundary>} />
           <Route path="/features" element={<RouteErrorBoundary name="features"><FeaturesPage /></RouteErrorBoundary>} />
           <Route path="/about" element={<RouteErrorBoundary name="about"><AboutPage /></RouteErrorBoundary>} />
+          <Route path="/privacy" element={<RouteErrorBoundary name="privacy"><PrivacyPage /></RouteErrorBoundary>} />
+          <Route path="/terms" element={<RouteErrorBoundary name="terms"><TermsPage /></RouteErrorBoundary>} />
+          <Route path="/cookies" element={<RouteErrorBoundary name="cookies"><CookiePolicyPage /></RouteErrorBoundary>} />
+          <Route path="/refunds" element={<RouteErrorBoundary name="refunds"><RefundPolicyPage /></RouteErrorBoundary>} />
           <Route path="/contact" element={<RouteErrorBoundary name="contact"><ContactPage /></RouteErrorBoundary>} />
           <Route path="/demo" element={<RouteErrorBoundary name="demo"><DemoPage /></RouteErrorBoundary>} />
 

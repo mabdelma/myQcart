@@ -902,4 +902,6 @@ export const translations: Record<TranslationKey, string> = {
   'about.value3Desc': "نفضّل أن يقوم النظام بالعمل بدل أن نمنحك لوحة أخرى تقرؤها. الذكاء الاصطناعي يتصرف، وأنت المتحكم.",
   'about.builtByTitle': "من إنتاج Grand Minds Technology",
   'about.builtByBody': "Qlisted مصمّمة ومملوكة لشركة Grand Minds Technology، التي تبني برمجيات عملية للأعمال التي تُطعم العالم وتستضيفه.",
+  'features.groupOperations': "العمليات",
+  'features.groupGrowth': "نمِّ الإيرادات",
 };

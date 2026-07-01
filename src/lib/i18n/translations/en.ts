@@ -1102,4 +1102,6 @@ export const translations: Record<TranslationKey, string> = {
   'about.value3Desc': "We'd rather the system do the work than hand you another dashboard to read. The AI takes action, with you in control.",
   'about.builtByTitle': "Built by Grand Minds Technology",
   'about.builtByBody': "Qlisted is designed and owned by Grand Minds Technology, building practical software for the businesses that feed and host the world.",
+  'features.groupOperations': "Operations",
+  'features.groupGrowth': "Grow revenue",
 };

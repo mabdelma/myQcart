@@ -891,4 +891,6 @@ export const translations: Record<TranslationKey, string> = {
   'about.value3Desc': "見るためのダッシュボードをもう一つ増やすより、システムに働いてもらう方がよいと考えています。AIが行動し、主導権はあなたに。",
   'about.builtByTitle': "Grand Minds Technology が開発",
   'about.builtByBody': "Qlistedは、世界を養い、もてなす事業のための実用的なソフトウェアを手がける Grand Minds Technology が設計・運営しています。",
+  'features.groupOperations': "オペレーション",
+  'features.groupGrowth': "売上を伸ばす",
 };

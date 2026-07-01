@@ -891,4 +891,6 @@ export const translations: Record<TranslationKey, string> = {
   'about.value3Desc': "我们宁愿系统替你干活，也不愿再给你一块要盯着看的仪表盘。AI 会采取行动，而你掌握控制权。",
   'about.builtByTitle': "由 Grand Minds Technology 打造",
   'about.builtByBody': "Qlisted 由 Grand Minds Technology 设计并拥有，为养育和接待世界的行业打造实用软件。",
+  'features.groupOperations': "运营",
+  'features.groupGrowth': "增长营收",
 };

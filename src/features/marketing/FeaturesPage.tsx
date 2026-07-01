@@ -1,7 +1,8 @@
 import { useI18n } from '../../contexts/I18nContext';
 import {
   Smartphone, CreditCard, Users, BarChart3, Bell,
-  Globe, Clock, Printer, Sliders
+  Globe, Clock, Printer, Sliders,
+  Boxes, CalendarClock, Hotel, TrendingUp, Heart, Megaphone,
 } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
@@ -32,6 +33,22 @@ export function FeaturesPage() {
         { icon: BarChart3, title: t('features.itemAnalytics'), desc: t('features.itemAnalyticsDesc') },
         { icon: Sliders, title: t('features.itemMenuManagement'), desc: t('features.itemMenuManagementDesc') },
         { icon: Printer, title: t('features.itemPaymentLinks'), desc: t('features.itemPaymentLinksDesc') },
+      ],
+    },
+    {
+      title: t('features.groupOperations'),
+      items: [
+        { icon: Boxes, title: t('marketing.featureInventory'), desc: t('marketing.featureInventoryDesc') },
+        { icon: CalendarClock, title: t('marketing.featureScheduling'), desc: t('marketing.featureSchedulingDesc') },
+        { icon: Hotel, title: t('marketing.featureHotel'), desc: t('marketing.featureHotelDesc') },
+      ],
+    },
+    {
+      title: t('features.groupGrowth'),
+      items: [
+        { icon: TrendingUp, title: t('marketing.featureForecasting'), desc: t('marketing.featureForecastingDesc') },
+        { icon: Heart, title: t('marketing.featureCrm'), desc: t('marketing.featureCrmDesc') },
+        { icon: Megaphone, title: t('marketing.featureMarketing'), desc: t('marketing.featureMarketingDesc') },
       ],
     },
   ];
