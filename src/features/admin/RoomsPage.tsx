@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, BedDouble, Hotel } from 'lucide-react';
+import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User } from 'lucide-react';
 import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
-import type { Room, RoomStatus, RoomStats } from '../../lib/api/types';
+import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus } from '../../lib/api/types';
 
 const STATUSES: RoomStatus[] = ['available', 'occupied', 'reserved', 'cleaning', 'maintenance'];
+
+const BOOKING_STYLE: Record<BookingStatus, string> = {
+  booked: 'bg-amber-100 text-amber-800',
+  checked_in: 'bg-blue-100 text-blue-800',
+  checked_out: 'bg-gray-100 text-gray-600',
+  cancelled: 'bg-red-100 text-red-700 line-through',
+};
 
 const STATUS_STYLE: Record<RoomStatus, string> = {
   available: 'bg-green-50 border-green-300 text-green-800',
@@ -34,18 +41,45 @@ export function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [creating, setCreating] = useState<{ number: string; type: string; floor: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [view, setView] = useState<'rooms' | 'bookings'>('rooms');
+  const [bookings, setBookings] = useState<RoomBooking[]>([]);
+  const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
 
   const statusLabel = (s: RoomStatus) => t(`hotel.status.${s}`);
+  const bookingLabel = (s: BookingStatus) => t(`hotel.bookingStatus.${s}`);
 
   const load = useCallback(async () => {
     if (!slug) return;
     setLoading(true);
     try {
-      const [r, s] = await Promise.all([hotelApi.list(slug), hotelApi.stats(slug)]);
-      setRooms(r); setStats(s);
+      const [r, s, b] = await Promise.all([hotelApi.list(slug), hotelApi.stats(slug), hotelApi.listBookings(slug)]);
+      setRooms(r); setStats(s); setBookings(b);
     } catch { /* ignore */ } finally { setLoading(false); }
   }, [slug]);
   useEffect(() => { load(); }, [load]);
+
+  async function saveBooking() {
+    if (!slug || !booking || !booking.roomId || !booking.guestName.trim() || !booking.checkIn || !booking.checkOut) return;
+    setSaving(true);
+    try {
+      await hotelApi.createBooking(slug, {
+        roomId: booking.roomId, guestName: booking.guestName,
+        guestEmail: booking.guestEmail || undefined, guestPhone: booking.guestPhone || undefined,
+        checkIn: booking.checkIn, checkOut: booking.checkOut,
+      });
+      setBooking(null); await load();
+    } catch { /* ignore */ } finally { setSaving(false); }
+  }
+
+  async function bookingAction(id: string, action: 'check-in' | 'check-out' | 'cancel') {
+    if (!slug) return;
+    try {
+      if (action === 'check-in') await hotelApi.checkIn(slug, id);
+      else if (action === 'check-out') await hotelApi.checkOut(slug, id);
+      else await hotelApi.cancelBooking(slug, id);
+    } catch { /* ignore */ }
+    await load();
+  }
 
   const shown = rooms.filter((r) => filter === 'all' || r.status === filter);
 
@@ -93,13 +127,29 @@ export function RoomsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Hotel className="w-6 h-6 text-[#8B4513]" /> {t('hotel.title')}</h2>
-        <button onClick={() => setCreating({ number: '', type: '', floor: '' })}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
-          <Plus className="w-4 h-4" /> {t('hotel.addRoom')}
-        </button>
+        {view === 'rooms' ? (
+          <button onClick={() => setCreating({ number: '', type: '', floor: '' })}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
+            <Plus className="w-4 h-4" /> {t('hotel.addRoom')}
+          </button>
+        ) : (
+          <button onClick={() => setBooking({ roomId: '', guestName: '', guestEmail: '', guestPhone: '', checkIn: '', checkOut: '' })}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
+            <Plus className="w-4 h-4" /> {t('hotel.addBooking')}
+          </button>
+        )}
       </div>
 
-      {stats && (
+      <div className="flex gap-1 border-b border-gray-200">
+        {(['rooms', 'bookings'] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${view === v ? 'border-[#8B4513] text-[#8B4513]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+            {v === 'rooms' ? t('hotel.title') : t('hotel.bookings')}
+          </button>
+        ))}
+      </div>
+
+      {view === 'rooms' && stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {statCards.map((s) => (
             <div key={s.key} className="bg-white rounded-lg shadow p-4">
@@ -110,17 +160,19 @@ export function RoomsPage() {
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap">
-        {(['all', ...STATUSES] as const).map((s) => (
-          <button key={s} onClick={() => setFilter(s)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm ${filter === s ? 'bg-[#8B4513] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-            {s !== 'all' && <span className={`w-2 h-2 rounded-full ${DOT[s]}`} />}
-            {s === 'all' ? t('menu.categoryAll') : statusLabel(s)}
-          </button>
-        ))}
-      </div>
+      {view === 'rooms' && (
+        <div className="flex gap-2 flex-wrap">
+          {(['all', ...STATUSES] as const).map((s) => (
+            <button key={s} onClick={() => setFilter(s)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm ${filter === s ? 'bg-[#8B4513] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              {s !== 'all' && <span className={`w-2 h-2 rounded-full ${DOT[s]}`} />}
+              {s === 'all' ? t('menu.categoryAll') : statusLabel(s)}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {loading ? <p className="text-gray-500">{t('common.loading')}...</p> : shown.length === 0 ? (
+      {view === 'rooms' && (loading ? <p className="text-gray-500">{t('common.loading')}...</p> : shown.length === 0 ? (
         <p className="bg-white rounded-lg shadow p-6 text-center text-gray-500 text-sm">{t('hotel.noRooms')}</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -140,6 +192,69 @@ export function RoomsPage() {
             </div>
           ))}
         </div>
+      ))}
+
+      {view === 'bookings' && (
+        loading ? <p className="text-gray-500">{t('common.loading')}...</p> : bookings.length === 0 ? (
+          <p className="bg-white rounded-lg shadow p-6 text-center text-gray-500 text-sm">{t('hotel.noBookings')}</p>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50"><tr>
+                <th className="text-left p-3">{t('hotel.guest')}</th>
+                <th className="text-left p-3">{t('hotel.room')}</th>
+                <th className="text-left p-3 hidden sm:table-cell">{t('hotel.checkInDate')}</th>
+                <th className="text-left p-3 hidden sm:table-cell">{t('hotel.checkOutDate')}</th>
+                <th className="text-left p-3">{t('hotel.status.label')}</th>
+                <th className="p-3"></th>
+              </tr></thead>
+              <tbody>{bookings.map((b) => (
+                <tr key={b.id} className="border-t border-gray-100">
+                  <td className="p-3 font-medium text-gray-800 flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-gray-400" />{b.guestName}</td>
+                  <td className="p-3 text-gray-600">{b.roomNumber || '—'}</td>
+                  <td className="p-3 text-gray-500 hidden sm:table-cell">{b.checkIn}</td>
+                  <td className="p-3 text-gray-500 hidden sm:table-cell">{b.checkOut}</td>
+                  <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${BOOKING_STYLE[b.status]}`}>{bookingLabel(b.status)}</span></td>
+                  <td className="p-3 text-right whitespace-nowrap">
+                    {b.status === 'booked' && (
+                      <button onClick={() => bookingAction(b.id, 'check-in')} title={t('hotel.checkIn')} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1"><LogIn className="w-3.5 h-3.5" />{t('hotel.checkIn')}</button>
+                    )}
+                    {b.status === 'checked_in' && (
+                      <button onClick={() => bookingAction(b.id, 'check-out')} title={t('hotel.checkOut')} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 mr-1"><LogOut className="w-3.5 h-3.5" />{t('hotel.checkOut')}</button>
+                    )}
+                    {(b.status === 'booked' || b.status === 'checked_in') && (
+                      <button onClick={() => bookingAction(b.id, 'cancel')} title={t('common.cancel')} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-red-600 hover:bg-red-50"><Ban className="w-3.5 h-3.5" /></button>
+                    )}
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )
+      )}
+
+      {booking && (
+        <Modal title={t('hotel.addBooking')} onClose={() => setBooking(null)}>
+          <Field label={t('hotel.room')}>
+            <select value={booking.roomId} onChange={(e) => setBooking({ ...booking, roomId: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]">
+              <option value="">{t('hotel.selectRoom')}</option>
+              {rooms.map((r) => <option key={r.id} value={r.id}>{r.number}{r.type ? ` · ${r.type}` : ''}</option>)}
+            </select>
+          </Field>
+          <Field label={t('hotel.guest')}><input autoFocus value={booking.guestName} onChange={(e) => setBooking({ ...booking, guestName: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('common.email')}><input type="email" value={booking.guestEmail} onChange={(e) => setBooking({ ...booking, guestEmail: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+            <Field label={t('common.phone')}><input value={booking.guestPhone} onChange={(e) => setBooking({ ...booking, guestPhone: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('hotel.checkInDate')}><input type="date" value={booking.checkIn} onChange={(e) => setBooking({ ...booking, checkIn: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+            <Field label={t('hotel.checkOutDate')}><input type="date" value={booking.checkOut} min={booking.checkIn || undefined} onChange={(e) => setBooking({ ...booking, checkOut: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setBooking(null)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
+            <button onClick={saveBooking} disabled={saving || !booking.roomId || !booking.guestName.trim() || !booking.checkIn || !booking.checkOut} className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">{t('common.save')}</button>
+          </div>
+        </Modal>
       )}
 
       {creating && (

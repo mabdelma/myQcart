@@ -531,6 +531,22 @@ export const rooms = pgTable('rooms', {
   updatedAt: text('updated_at').notNull().default(sql`now()`),
 });
 
+// ── Hotel: reservations / check-in ──────────────────────────────────────────
+export const roomBookings = pgTable('room_bookings', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  roomId: text('room_id').notNull().references(() => rooms.id),
+  guestName: text('guest_name').notNull(),
+  guestEmail: text('guest_email'),
+  guestPhone: text('guest_phone'),
+  checkIn: text('check_in').notNull(), // YYYY-MM-DD
+  checkOut: text('check_out').notNull(), // YYYY-MM-DD
+  status: text('status', { enum: ['booked', 'checked_in', 'checked_out', 'cancelled'] }).notNull().default('booked'),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+  updatedAt: text('updated_at').notNull().default(sql`now()`),
+});
+
 // ── Staff scheduling: shifts (weekly rota) ──────────────────────────────────
 export const shifts = pgTable('shifts', {
   id: text('id').primaryKey(),

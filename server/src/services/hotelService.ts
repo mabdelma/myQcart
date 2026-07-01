@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, desc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 
 export type RoomStatus = 'available' | 'occupied' | 'cleaning' | 'maintenance' | 'reserved';
@@ -47,6 +47,88 @@ export async function setRoomStatus(tenantId: string, id: string, status: RoomSt
 
 export async function deleteRoom(tenantId: string, id: string) {
   await db.delete(schema.rooms).where(and(eq(schema.rooms.id, id), eq(schema.rooms.tenantId, tenantId)));
+  return { success: true };
+}
+
+// ── Reservations / check-in ─────────────────────────────────────────────────
+
+/** Bookings for a property, newest check-in first, with the room number joined. */
+export async function listBookings(tenantId: string) {
+  return db
+    .select({
+      id: schema.roomBookings.id,
+      roomId: schema.roomBookings.roomId,
+      roomNumber: schema.rooms.number,
+      guestName: schema.roomBookings.guestName,
+      guestEmail: schema.roomBookings.guestEmail,
+      guestPhone: schema.roomBookings.guestPhone,
+      checkIn: schema.roomBookings.checkIn,
+      checkOut: schema.roomBookings.checkOut,
+      status: schema.roomBookings.status,
+      notes: schema.roomBookings.notes,
+    })
+    .from(schema.roomBookings)
+    .leftJoin(schema.rooms, eq(schema.roomBookings.roomId, schema.rooms.id))
+    .where(eq(schema.roomBookings.tenantId, tenantId))
+    .orderBy(desc(schema.roomBookings.checkIn));
+}
+
+export async function createBooking(
+  tenantId: string,
+  data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string; notes?: string },
+) {
+  // Room must belong to this tenant.
+  const room = await db.select({ id: schema.rooms.id }).from(schema.rooms)
+    .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId)));
+  if (room.length === 0) return { error: 'room not found' as const };
+  if (data.checkOut <= data.checkIn) return { error: 'check-out must be after check-in' as const };
+  const id = uuid();
+  await db.insert(schema.roomBookings).values({ id, tenantId, ...data });
+  // Mark the room reserved (unless already occupied) so the board reflects the hold.
+  await db.update(schema.rooms).set({ status: 'reserved', guestName: data.guestName, updatedAt: new Date().toISOString() })
+    .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId), eq(schema.rooms.status, 'available')));
+  return { id };
+}
+
+async function bookingWithRoom(tenantId: string, id: string) {
+  const rows = await db.select().from(schema.roomBookings)
+    .where(and(eq(schema.roomBookings.id, id), eq(schema.roomBookings.tenantId, tenantId)));
+  return rows[0];
+}
+
+/** Check a guest in: booking → checked_in, room → occupied with the guest name. */
+export async function checkIn(tenantId: string, id: string) {
+  const b = await bookingWithRoom(tenantId, id);
+  if (!b) return { error: 'booking not found' as const };
+  const now = new Date().toISOString();
+  await db.update(schema.roomBookings).set({ status: 'checked_in', updatedAt: now })
+    .where(and(eq(schema.roomBookings.id, id), eq(schema.roomBookings.tenantId, tenantId)));
+  await db.update(schema.rooms).set({ status: 'occupied', guestName: b.guestName, updatedAt: now })
+    .where(and(eq(schema.rooms.id, b.roomId), eq(schema.rooms.tenantId, tenantId)));
+  return { success: true };
+}
+
+/** Check a guest out: booking → checked_out, room → cleaning (housekeeping), guest cleared. */
+export async function checkOut(tenantId: string, id: string) {
+  const b = await bookingWithRoom(tenantId, id);
+  if (!b) return { error: 'booking not found' as const };
+  const now = new Date().toISOString();
+  await db.update(schema.roomBookings).set({ status: 'checked_out', updatedAt: now })
+    .where(and(eq(schema.roomBookings.id, id), eq(schema.roomBookings.tenantId, tenantId)));
+  await db.update(schema.rooms).set({ status: 'cleaning', guestName: null, updatedAt: now })
+    .where(and(eq(schema.rooms.id, b.roomId), eq(schema.rooms.tenantId, tenantId)));
+  return { success: true };
+}
+
+/** Cancel a booking. If the room was only reserved (not occupied), free it back up. */
+export async function cancelBooking(tenantId: string, id: string) {
+  const b = await bookingWithRoom(tenantId, id);
+  if (!b) return { error: 'booking not found' as const };
+  const now = new Date().toISOString();
+  await db.update(schema.roomBookings).set({ status: 'cancelled', updatedAt: now })
+    .where(and(eq(schema.roomBookings.id, id), eq(schema.roomBookings.tenantId, tenantId)));
+  await db.update(schema.rooms).set({ status: 'available', guestName: null, updatedAt: now })
+    .where(and(eq(schema.rooms.id, b.roomId), eq(schema.rooms.tenantId, tenantId), eq(schema.rooms.status, 'reserved')));
   return { success: true };
 }
 

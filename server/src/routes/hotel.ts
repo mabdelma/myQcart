@@ -33,4 +33,28 @@ hotel.post('/:slug/rooms/:id/status', ...adminMgr, zValidator('json', statusSche
 hotel.delete('/:slug/rooms/:id', ...adminMgr, async (c) =>
   c.json(await svc.deleteRoom(c.get('tenantId'), c.req.param('id')!)));
 
+// ── Reservations / check-in ─────────────────────────────────────────────────
+const bookingSchema = z.object({
+  roomId: z.string().min(1),
+  guestName: z.string().min(1),
+  guestEmail: z.string().email().optional().or(z.literal('')),
+  guestPhone: z.string().optional(),
+  checkIn: z.string().min(1),
+  checkOut: z.string().min(1),
+  notes: z.string().optional(),
+});
+
+hotel.get('/:slug/bookings', ...adminMgr, async (c) => c.json(await svc.listBookings(c.get('tenantId'))));
+hotel.post('/:slug/bookings', ...adminMgr, zValidator('json', bookingSchema), async (c) => {
+  const b = c.req.valid('json');
+  const r = await svc.createBooking(c.get('tenantId'), { ...b, guestEmail: b.guestEmail || undefined });
+  return 'error' in r ? c.json(r, 400) : c.json(r, 201);
+});
+hotel.post('/:slug/bookings/:id/check-in', ...adminMgr, async (c) =>
+  c.json(await svc.checkIn(c.get('tenantId'), c.req.param('id')!)));
+hotel.post('/:slug/bookings/:id/check-out', ...adminMgr, async (c) =>
+  c.json(await svc.checkOut(c.get('tenantId'), c.req.param('id')!)));
+hotel.post('/:slug/bookings/:id/cancel', ...adminMgr, async (c) =>
+  c.json(await svc.cancelBooking(c.get('tenantId'), c.req.param('id')!)));
+
 export default hotel;

@@ -532,6 +532,21 @@ export interface RoomStats {
   reserved: number;
 }
 
+export type BookingStatus = 'booked' | 'checked_in' | 'checked_out' | 'cancelled';
+
+export interface RoomBooking {
+  id: string;
+  roomId: string;
+  roomNumber?: string | null;
+  guestName: string;
+  guestEmail?: string | null;
+  guestPhone?: string | null;
+  checkIn: string;
+  checkOut: string;
+  status: BookingStatus;
+  notes?: string | null;
+}
+
 export interface Shift {
   id: string;
   userId: string;

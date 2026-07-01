@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats, RoomBooking } from './types';
 
 // Auth
 export const authApi = {
@@ -363,6 +363,13 @@ export const hotelApi = {
   setStatus: (slug: string, id: string, status: RoomStatus, guestName?: string) =>
     api.post<{ success: boolean }>(`/r/${slug}/rooms/${id}/status`, { status, guestName }),
   delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/rooms/${id}`),
+  // Reservations / check-in
+  listBookings: (slug: string) => api.get<RoomBooking[]>(`/r/${slug}/bookings`),
+  createBooking: (slug: string, data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string; notes?: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/bookings`, data),
+  checkIn: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${id}/check-in`, {}),
+  checkOut: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${id}/check-out`, {}),
+  cancelBooking: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${id}/cancel`, {}),
 };
 
 export const customerApi = {
