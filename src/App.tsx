@@ -25,6 +25,7 @@ const OnboardingWizard = lazy(() => import('./features/onboarding/OnboardingWiza
 const MarketingLanding = lazy(() => import('./features/marketing/MarketingLanding').then(m => ({ default: m.MarketingLanding })));
 const PricingPage = lazy(() => import('./features/marketing/PricingPage').then(m => ({ default: m.PricingPage })));
 const FeaturesPage = lazy(() => import('./features/marketing/FeaturesPage').then(m => ({ default: m.FeaturesPage })));
+const AboutPage = lazy(() => import('./features/marketing/AboutPage').then(m => ({ default: m.AboutPage })));
 const ContactPage = lazy(() => import('./features/marketing/ContactPage').then(m => ({ default: m.ContactPage })));
 const DemoPage = lazy(() => import('./features/marketing/DemoPage').then(m => ({ default: m.DemoPage })));
 const TableFlowLayout = lazy(() => import('./features/restaurant/TableFlowLayout').then(m => ({ default: m.TableFlowLayout })));
@@ -111,6 +112,7 @@ function App() {
           <Route path="/" element={<RootRoute />} />
           <Route path="/pricing" element={<RouteErrorBoundary name="pricing"><PricingPage /></RouteErrorBoundary>} />
           <Route path="/features" element={<RouteErrorBoundary name="features"><FeaturesPage /></RouteErrorBoundary>} />
+          <Route path="/about" element={<RouteErrorBoundary name="about"><AboutPage /></RouteErrorBoundary>} />
           <Route path="/contact" element={<RouteErrorBoundary name="contact"><ContactPage /></RouteErrorBoundary>} />
           <Route path="/demo" element={<RouteErrorBoundary name="demo"><DemoPage /></RouteErrorBoundary>} />
 

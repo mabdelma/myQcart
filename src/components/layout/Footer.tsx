@@ -27,8 +27,8 @@ export function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Company</h3>
             <ul className="space-y-2">
+              <li><Link to="/about" className="text-sm hover:text-white transition-colors">About</Link></li>
               <li><Link to="/contact" className="text-sm hover:text-white transition-colors">Contact</Link></li>
-              <li><span className="text-sm text-gray-500">About</span></li>
             </ul>
           </div>
         </div>

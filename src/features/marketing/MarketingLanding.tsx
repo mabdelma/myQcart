@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import {
   QrCode, CreditCard, Clock, Users, ArrowRight, Shield, BarChart3,
   Check, Star, Zap, Utensils, ChevronDown, Sparkles, Bot, Send,
+  Boxes, TrendingUp, CalendarClock, Heart, Megaphone, Hotel,
 } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
@@ -23,7 +24,13 @@ export function MarketingLanding() {
     { icon: CreditCard, title: t('marketing.featurePayments'), desc: t('marketing.featurePaymentsDesc') },
     { icon: Clock, title: t('marketing.featureKitchen'), desc: t('marketing.featureKitchenDesc') },
     { icon: Users, title: t('marketing.featureStaff'), desc: t('marketing.featureStaffDesc') },
+    { icon: CalendarClock, title: t('marketing.featureScheduling'), desc: t('marketing.featureSchedulingDesc') },
+    { icon: Boxes, title: t('marketing.featureInventory'), desc: t('marketing.featureInventoryDesc') },
     { icon: BarChart3, title: t('marketing.featureAnalytics'), desc: t('marketing.featureAnalyticsDesc') },
+    { icon: TrendingUp, title: t('marketing.featureForecasting'), desc: t('marketing.featureForecastingDesc') },
+    { icon: Heart, title: t('marketing.featureCrm'), desc: t('marketing.featureCrmDesc') },
+    { icon: Megaphone, title: t('marketing.featureMarketing'), desc: t('marketing.featureMarketingDesc') },
+    { icon: Hotel, title: t('marketing.featureHotel'), desc: t('marketing.featureHotelDesc') },
     { icon: Shield, title: t('marketing.featureMultiLocation'), desc: t('marketing.featureMultiLocationDesc') },
   ];
 
