@@ -909,4 +909,7 @@ export const translations: Record<TranslationKey, string> = {
   'cookie.accept': "Tout accepter",
   'cookie.decline': "Nécessaires uniquement",
   'cookie.learnMore': "En savoir plus",
+  'notFound.title': "Page introuvable",
+  'notFound.desc': "La page que vous cherchez n'existe pas ou a été déplacée.",
+  'notFound.back': "Retour à l'accueil",
 };

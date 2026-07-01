@@ -27,6 +27,7 @@ const MarketingLanding = lazy(() => import('./features/marketing/MarketingLandin
 const PricingPage = lazy(() => import('./features/marketing/PricingPage').then(m => ({ default: m.PricingPage })));
 const FeaturesPage = lazy(() => import('./features/marketing/FeaturesPage').then(m => ({ default: m.FeaturesPage })));
 const AboutPage = lazy(() => import('./features/marketing/AboutPage').then(m => ({ default: m.AboutPage })));
+const NotFoundPage = lazy(() => import('./features/marketing/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const PrivacyPage = lazy(() => import('./features/marketing/legal/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./features/marketing/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 const CookiePolicyPage = lazy(() => import('./features/marketing/legal/CookiePolicyPage').then(m => ({ default: m.CookiePolicyPage })));
@@ -157,7 +158,7 @@ function App() {
             <RouteErrorBoundary name="payment-link"><PaymentLinkPage /></RouteErrorBoundary>
           } />
 
-          <Route path="*" element={<RestaurantLanding />} />
+          <Route path="*" element={<RouteErrorBoundary name="not-found"><NotFoundPage /></RouteErrorBoundary>} />
         </Routes>
         </Suspense>
         <CookieConsent />

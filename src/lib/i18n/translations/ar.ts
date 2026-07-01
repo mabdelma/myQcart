@@ -909,4 +909,7 @@ export const translations: Record<TranslationKey, string> = {
   'cookie.accept': "قبول الكل",
   'cookie.decline': "الضرورية فقط",
   'cookie.learnMore': "اعرف المزيد",
+  'notFound.title': "الصفحة غير موجودة",
+  'notFound.desc': "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+  'notFound.back': "العودة إلى الرئيسية",
 };

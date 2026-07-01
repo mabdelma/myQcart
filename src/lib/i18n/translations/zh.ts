@@ -898,4 +898,7 @@ export const translations: Record<TranslationKey, string> = {
   'cookie.accept': "接受全部",
   'cookie.decline': "仅必要",
   'cookie.learnMore': "了解更多",
+  'notFound.title': "页面未找到",
+  'notFound.desc': "您要查找的页面不存在或已移动。",
+  'notFound.back': "返回首页",
 };

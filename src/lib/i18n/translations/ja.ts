@@ -898,4 +898,7 @@ export const translations: Record<TranslationKey, string> = {
   'cookie.accept': "すべて受け入れる",
   'cookie.decline': "必要なもののみ",
   'cookie.learnMore': "詳細",
+  'notFound.title': "ページが見つかりません",
+  'notFound.desc': "お探しのページは存在しないか、移動されました。",
+  'notFound.back': "ホームに戻る",
 };
