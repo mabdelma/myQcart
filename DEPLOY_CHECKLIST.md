@@ -88,8 +88,8 @@ docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.vps.
 
 ### Verify production
 
-1. **HTTPS**: Open `https://qcart.gmtmall.com` — should load with valid cert
-2. **API health**: `curl https://qcart.gmtmall.com/api/health/readiness` → `{"status":"ok"}`
+1. **HTTPS**: Open `https://qlisted.com` — should load with valid cert
+2. **API health**: `curl https://qlisted.com/api/health/readiness` → `{"status":"ok"}`
 3. **Sentry**: Trigger a test error → check Sentry dashboard for error + source maps
 4. **Stripe**: Place a test order with a real card — verify webhook received
 5. **Push notification**: Enable notifications in browser → confirm VAPID keys work

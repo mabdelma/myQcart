@@ -2,7 +2,7 @@
 
 React Native (Expo) wrapper for the QCart web application. Provides native app
 capabilities — camera QR scanning, offline menu caching, push notifications —
-while rendering the core UI through a WebView pointing at qcart.gmtmall.com.
+while rendering the core UI through a WebView pointing at qlisted.com.
 
 ## Setup
 

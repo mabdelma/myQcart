@@ -7,9 +7,9 @@ export interface DeepLinkResult {
  * Parse a deep-link / QR-code URL and return restaurant context.
  *
  * Supported patterns:
- *   https://qcart.gmtmall.com/table/:tableId
- *   https://qcart.gmtmall.com/r/:slug/table/:tableId
- *   https://qcart.gmtmall.com/r/:slug
+ *   https://qlisted.com/table/:tableId
+ *   https://qlisted.com/r/:slug/table/:tableId
+ *   https://qlisted.com/r/:slug
  *   qcart://table/:tableId
  *   qcart://r/:slug/table/:tableId
  */

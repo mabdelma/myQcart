@@ -9,7 +9,7 @@
 #   ./scripts/deploy-vps.sh
 #
 # One-time prereqs: Docker + compose installed, repo cloned, `.env.prod` filled,
-# `docker network create edge` done, and the qcart.gmtmall.com block added to
+# `docker network create edge` done, and the qlisted.com block added to
 # qarrito's Caddyfile (see DEPLOYMENT.md).
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -45,7 +45,7 @@ $COMPOSE ps
 cat <<'NOTE'
 
 If this is the FIRST deploy (or you changed the Caddyfile), reload the shared
-Caddy from the qarrito project so qcart.gmtmall.com starts routing + gets a cert:
+Caddy from the qarrito project so qlisted.com starts routing + gets a cert:
 
   cd /path/to/qarrito
   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile

@@ -39,13 +39,13 @@
 ### Recommended CDN
 
 **Implementation: Cloudflare (Free tier → Pro)**
-- DNS: Point `qcart.gmtmall.com` to Cloudflare (change nameservers)
+- DNS: Point `qlisted.com` to Cloudflare (change nameservers)
 - Proxied (orange cloud) for DDoS protection + SSL termination + caching
 - Page Rules:
-  1. `qcart.gmtmall.com/assets/*` → Cache everything, Edge Cache TTL 1 year
-  2. `qcart.gmtmall.com/uploads/*` → Cache everything, Edge Cache TTL 7 days
-  3. `qcart.gmtmall.com/api/*` → No cache, Bypass (dynamic content)
-  4. `qcart.gmtmall.com/` → Cache everything, Edge Cache TTL 5 minutes (SSR-like TTL for marketing pages)
+  1. `qlisted.com/assets/*` → Cache everything, Edge Cache TTL 1 year
+  2. `qlisted.com/uploads/*` → Cache everything, Edge Cache TTL 7 days
+  3. `qlisted.com/api/*` → No cache, Bypass (dynamic content)
+  4. `qlisted.com/` → Cache everything, Edge Cache TTL 5 minutes (SSR-like TTL for marketing pages)
 - Workers (optional): Rate limiting for `/api/` at the edge before it hits the VPS
 - Argo Smart Routing: reduces API latency by routing over Cloudflare's backbone
 
@@ -146,7 +146,7 @@ tar xzf uploads_2024-01-01.tar.gz -C /
 
 **1. Uptime Monitoring (free)**
 - **Better Stack** (betterstack.com) — free tier: 10 monitors, 30s intervals
-- Monitors: `https://qcart.gmtmall.com` (HTTP), `https://qcart.gmtmall.com/api/health/readiness` (HTTP + keyword "ok")
+- Monitors: `https://qlisted.com` (HTTP), `https://qlisted.com/api/health/readiness` (HTTP + keyword "ok")
 - Alert channels: Email, Slack webhook, SMS (paid)
 - Response: on-call rotation via PagerDuty or Opsgenie (if > 1 person)
 

@@ -4,10 +4,10 @@
 # reload Caddy:
 #   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
 #
-# DNS required first:  qcart.gmtmall.com → VPS public IP
+# DNS required first:  qlisted.com → VPS public IP
 # Caddy reaches qcart-frontend by container name over the shared `edge` network.
 
-qcart.gmtmall.com {
+qlisted.com {
 	encode gzip zstd
 	reverse_proxy qcart-frontend:80
 

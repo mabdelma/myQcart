@@ -4,7 +4,7 @@
 
 ## Current State
 
-QCart is a production-deployed QR ordering platform for hospitality. Core features are built and live at `qcart.gmtmall.com`.
+QCart is a production-deployed QR ordering platform for hospitality. Core features are built and live at `qlisted.com`.
 
 | Capability | Status |
 |---|---|
@@ -52,7 +52,7 @@ Detailed implementation timeline in `infra/production-readiness.md`.
 
 | Week | Item | Details |
 |------|------|---------|
-| 1 | **Cloudflare DNS + proxying** | Point `qcart.gmtmall.com` → Cloudflare for DDoS protection, SSL, edge caching. Page rules for `/assets/*` (1yr), `/uploads/*` (7d), `/api/*` (bypass). |
+| 1 | **Cloudflare DNS + proxying** | Point `qlisted.com` → Cloudflare for DDoS protection, SSL, edge caching. Page rules for `/assets/*` (1yr), `/uploads/*` (7d), `/api/*` (bypass). |
 | 1 | **Uptime monitoring** | Better Stack (free tier, 30s intervals) + Netdata on VPS for CPU/memory/disk. |
 | 2 | **Automated backups** | Cron: daily `pg_dump` → compress → encrypt (`age`) → rotate 30 days. Off-site replication via `rclone` to Backblaze B2. Test restore procedure. |
 | 2 | **Log aggregation** | Loki + Promtail + Grafana (self-hosted) or Better Stack logs (10 GB/mo free). Dashboards for request rate, error rate, p50/p95 latency. |

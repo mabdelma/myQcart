@@ -11,7 +11,7 @@
 #   docker network create edge        # if qarrito/escoutly haven't already
 #   cp .env.prod.example .env.prod     # then fill in real secrets
 #
-# DNS: one A record  →  qcart.gmtmall.com → VPS public IP
+# DNS: one A record  →  qlisted.com → VPS public IP
 # Then add the QCart block to qarrito's Caddyfile (see DEPLOYMENT.md) and reload:
 #   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
 # ─────────────────────────────────────────────────────────────────────────────
@@ -53,14 +53,14 @@ services:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
       JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET in .env.prod}"
       PORT: 3001
-      CORS_ORIGIN: "https://${DOMAIN:-qcart.gmtmall.com}"
+      CORS_ORIGIN: "https://${DOMAIN:-qlisted.com}"
       REDIS_URL: "redis://redis:6379"
       STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
       STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
       STRIPE_PRICE_STARTER: "${STRIPE_PRICE_STARTER:-}"
       STRIPE_PRICE_GROWTH: "${STRIPE_PRICE_GROWTH:-}"
       STRIPE_PRICE_ENTERPRISE: "${STRIPE_PRICE_ENTERPRISE:-}"
-      FRONTEND_URL: "https://${DOMAIN:-qcart.gmtmall.com}"
+      FRONTEND_URL: "https://${DOMAIN:-qlisted.com}"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       OPENAI_MODEL: "${OPENAI_MODEL:-}"
       OPENAI_REALTIME_MODEL: "${OPENAI_REALTIME_MODEL:-}"
@@ -97,7 +97,7 @@ volumes:
 
 networks:
   # Shared cross-stack network; Caddy (in qarrito's stack) joins it and proxies
-  # qcart.gmtmall.com → qcart-frontend:80. Created once on the host:
+  # qlisted.com → qcart-frontend:80. Created once on the host:
   #   docker network create edge
   edge:
     external: true

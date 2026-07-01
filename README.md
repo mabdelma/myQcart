@@ -2,7 +2,7 @@
 
 Digital ordering and payment platform for restaurants. Customers scan a QR code, browse the menu, place orders, and pay from their phone — no app download required.
 
-Live at: [qcart.gmtmall.com](https://qcart.gmtmall.com)
+Live at: [qlisted.com](https://qlisted.com)
 
 ## Architecture
 
@@ -10,7 +10,7 @@ Live at: [qcart.gmtmall.com](https://qcart.gmtmall.com)
 ┌─────────────────────────────────────────────────────┐
 │                     Caddy                            │
 │              (shared reverse proxy)                  │
-│   qcart.gmtmall.com → qcart-frontend:80             │
+│   qlisted.com → qcart-frontend:80             │
 └──────────────┬──────────────────────────────────────┘
                │
 ┌──────────────┴──────────────────────────────────────┐
@@ -246,7 +246,7 @@ docker compose --env-file .env.prod \
   up -d --build
 ```
 
-The `qcart-frontend` nginx container joins a shared `edge` Docker network. Caddy (from a separate stack) proxies `qcart.gmtmall.com` → `qcart-frontend:80`.
+The `qcart-frontend` nginx container joins a shared `edge` Docker network. Caddy (from a separate stack) proxies `qlisted.com` → `qcart-frontend:80`.
 
 ### Updating
 

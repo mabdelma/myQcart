@@ -5,7 +5,7 @@ edge caching, and optional rate-limiting Workers.
 
 ## Prerequisites
 
-- Domain `qcart.gmtmall.com` (or your custom domain) registered at any registrar
+- Domain `qlisted.com` (or your custom domain) registered at any registrar
 - Cloudflare account (free tier)
 
 ## Step 1: Add domain to Cloudflare
@@ -21,7 +21,7 @@ Add these DNS records in Cloudflare (orange cloud ☁️ = proxied):
 | Type | Name | Content | Proxy |
 |------|------|---------|-------|
 | A | `qcart` | `31.97.158.10` | ☁️ Proxied |
-| CNAME | `www` | `qcart.gmtmall.com` | ☁️ Proxied (optional) |
+| CNAME | `www` | `qlisted.com` | ☁️ Proxied (optional) |
 
 > **Important:** After changing nameservers (step 3), ALL traffic flows through
 > Cloudflare. Caddy on the VPS will see Cloudflare IPs, not real visitor IPs.
@@ -55,7 +55,7 @@ automatically trusts Cloudflare IPs when the proxy protocol header is present.
 If you add `get_ip` or rate-limiting, update `qcart.Caddyfile`:
 
 ```
-qcart.gmtmall.com {
+qlisted.com {
     # Trust Cloudflare proxy IPs
     trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 \
                           103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 \
@@ -81,29 +81,29 @@ Create these in Cloudflare Dashboard → **Rules** → **Page Rules**:
 
 | # | URL | Setting | Value |
 |---|-----|---------|-------|
-| 1 | `qcart.gmtmall.com/assets/*` | Cache Level: **Cache Everything** | Edge TTL: **1 year** |
-| 2 | `qcart.gmtmall.com/uploads/*` | Cache Level: **Cache Everything** | Edge TTL: **7 days** |
-| 3 | `qcart.gmtmall.com/api/*` | Cache Level: **Bypass** | — |
+| 1 | `qlisted.com/assets/*` | Cache Level: **Cache Everything** | Edge TTL: **1 year** |
+| 2 | `qlisted.com/uploads/*` | Cache Level: **Cache Everything** | Edge TTL: **7 days** |
+| 3 | `qlisted.com/api/*` | Cache Level: **Bypass** | — |
 
 ## Step 7: Cache Rules (modern alternative to Page Rules)
 
 Cloudflare Dashboard → **Rules** → **Cache Rules** (recommended over Page Rules):
 
 **Rule 1 — Static assets:**
-- When: `Hostname equals qcart.gmtmall.com` AND `URI Path starts with /assets/`
+- When: `Hostname equals qlisted.com` AND `URI Path starts with /assets/`
 - Cache: **Eligible for cache**, Edge TTL = **1 year**, Origin TTL = **respected**
 - Note: origin sets `Cache-Control: public, immutable, max-age=31536000` for `/assets/`
 
 **Rule 2 — Uploaded images:**
-- When: `Hostname equals qcart.gmtmall.com` AND `URI Path starts with /uploads/`
+- When: `Hostname equals qlisted.com` AND `URI Path starts with /uploads/`
 - Cache: **Eligible for cache**, Edge TTL = **7 days**, Origin TTL = **respected**
 
 **Rule 3 — API / dynamic:**
-- When: `Hostname equals qcart.gmtmall.com` AND `URI Path starts with /api/`
+- When: `Hostname equals qlisted.com` AND `URI Path starts with /api/`
 - Cache: **Bypass cache**
 
 **Rule 4 — Homepage:**
-- When: `Hostname equals qcart.gmtmall.com` AND `URI Path equals /`
+- When: `Hostname equals qlisted.com` AND `URI Path equals /`
 - Cache: **Eligible for cache**, Edge TTL = **5 minutes**
 - Serve stale while revalidating
 
@@ -146,7 +146,7 @@ export default {
 
 After Cloudflare is live:
 ```bash
-curl -sI https://qcart.gmtmall.com/assets/index-*.js | findstr "cf-cache-status"
+curl -sI https://qlisted.com/assets/index-*.js | findstr "cf-cache-status"
 # Expected: cf-cache-status: HIT  (after first request)
 ```
 

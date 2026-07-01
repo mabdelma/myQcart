@@ -12,7 +12,7 @@ import { handleDeepLink } from './src/services/deepLink';
 import { useOfflineSync, setNetInfoConnected } from './src/hooks/useOfflineSync';
 import { registerForPushNotificationsAsync, addNotificationResponseListener } from './src/services/pushNotifications';
 
-const BASE_URL = process.env.APP_BASE_URL || 'https://qcart.gmtmall.com';
+const BASE_URL = process.env.APP_BASE_URL || 'https://qlisted.com';
 
 type TabParamList = {
   Menu: { slug?: string; tableId?: string };

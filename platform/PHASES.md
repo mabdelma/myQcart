@@ -29,7 +29,7 @@ existing Vite frontend or current `docker-compose.*`. Adopt incrementally (stran
 - **Phase 2 — payments/billing:** PSP + webhooks behind `billing`.
 - **Phase 3 — menu/catalog (listings):** read-heavy menu API.
 - **Phase 4 — orders (engagement):** order lifecycle + table/QR sessions; emits `order.placed`/`order.ready`.
-- **Phase 5 — auth + gateway:** centralize tokens; route `api.qcart.gmtmall.com/v1/<svc>`.
+- **Phase 5 — auth + gateway:** centralize tokens; route `api.qlisted.com/v1/<svc>`.
 
 ## Run the scaffold
 See `platform/infra/k8s/README.md`. Local: add root workspaces for `platform/*`,

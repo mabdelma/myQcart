@@ -10,11 +10,11 @@ get automatic HTTPS, all apps follow one rule:
 
 QCart is **single-origin**: its own internal nginx serves the SPA and proxies
 `/api` (including SSE) and `/uploads` to the qcart API. So Caddy only needs to
-forward `qcart.gmtmall.com` → `qcart-frontend:80`.
+forward `qlisted.com` → `qcart-frontend:80`.
 
 ```
 Internet ──HTTPS──▶ Caddy (qarrito stack, :443)
-                      │  qcart.gmtmall.com
+                      │  qlisted.com
                       ▼   (edge network, by name)
                  qcart-frontend:80  (nginx: SPA + /api + /uploads proxy)
                       │ (qcart internal network)
@@ -36,7 +36,7 @@ Internet ──HTTPS──▶ Caddy (qarrito stack, :443)
 
 ## One-time setup on the VPS
 
-1. **DNS** — add an A record: `qcart.gmtmall.com` → VPS public IP.
+1. **DNS** — add an A record: `qlisted.com` → VPS public IP.
 
 2. **Shared network** (skip if qarrito/escoutly already created it):
    ```bash
@@ -53,7 +53,7 @@ Internet ──HTTPS──▶ Caddy (qarrito stack, :443)
    ```
 
 4. **Caddy block** — already added to qarrito's `infrastructure/caddy/Caddyfile`
-   (the `qcart.gmtmall.com {…}` block). If qarrito's Caddyfile on the VPS predates
+   (the `qlisted.com {…}` block). If qarrito's Caddyfile on the VPS predates
    that change, paste `infrastructure/caddy/qcart.Caddyfile` into it.
 
 ## Deploy / redeploy
@@ -92,7 +92,7 @@ docker compose --env-file .env.prod \
 
 Point your Stripe webhook endpoint at:
 ```
-https://qcart.gmtmall.com/api/webhooks/stripe
+https://qlisted.com/api/webhooks/stripe
 ```
 and set the resulting signing secret as `STRIPE_WEBHOOK_SECRET` in `.env.prod`.
 
