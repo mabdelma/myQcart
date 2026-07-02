@@ -146,7 +146,7 @@ function App() {
           <Route path="/table/:tableId/*" element={<RouteErrorBoundary name="customer-menu"><CustomerMenuPage /></RouteErrorBoundary>} />
 
           {/* Public restaurant landing page */}
-          <Route path="/r/:slug/room/:roomId" element={<RouteErrorBoundary name="room-service"><RoomServicePage /></RouteErrorBoundary>} />
+          <Route path="/r/:slug/room/:token" element={<RouteErrorBoundary name="room-service"><RoomServicePage /></RouteErrorBoundary>} />
           <Route path="/r/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
           <Route path="/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
 

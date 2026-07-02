@@ -20,13 +20,24 @@ export async function listRooms(tenantId: string) {
     .orderBy(asc(schema.rooms.floor), asc(schema.rooms.number));
 }
 
+/** Short, unguessable token for a room's in-room service QR link. */
+const newServiceToken = () => uuid().replace(/-/g, '') + uuid().replace(/-/g, '').slice(0, 4);
+
 export async function createRoom(
   tenantId: string,
   data: { number: string; type?: string; floor?: string; status?: RoomStatus; rate?: number; notes?: string },
 ) {
   const id = uuid();
-  await db.insert(schema.rooms).values({ id, tenantId, ...data });
+  await db.insert(schema.rooms).values({ id, tenantId, serviceToken: newServiceToken(), ...data });
   return { id };
+}
+
+/** Rotate a room's service token (invalidates the old QR link). */
+export async function regenerateServiceToken(tenantId: string, id: string) {
+  const serviceToken = newServiceToken();
+  await db.update(schema.rooms).set({ serviceToken, updatedAt: new Date().toISOString() })
+    .where(and(eq(schema.rooms.id, id), eq(schema.rooms.tenantId, tenantId)));
+  return { serviceToken };
 }
 
 export async function updateRoom(
@@ -244,27 +255,31 @@ export async function deleteFolioItem(tenantId: string, id: string) {
 
 // ── Room service (guest orders from the in-room menu, posted to their folio) ──
 
-/** The active (checked-in) stay for a room, or null. */
-export async function activeStay(tenantId: string, roomId: string) {
+/** The active (checked-in) stay for a room identified by its service token, or null. */
+export async function activeStay(tenantId: string, token: string) {
+  if (!token) return null;
+  const [room] = await db.select({ id: schema.rooms.id }).from(schema.rooms)
+    .where(and(eq(schema.rooms.tenantId, tenantId), eq(schema.rooms.serviceToken, token)));
+  if (!room) return null;
   const [b] = await db
     .select({ bookingId: schema.roomBookings.id, guestName: schema.roomBookings.guestName, roomNumber: schema.rooms.number })
     .from(schema.roomBookings)
     .leftJoin(schema.rooms, eq(schema.roomBookings.roomId, schema.rooms.id))
     .where(and(
       eq(schema.roomBookings.tenantId, tenantId),
-      eq(schema.roomBookings.roomId, roomId),
+      eq(schema.roomBookings.roomId, room.id),
       eq(schema.roomBookings.status, 'checked_in'),
     ));
   return b || null;
 }
 
-/** Place a room-service order for a room's active stay and post it to the folio. */
+/** Place a room-service order for a room's active stay (by token) and post it to the folio. */
 export async function placeRoomServiceOrder(
   tenantId: string,
-  roomId: string,
+  token: string,
   items: { menuItemId: string; name: string; quantity: number; unitPrice: number }[],
 ) {
-  const stay = await activeStay(tenantId, roomId);
+  const stay = await activeStay(tenantId, token);
   if (!stay) return { error: 'no active stay for this room' as const };
   const result = await createOrder(tenantId, {
     orderType: 'takeout',

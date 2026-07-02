@@ -517,6 +517,7 @@ export interface Room {
   status: RoomStatus;
   floor?: string | null;
   rate: number;
+  serviceToken?: string | null;
   guestName?: string | null;
   notes?: string | null;
   createdAt: string;

@@ -1147,4 +1147,5 @@ export const translations: Record<TranslationKey, string> = {
   'roomService.placed': "Added to your room",
   'roomService.placedDesc': "Your order is on its way and has been added to your folio.",
   'roomService.orderMore': "Order more",
+  'hotel.regenerateLink': "Regenerate link",
 };

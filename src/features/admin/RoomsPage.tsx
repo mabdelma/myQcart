@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight, Receipt, Trash2 } from 'lucide-react';
+import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight, Receipt, Trash2, RefreshCw } from 'lucide-react';
 import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
@@ -35,7 +35,7 @@ export function RoomsPage() {
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const money = (n: number) => formatPrice(n, locale);
-  const rsUrl = (roomId: string) => `${window.location.origin}/r/${slug ?? ''}/room/${roomId}`;
+  const rsUrl = (token: string) => `${window.location.origin}/r/${slug ?? ''}/room/${token}`;
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [stats, setStats] = useState<RoomStats | null>(null);
@@ -164,6 +164,16 @@ export function RoomsPage() {
       await hotelApi.update(slug, editing.id, { number: editing.number, type: editing.type || undefined, floor: editing.floor || undefined, rate: Number(editing.rate) || 0, notes: editing.notes || undefined });
       if (editing.status !== 'available') await hotelApi.setStatus(slug, editing.id, editing.status, editing.guestName || undefined);
       setEditing(null); await load();
+    } catch { /* ignore */ } finally { setSaving(false); }
+  }
+
+  async function regenToken() {
+    if (!slug || !editing) return;
+    setSaving(true);
+    try {
+      const { serviceToken } = await hotelApi.regenerateToken(slug, editing.id);
+      setEditing({ ...editing, serviceToken });
+      await load();
     } catch { /* ignore */ } finally { setSaving(false); }
   }
 
@@ -462,8 +472,9 @@ export function RoomsPage() {
           <div className="rounded-lg bg-gray-50 p-2.5">
             <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Receipt className="w-3.5 h-3.5" /> {t('roomService.title')}</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 truncate text-xs text-gray-700">{rsUrl(editing.id)}</code>
-              <button onClick={() => navigator.clipboard?.writeText(rsUrl(editing.id))} className="px-2 py-1 text-xs rounded bg-white border border-gray-200 hover:bg-gray-100 whitespace-nowrap">{t('common.copy')}</button>
+              <code className="flex-1 truncate text-xs text-gray-700">{editing.serviceToken ? rsUrl(editing.serviceToken) : '—'}</code>
+              <button onClick={() => editing.serviceToken && navigator.clipboard?.writeText(rsUrl(editing.serviceToken))} className="px-2 py-1 text-xs rounded bg-white border border-gray-200 hover:bg-gray-100 whitespace-nowrap">{t('common.copy')}</button>
+              <button onClick={regenToken} disabled={saving} title={t('hotel.regenerateLink')} className="p-1.5 rounded bg-white border border-gray-200 hover:bg-gray-100"><RefreshCw className="w-3.5 h-3.5 text-gray-500" /></button>
             </div>
           </div>
           <div className="flex justify-between gap-2">

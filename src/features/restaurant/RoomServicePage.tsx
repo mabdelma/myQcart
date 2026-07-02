@@ -7,7 +7,7 @@ import type { MenuCategory, MenuItem } from '../../lib/api/types';
 
 export function RoomServicePage() {
   const { t, locale } = useI18n();
-  const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
+  const { slug, token } = useParams<{ slug: string; token: string }>();
 
   const [loading, setLoading] = useState(true);
   const [stay, setStay] = useState<{ active: boolean; guestName: string | null; roomNumber: string | null } | null>(null);
@@ -21,16 +21,16 @@ export function RoomServicePage() {
   const price = (n: number) => n.toFixed(2);
 
   const load = useCallback(async () => {
-    if (!slug || !roomId) return;
+    if (!slug || !token) return;
     setLoading(true);
     try {
-      const [s, menu] = await Promise.all([roomServiceApi.stay(slug, roomId), menuApi.getFullMenu(slug)]);
+      const [s, menu] = await Promise.all([roomServiceApi.stay(slug, token), menuApi.getFullMenu(slug)]);
       setStay(s);
       setCategories(menu.categories);
       setItems(menu.items.filter((i) => i.available));
     } catch { setStay({ active: false, guestName: null, roomNumber: null }); }
     finally { setLoading(false); }
-  }, [slug, roomId]);
+  }, [slug, token]);
   useEffect(() => { load(); }, [load]);
 
   const inc = (id: string) => setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
@@ -41,10 +41,10 @@ export function RoomServicePage() {
   const total = cartLines.reduce((s, i) => s + cart[i.id] * i.price, 0);
 
   async function placeOrder() {
-    if (!slug || !roomId || count === 0) return;
+    if (!slug || !token || count === 0) return;
     setPlacing(true);
     try {
-      await roomServiceApi.order(slug, roomId, cartLines.map((i) => ({ menuItemId: i.id, name: i.name, quantity: cart[i.id], unitPrice: i.price })));
+      await roomServiceApi.order(slug, token, cartLines.map((i) => ({ menuItemId: i.id, name: i.name, quantity: cart[i.id], unitPrice: i.price })));
       setCart({}); setPlaced(true);
     } catch { /* ignore */ } finally { setPlacing(false); }
   }

@@ -936,4 +936,5 @@ export const translations: Record<TranslationKey, string> = {
   'roomService.placed': "お部屋に追加しました",
   'roomService.placedDesc': "ご注文は準備中で、お会計に追加されました。",
   'roomService.orderMore': "追加注文",
+  'hotel.regenerateLink': "リンクを再生成",
 };

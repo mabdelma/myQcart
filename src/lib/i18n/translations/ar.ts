@@ -947,4 +947,5 @@ export const translations: Record<TranslationKey, string> = {
   'roomService.placed': "تمت الإضافة إلى غرفتك",
   'roomService.placedDesc': "طلبك في الطريق وتمت إضافته إلى حسابك.",
   'roomService.orderMore': "اطلب المزيد",
+  'hotel.regenerateLink': "إنشاء رابط جديد",
 };

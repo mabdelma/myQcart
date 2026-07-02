@@ -365,6 +365,7 @@ export const hotelApi = {
   setStatus: (slug: string, id: string, status: RoomStatus, guestName?: string) =>
     api.post<{ success: boolean }>(`/r/${slug}/rooms/${id}/status`, { status, guestName }),
   delete: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/rooms/${id}`),
+  regenerateToken: (slug: string, id: string) => api.post<{ serviceToken: string }>(`/r/${slug}/rooms/${id}/regenerate-token`, {}),
   // Reservations / check-in
   listBookings: (slug: string) => api.get<RoomBooking[]>(`/r/${slug}/bookings`),
   createBooking: (slug: string, data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string; notes?: string }) =>

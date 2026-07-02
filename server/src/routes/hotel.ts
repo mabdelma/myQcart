@@ -35,6 +35,8 @@ hotel.post('/:slug/rooms/:id/status', ...adminMgr, zValidator('json', statusSche
 });
 hotel.delete('/:slug/rooms/:id', ...adminMgr, async (c) =>
   c.json(await svc.deleteRoom(c.get('tenantId'), c.req.param('id')!)));
+hotel.post('/:slug/rooms/:id/regenerate-token', ...adminMgr, async (c) =>
+  c.json(await svc.regenerateServiceToken(c.get('tenantId'), c.req.param('id')!)));
 
 // ── Reservations / check-in ─────────────────────────────────────────────────
 const bookingSchema = z.object({
@@ -84,12 +86,12 @@ const roomServiceSchema = z.object({
   })).min(1),
 });
 
-hotel.get('/:slug/room/:roomId/stay', resolveTenant, async (c) => {
-  const stay = await svc.activeStay(c.get('tenantId'), c.req.param('roomId')!);
+hotel.get('/:slug/room/:token/stay', resolveTenant, async (c) => {
+  const stay = await svc.activeStay(c.get('tenantId'), c.req.param('token')!);
   return c.json({ active: !!stay, guestName: stay?.guestName ?? null, roomNumber: stay?.roomNumber ?? null });
 });
-hotel.post('/:slug/room/:roomId/order', resolveTenant, zValidator('json', roomServiceSchema), async (c) => {
-  const r = await svc.placeRoomServiceOrder(c.get('tenantId'), c.req.param('roomId')!, c.req.valid('json').items);
+hotel.post('/:slug/room/:token/order', resolveTenant, zValidator('json', roomServiceSchema), async (c) => {
+  const r = await svc.placeRoomServiceOrder(c.get('tenantId'), c.req.param('token')!, c.req.valid('json').items);
   return 'error' in r ? c.json(r, 400) : c.json(r, 201);
 });
 

@@ -936,4 +936,5 @@ export const translations: Record<TranslationKey, string> = {
   'roomService.placed': "Zu Ihrem Zimmer hinzugefügt",
   'roomService.placedDesc': "Ihre Bestellung ist unterwegs und wurde Ihrer Rechnung hinzugefügt.",
   'roomService.orderMore': "Mehr bestellen",
+  'hotel.regenerateLink': "Link neu erzeugen",
 };
