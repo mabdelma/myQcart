@@ -967,4 +967,7 @@ export const translations: Record<TranslationKey, string> = {
   'restaurants.ctaTitle': "अपने रेस्तरां को डिजिटल करने को तैयार?",
   'restaurants.ctaDesc': "मुफ़्त शुरू करें — कोई कार्ड नहीं। आपका मेन्यू मिनटों में लाइव।",
   'hotels.forecastDesc': "आगामी ऑक्युपेंसी और कमरा आय देखें, धीमी रातें पहले पहचानें, और AI को यह बताने दें कि किस पर ध्यान चाहिए।",
+  'hotel.paid': "भुगतान हो गया",
+  'hotel.paymentLink': "भुगतान लिंक",
+  'hotel.markPaid': "भुगतान चिह्नित करें",
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight, Receipt, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight, Receipt, Trash2, RefreshCw, Check, CreditCard } from 'lucide-react';
 import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
@@ -127,6 +127,16 @@ export function RoomsPage() {
   async function deleteFolioLine(id: string) {
     if (!slug || !folioFor) return;
     try { await hotelApi.deleteFolioItem(slug, id); setFolioData(await hotelApi.getFolio(slug, folioFor)); } catch { /* ignore */ }
+  }
+  async function openPayLink() {
+    if (!slug || !folioFor) return;
+    try { const { url } = await hotelApi.folioPayLink(slug, folioFor); window.open(url, '_blank', 'noopener'); } catch { /* ignore */ }
+  }
+  async function markSettled() {
+    if (!slug || !folioFor) return;
+    setSaving(true);
+    try { await hotelApi.settleFolio(slug, folioFor); setFolioData(await hotelApi.getFolio(slug, folioFor)); }
+    catch { /* ignore */ } finally { setSaving(false); }
   }
 
   async function bookingAction(id: string, action: 'check-in' | 'check-out' | 'cancel') {
@@ -425,6 +435,14 @@ export function RoomsPage() {
                 ))}
               </div>
               <div className="flex justify-between py-1 text-base font-bold text-gray-900"><span>{t('hotel.grandTotal')}</span><span>{money(folioData.grandTotal)}</span></div>
+              {folioData.paidAt ? (
+                <div className="flex items-center justify-center gap-1.5 rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700"><Check className="w-4 h-4" /> {t('hotel.paid')}</div>
+              ) : folioData.grandTotal > 0 ? (
+                <div className="flex gap-2">
+                  <button onClick={openPayLink} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"><CreditCard className="w-4 h-4" /> {t('hotel.paymentLink')}</button>
+                  <button onClick={markSettled} disabled={saving} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#8B4513] text-white text-sm hover:bg-[#5C4033] disabled:opacity-50"><Check className="w-4 h-4" /> {t('hotel.markPaid')}</button>
+                </div>
+              ) : null}
               <div className="flex gap-2 items-end pt-3 border-t border-gray-100">
                 <div className="flex-1"><label className="block text-xs text-gray-500 mb-1">{t('hotel.chargeDesc')}</label><input value={folioLine.description} onChange={(e) => setFolioLine({ ...folioLine, description: e.target.value })} placeholder={t('hotel.chargeHint')} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
                 <div className="w-24"><label className="block text-xs text-gray-500 mb-1">{t('hotel.amount')}</label><input type="number" min="0" step="0.01" value={folioLine.amount} onChange={(e) => setFolioLine({ ...folioLine, amount: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>

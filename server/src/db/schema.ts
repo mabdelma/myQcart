@@ -546,6 +546,7 @@ export const roomBookings = pgTable('room_bookings', {
   status: text('status', { enum: ['booked', 'checked_in', 'checked_out', 'cancelled'] }).notNull().default('booked'),
   ratePerNight: doublePrecision('rate_per_night').notNull().default(0),
   total: doublePrecision('total').notNull().default(0),
+  folioPaidAt: text('folio_paid_at'), // set when the guest's folio is settled
   notes: text('notes'),
   createdAt: text('created_at').notNull().default(sql`now()`),
   updatedAt: text('updated_at').notNull().default(sql`now()`),

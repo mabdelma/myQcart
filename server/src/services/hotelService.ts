@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
 import { logger } from '../lib/logger.js';
 import { createOrder } from './orderService.js';
+import { createPaymentLink } from './paymentService.js';
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -266,6 +267,7 @@ export async function getFolio(tenantId: string, bookingId: string) {
       checkOut: schema.roomBookings.checkOut,
       status: schema.roomBookings.status,
       roomCharge: schema.roomBookings.total,
+      paidAt: schema.roomBookings.folioPaidAt,
     })
     .from(schema.roomBookings)
     .leftJoin(schema.rooms, eq(schema.roomBookings.roomId, schema.rooms.id))
@@ -278,8 +280,28 @@ export async function getFolio(tenantId: string, bookingId: string) {
   const extras = +items.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2);
   return {
     booking: { id: b.id, guestName: b.guestName, roomNumber: b.roomNumber, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status },
-    roomCharge, items, extras, grandTotal: +(roomCharge + extras).toFixed(2),
+    roomCharge, items, extras, grandTotal: +(roomCharge + extras).toFixed(2), paidAt: b.paidAt,
   };
+}
+
+/** Generate a Stripe payment link for a booking's current folio grand total. */
+export async function folioPayLink(tenantId: string, bookingId: string) {
+  const folio = await getFolio(tenantId, bookingId);
+  if ('error' in folio) return folio;
+  if (folio.grandTotal <= 0) return { error: 'nothing to charge' as const };
+  const label = `Folio — ${folio.booking.guestName}${folio.booking.roomNumber ? `, Room ${folio.booking.roomNumber}` : ''}`;
+  const link = await createPaymentLink(tenantId, undefined, folio.grandTotal, label);
+  return { url: link.url, amount: folio.grandTotal };
+}
+
+/** Mark a booking's folio as settled (cash, or after a card payment). */
+export async function settleFolio(tenantId: string, bookingId: string) {
+  const [b] = await db.select({ id: schema.roomBookings.id }).from(schema.roomBookings)
+    .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  if (!b) return { error: 'booking not found' as const };
+  await db.update(schema.roomBookings).set({ folioPaidAt: new Date().toISOString() })
+    .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  return { success: true };
 }
 
 export async function addFolioItem(tenantId: string, bookingId: string, data: { description: string; amount: number }) {

@@ -33,6 +33,13 @@ vi.mock('../db/index.js', () => {
     reservations: 'reservations',
     waitlistEntries: 'waitlistEntries',
     taxCategories: 'taxCategories',
+    rooms: 'rooms',
+    roomBookings: 'roomBookings',
+    folioItems: 'folioItems',
+    shifts: 'shifts',
+    suppliers: 'suppliers',
+    purchaseOrders: 'purchaseOrders',
+    purchaseOrderItems: 'purchaseOrderItems',
   };
 
   let queryQueue: unknown[] = [];

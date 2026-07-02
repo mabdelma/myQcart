@@ -564,6 +564,7 @@ export interface Folio {
   items: FolioItem[];
   extras: number;
   grandTotal: number;
+  paidAt?: string | null;
 }
 
 export interface Shift {

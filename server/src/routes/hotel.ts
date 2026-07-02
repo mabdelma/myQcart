@@ -75,6 +75,14 @@ hotel.post('/:slug/bookings/:id/folio', ...adminMgr, zValidator('json', folioIte
 });
 hotel.delete('/:slug/folio/:id', ...adminMgr, async (c) =>
   c.json(await svc.deleteFolioItem(c.get('tenantId'), c.req.param('id')!)));
+hotel.post('/:slug/bookings/:id/folio/pay-link', ...adminMgr, async (c) => {
+  const r = await svc.folioPayLink(c.get('tenantId'), c.req.param('id')!);
+  return 'error' in r ? c.json(r, 400) : c.json(r, 201);
+});
+hotel.post('/:slug/bookings/:id/folio/settle', ...adminMgr, async (c) => {
+  const r = await svc.settleFolio(c.get('tenantId'), c.req.param('id')!);
+  return 'error' in r ? c.json(r, 404) : c.json(r);
+});
 
 // ── Room service (public — a checked-in guest ordering from their room) ──────
 const roomServiceSchema = z.object({

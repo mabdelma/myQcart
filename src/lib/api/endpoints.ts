@@ -378,6 +378,8 @@ export const hotelApi = {
   addFolioItem: (slug: string, bookingId: string, data: { description: string; amount: number }) =>
     api.post<{ id: string }>(`/r/${slug}/bookings/${bookingId}/folio`, data),
   deleteFolioItem: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/folio/${id}`),
+  folioPayLink: (slug: string, bookingId: string) => api.post<{ url: string; amount: number }>(`/r/${slug}/bookings/${bookingId}/folio/pay-link`, {}),
+  settleFolio: (slug: string, bookingId: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${bookingId}/folio/settle`, {}),
 };
 
 // Room service — guest-facing (no auth): a checked-in guest orders to their room.

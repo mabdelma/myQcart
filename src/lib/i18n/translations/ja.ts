@@ -967,4 +967,7 @@ export const translations: Record<TranslationKey, string> = {
   'restaurants.ctaTitle': "レストランをデジタル化しませんか？",
   'restaurants.ctaDesc': "無料で開始 — カード不要。メニューは数分で公開。",
   'hotels.forecastDesc': "今後の稼働率と客室収益を把握し、閑散日を早めに察知。注意が必要な点はAIが知らせます。",
+  'hotel.paid': "支払済み",
+  'hotel.paymentLink': "支払いリンク",
+  'hotel.markPaid': "支払済みにする",
 };
