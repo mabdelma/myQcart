@@ -183,7 +183,46 @@ export async function checkIn(tenantId: string, id: string) {
     .where(and(eq(schema.roomBookings.id, id), eq(schema.roomBookings.tenantId, tenantId)));
   await db.update(schema.rooms).set({ status: 'occupied', guestName: b.guestName, updatedAt: now })
     .where(and(eq(schema.rooms.id, b.roomId), eq(schema.rooms.tenantId, tenantId)));
+  if (b.guestEmail) void sendCheckInEmail(tenantId, id);
   return { success: true };
+}
+
+/**
+ * Fire-and-forget welcome email at check-in with the guest's room-service link.
+ * Sent here (not at booking) because the room's service token is only guaranteed
+ * valid for the whole stay once the guest is checked in.
+ */
+async function sendCheckInEmail(tenantId: string, bookingId: string) {
+  try {
+    const [row] = await db
+      .select({
+        guestEmail: schema.roomBookings.guestEmail,
+        guestName: schema.roomBookings.guestName,
+        roomNumber: schema.rooms.number,
+        serviceToken: schema.rooms.serviceToken,
+        tenantName: schema.tenants.name,
+        tenantSlug: schema.tenants.slug,
+        primaryColor: schema.tenants.primaryColor,
+      })
+      .from(schema.roomBookings)
+      .leftJoin(schema.rooms, eq(schema.roomBookings.roomId, schema.rooms.id))
+      .leftJoin(schema.tenants, eq(schema.roomBookings.tenantId, schema.tenants.id))
+      .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+    if (!row?.guestEmail || !row.serviceToken || !row.tenantSlug) return;
+    const base = (process.env.FRONTEND_URL || 'https://qlisted.com').replace(/\/$/, '');
+    const link = `${base}/r/${row.tenantSlug}/room/${row.serviceToken}`;
+    const name = row.tenantName || 'Qlisted';
+    const color = row.primaryColor || '#8B4513';
+    const content = `
+      <h2 style="margin:0 0 12px">Welcome to ${escapeHtml(name)}</h2>
+      <p>Hi ${escapeHtml(row.guestName)}, you're checked in${row.roomNumber ? ` to room <strong>${escapeHtml(row.roomNumber)}</strong>` : ''}. Enjoy your stay!</p>
+      <p>Order room service straight to your room — anything you order is added to your bill:</p>
+      <p style="margin:20px 0"><a href="${link}" style="display:inline-block;background:${color};color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">Open room service</a></p>
+      <p style="font-size:12px;color:#888;word-break:break-all">${link}</p>`;
+    await sendEmail({ to: row.guestEmail, subject: `You're checked in — ${name}`, html: brandedEmailHtml(content, name, color) });
+  } catch (e) {
+    logger.warn({ err: e }, 'check-in email failed');
+  }
 }
 
 /**
