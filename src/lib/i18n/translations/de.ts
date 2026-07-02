@@ -913,4 +913,6 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingStatus.checked_in': "Eingecheckt",
   'hotel.bookingStatus.checked_out': "Ausgecheckt",
   'hotel.bookingStatus.cancelled': "Storniert",
+  'hotel.arrivalsToday': "Ankünfte heute",
+  'hotel.departuresToday': "Abreisen heute",
 };

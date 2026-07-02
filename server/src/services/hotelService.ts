@@ -1,6 +1,11 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, asc, desc } from 'drizzle-orm';
+import { eq, and, asc, desc, inArray, lt, gt } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
+import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
+import { logger } from '../lib/logger.js';
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export type RoomStatus = 'available' | 'occupied' | 'cleaning' | 'maintenance' | 'reserved';
 const STATUSES: RoomStatus[] = ['available', 'occupied', 'cleaning', 'maintenance', 'reserved'];
@@ -78,16 +83,52 @@ export async function createBooking(
   data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string; notes?: string },
 ) {
   // Room must belong to this tenant.
-  const room = await db.select({ id: schema.rooms.id }).from(schema.rooms)
+  const room = await db.select({ id: schema.rooms.id, number: schema.rooms.number }).from(schema.rooms)
     .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId)));
   if (room.length === 0) return { error: 'room not found' as const };
   if (data.checkOut <= data.checkIn) return { error: 'check-out must be after check-in' as const };
+
+  // Conflict detection: reject overlapping active bookings for the same room.
+  // Half-open ranges [checkIn, checkOut) overlap when start < otherEnd && end > otherStart.
+  const clashes = await db.select({ id: schema.roomBookings.id }).from(schema.roomBookings)
+    .where(and(
+      eq(schema.roomBookings.tenantId, tenantId),
+      eq(schema.roomBookings.roomId, data.roomId),
+      inArray(schema.roomBookings.status, ['booked', 'checked_in']),
+      lt(schema.roomBookings.checkIn, data.checkOut),
+      gt(schema.roomBookings.checkOut, data.checkIn),
+    ));
+  if (clashes.length > 0) return { error: 'those dates overlap an existing booking for this room' as const };
+
   const id = uuid();
   await db.insert(schema.roomBookings).values({ id, tenantId, ...data });
   // Mark the room reserved (unless already occupied) so the board reflects the hold.
   await db.update(schema.rooms).set({ status: 'reserved', guestName: data.guestName, updatedAt: new Date().toISOString() })
     .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId), eq(schema.rooms.status, 'available')));
+
+  if (data.guestEmail) void sendBookingConfirmation(tenantId, data.guestEmail, data.guestName, room[0].number, data.checkIn, data.checkOut);
   return { id };
+}
+
+/** Fire-and-forget guest confirmation email; failures are logged, never block the booking. */
+async function sendBookingConfirmation(tenantId: string, to: string, guestName: string, roomNumber: string, checkIn: string, checkOut: string) {
+  try {
+    const [tenant] = await db.select({ name: schema.tenants.name, primaryColor: schema.tenants.primaryColor })
+      .from(schema.tenants).where(eq(schema.tenants.id, tenantId));
+    const name = tenant?.name || 'Qlisted';
+    const content = `
+      <h2 style="margin:0 0 12px">Booking confirmed</h2>
+      <p>Hi ${escapeHtml(guestName)}, your reservation at <strong>${escapeHtml(name)}</strong> is confirmed.</p>
+      <table style="border-collapse:collapse;margin:16px 0">
+        <tr><td style="padding:4px 16px 4px 0;color:#666">Room</td><td style="padding:4px 0"><strong>${escapeHtml(roomNumber)}</strong></td></tr>
+        <tr><td style="padding:4px 16px 4px 0;color:#666">Check-in</td><td style="padding:4px 0"><strong>${escapeHtml(checkIn)}</strong></td></tr>
+        <tr><td style="padding:4px 16px 4px 0;color:#666">Check-out</td><td style="padding:4px 0"><strong>${escapeHtml(checkOut)}</strong></td></tr>
+      </table>
+      <p>We look forward to hosting you.</p>`;
+    await sendEmail({ to, subject: `Booking confirmed — ${name}`, html: brandedEmailHtml(content, name, tenant?.primaryColor) });
+  } catch (e) {
+    logger.warn({ err: e }, 'booking confirmation email failed');
+  }
 }
 
 async function bookingWithRoom(tenantId: string, id: string) {

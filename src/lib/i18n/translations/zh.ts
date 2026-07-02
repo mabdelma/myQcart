@@ -913,4 +913,6 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingStatus.checked_in': "已入住",
   'hotel.bookingStatus.checked_out': "已退房",
   'hotel.bookingStatus.cancelled': "已取消",
+  'hotel.arrivalsToday': "今日入住",
+  'hotel.departuresToday': "今日退房",
 };

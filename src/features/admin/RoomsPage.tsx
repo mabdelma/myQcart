@@ -44,6 +44,10 @@ export function RoomsPage() {
   const [view, setView] = useState<'rooms' | 'bookings'>('rooms');
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
   const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
+  const [bookingError, setBookingError] = useState('');
+  const today = new Date().toISOString().slice(0, 10);
+  const arrivals = bookings.filter((b) => b.status === 'booked' && b.checkIn === today);
+  const departures = bookings.filter((b) => b.status === 'checked_in' && b.checkOut === today);
 
   const statusLabel = (s: RoomStatus) => t(`hotel.status.${s}`);
   const bookingLabel = (s: BookingStatus) => t(`hotel.bookingStatus.${s}`);
@@ -60,7 +64,7 @@ export function RoomsPage() {
 
   async function saveBooking() {
     if (!slug || !booking || !booking.roomId || !booking.guestName.trim() || !booking.checkIn || !booking.checkOut) return;
-    setSaving(true);
+    setSaving(true); setBookingError('');
     try {
       await hotelApi.createBooking(slug, {
         roomId: booking.roomId, guestName: booking.guestName,
@@ -68,7 +72,8 @@ export function RoomsPage() {
         checkIn: booking.checkIn, checkOut: booking.checkOut,
       });
       setBooking(null); await load();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch (e) { setBookingError((e as { message?: string }).message || t('error.generic')); }
+    finally { setSaving(false); }
   }
 
   async function bookingAction(id: string, action: 'check-in' | 'check-out' | 'cancel') {
@@ -133,7 +138,7 @@ export function RoomsPage() {
             <Plus className="w-4 h-4" /> {t('hotel.addRoom')}
           </button>
         ) : (
-          <button onClick={() => setBooking({ roomId: '', guestName: '', guestEmail: '', guestPhone: '', checkIn: '', checkOut: '' })}
+          <button onClick={() => { setBookingError(''); setBooking({ roomId: '', guestName: '', guestEmail: '', guestPhone: '', checkIn: '', checkOut: '' }); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
             <Plus className="w-4 h-4" /> {t('hotel.addBooking')}
           </button>
@@ -195,7 +200,22 @@ export function RoomsPage() {
       ))}
 
       {view === 'bookings' && (
-        loading ? <p className="text-gray-500">{t('common.loading')}...</p> : bookings.length === 0 ? (
+        <div className="space-y-4">
+        {(arrivals.length > 0 || departures.length > 0) && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg shadow p-4">
+              <p className="text-xs text-gray-500 flex items-center gap-1"><LogIn className="w-3.5 h-3.5" /> {t('hotel.arrivalsToday')}</p>
+              <p className="text-2xl font-bold text-gray-900">{arrivals.length}</p>
+              {arrivals.length > 0 && <p className="text-xs text-gray-500 mt-1 truncate">{arrivals.map((a) => a.guestName).join(', ')}</p>}
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <p className="text-xs text-gray-500 flex items-center gap-1"><LogOut className="w-3.5 h-3.5" /> {t('hotel.departuresToday')}</p>
+              <p className="text-2xl font-bold text-gray-900">{departures.length}</p>
+              {departures.length > 0 && <p className="text-xs text-gray-500 mt-1 truncate">{departures.map((a) => a.guestName).join(', ')}</p>}
+            </div>
+          </div>
+        )}
+        {loading ? <p className="text-gray-500">{t('common.loading')}...</p> : bookings.length === 0 ? (
           <p className="bg-white rounded-lg shadow p-6 text-center text-gray-500 text-sm">{t('hotel.noBookings')}</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
@@ -230,11 +250,13 @@ export function RoomsPage() {
               ))}</tbody>
             </table>
           </div>
-        )
+        )}
+        </div>
       )}
 
       {booking && (
-        <Modal title={t('hotel.addBooking')} onClose={() => setBooking(null)}>
+        <Modal title={t('hotel.addBooking')} onClose={() => { setBooking(null); setBookingError(''); }}>
+          {bookingError && <div className="bg-red-50 border-l-4 border-red-400 p-3 text-sm text-red-700">{bookingError}</div>}
           <Field label={t('hotel.room')}>
             <select value={booking.roomId} onChange={(e) => setBooking({ ...booking, roomId: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]">
               <option value="">{t('hotel.selectRoom')}</option>

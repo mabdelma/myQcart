@@ -913,4 +913,6 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingStatus.checked_in': "入室済み",
   'hotel.bookingStatus.checked_out': "退室済み",
   'hotel.bookingStatus.cancelled': "キャンセル済み",
+  'hotel.arrivalsToday': "本日の到着",
+  'hotel.departuresToday': "本日の出発",
 };
