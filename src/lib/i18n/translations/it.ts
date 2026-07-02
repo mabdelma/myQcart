@@ -927,4 +927,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.chargeHint': "es. Ristorante, minibar",
   'hotel.amount': "Importo",
   'hotel.addCharge': "Aggiungi",
+  'roomService.title': "Servizio in camera",
+  'roomService.welcome': "Benvenuto, {name}",
+  'roomService.subtitle': "Ordina in camera {room} — aggiunto al conto",
+  'roomService.noStay': "Nessun soggiorno attivo per questa camera. Rivolgiti alla reception.",
+  'roomService.addToRoom': "Aggiungi alla camera",
+  'roomService.placed': "Aggiunto alla tua camera",
+  'roomService.placedDesc': "Il tuo ordine è in arrivo ed è stato aggiunto al conto.",
+  'roomService.orderMore': "Ordina altro",
 };

@@ -1139,4 +1139,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.chargeHint': "e.g. Restaurant, minibar",
   'hotel.amount': "Amount",
   'hotel.addCharge': "Add",
+  'roomService.title': "Room service",
+  'roomService.welcome': "Welcome, {name}",
+  'roomService.subtitle': "Order to Room {room} — added to your bill",
+  'roomService.noStay': "No active stay for this room. Please see the front desk.",
+  'roomService.addToRoom': "Add to my room",
+  'roomService.placed': "Added to your room",
+  'roomService.placedDesc': "Your order is on its way and has been added to your folio.",
+  'roomService.orderMore': "Order more",
 };

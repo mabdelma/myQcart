@@ -928,4 +928,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.chargeHint': "напр. Ресторан, мини-бар",
   'hotel.amount': "Сумма",
   'hotel.addCharge': "Добавить",
+  'roomService.title': "Обслуживание номеров",
+  'roomService.welcome': "Добро пожаловать, {name}",
+  'roomService.subtitle': "Заказ в номер {room} — добавится в счёт",
+  'roomService.noStay': "Для этого номера нет активного проживания. Обратитесь на стойку регистрации.",
+  'roomService.addToRoom': "Добавить в мой счёт",
+  'roomService.placed': "Добавлено в ваш счёт",
+  'roomService.placedDesc': "Ваш заказ уже в пути и добавлен в ваш счёт.",
+  'roomService.orderMore': "Заказать ещё",
 };

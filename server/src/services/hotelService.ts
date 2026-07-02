@@ -3,6 +3,7 @@ import { eq, and, asc, desc, inArray, lt, gt } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
 import { logger } from '../lib/logger.js';
+import { createOrder } from './orderService.js';
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -239,6 +240,42 @@ export async function addFolioItem(tenantId: string, bookingId: string, data: { 
 export async function deleteFolioItem(tenantId: string, id: string) {
   await db.delete(schema.folioItems).where(and(eq(schema.folioItems.id, id), eq(schema.folioItems.tenantId, tenantId)));
   return { success: true };
+}
+
+// ── Room service (guest orders from the in-room menu, posted to their folio) ──
+
+/** The active (checked-in) stay for a room, or null. */
+export async function activeStay(tenantId: string, roomId: string) {
+  const [b] = await db
+    .select({ bookingId: schema.roomBookings.id, guestName: schema.roomBookings.guestName, roomNumber: schema.rooms.number })
+    .from(schema.roomBookings)
+    .leftJoin(schema.rooms, eq(schema.roomBookings.roomId, schema.rooms.id))
+    .where(and(
+      eq(schema.roomBookings.tenantId, tenantId),
+      eq(schema.roomBookings.roomId, roomId),
+      eq(schema.roomBookings.status, 'checked_in'),
+    ));
+  return b || null;
+}
+
+/** Place a room-service order for a room's active stay and post it to the folio. */
+export async function placeRoomServiceOrder(
+  tenantId: string,
+  roomId: string,
+  items: { menuItemId: string; name: string; quantity: number; unitPrice: number }[],
+) {
+  const stay = await activeStay(tenantId, roomId);
+  if (!stay) return { error: 'no active stay for this room' as const };
+  const result = await createOrder(tenantId, {
+    orderType: 'takeout',
+    customerName: `Room ${stay.roomNumber} — ${stay.guestName}`,
+    items,
+  });
+  if ('error' in result) return { error: result.error };
+  const total = Number(result.data.total || 0);
+  const n = items.reduce((s, i) => s + i.quantity, 0);
+  await addFolioItem(tenantId, stay.bookingId, { description: `Room service (${n} item${n > 1 ? 's' : ''})`, amount: total });
+  return { orderId: result.data.id, total };
 }
 
 /** Occupancy summary for the front-desk header / dashboard. */

@@ -379,6 +379,14 @@ export const hotelApi = {
   deleteFolioItem: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/folio/${id}`),
 };
 
+// Room service — guest-facing (no auth): a checked-in guest orders to their room.
+export const roomServiceApi = {
+  stay: (slug: string, roomId: string) =>
+    api.get<{ active: boolean; guestName: string | null; roomNumber: string | null }>(`/r/${slug}/room/${roomId}/stay`, { skipAuth: true }),
+  order: (slug: string, roomId: string, items: { menuItemId: string; name: string; quantity: number; unitPrice: number }[]) =>
+    api.post<{ orderId: string; total: number }>(`/r/${slug}/room/${roomId}/order`, { items }, { skipAuth: true }),
+};
+
 export const customerApi = {
   list: (slug: string) => api.get<Customer[]>(`/r/${slug}/customers`),
   create: (slug: string, data: { name: string; email?: string; phone?: string }) =>

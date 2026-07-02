@@ -35,6 +35,7 @@ export function RoomsPage() {
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
   const money = (n: number) => formatPrice(n, locale);
+  const rsUrl = (roomId: string) => `${window.location.origin}/r/${slug ?? ''}/room/${roomId}`;
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [stats, setStats] = useState<RoomStats | null>(null);
@@ -458,6 +459,13 @@ export function RoomsPage() {
             <Field label={t('hotel.guest')}><input value={editing.guestName || ''} onChange={(e) => setEditing({ ...editing, guestName: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
           )}
           <Field label={t('common.notes')}><textarea value={editing.notes || ''} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} rows={2} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          <div className="rounded-lg bg-gray-50 p-2.5">
+            <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Receipt className="w-3.5 h-3.5" /> {t('roomService.title')}</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 truncate text-xs text-gray-700">{rsUrl(editing.id)}</code>
+              <button onClick={() => navigator.clipboard?.writeText(rsUrl(editing.id))} className="px-2 py-1 text-xs rounded bg-white border border-gray-200 hover:bg-gray-100 whitespace-nowrap">{t('common.copy')}</button>
+            </div>
+          </div>
           <div className="flex justify-between gap-2">
             <button onClick={remove} disabled={saving} className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50">{t('common.delete')}</button>
             <div className="flex gap-2">
