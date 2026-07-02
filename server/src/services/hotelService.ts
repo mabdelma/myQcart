@@ -186,14 +186,18 @@ export async function checkIn(tenantId: string, id: string) {
   return { success: true };
 }
 
-/** Check a guest out: booking → checked_out, room → cleaning (housekeeping), guest cleared. */
+/**
+ * Check a guest out: booking → checked_out, room → cleaning (housekeeping), guest
+ * cleared. The room-service token is rotated so the departing guest's QR link
+ * dies immediately — the next guest gets the fresh link at check-in.
+ */
 export async function checkOut(tenantId: string, id: string) {
   const b = await bookingWithRoom(tenantId, id);
   if (!b) return { error: 'booking not found' as const };
   const now = new Date().toISOString();
   await db.update(schema.roomBookings).set({ status: 'checked_out', updatedAt: now })
     .where(and(eq(schema.roomBookings.id, id), eq(schema.roomBookings.tenantId, tenantId)));
-  await db.update(schema.rooms).set({ status: 'cleaning', guestName: null, updatedAt: now })
+  await db.update(schema.rooms).set({ status: 'cleaning', guestName: null, serviceToken: newServiceToken(), updatedAt: now })
     .where(and(eq(schema.rooms.id, b.roomId), eq(schema.rooms.tenantId, tenantId)));
   return { success: true };
 }
