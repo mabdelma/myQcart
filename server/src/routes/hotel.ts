@@ -84,6 +84,30 @@ hotel.post('/:slug/bookings/:id/folio/settle', ...adminMgr, async (c) => {
   return 'error' in r ? c.json(r, 404) : c.json(r);
 });
 
+// ── Public booking engine (a guest reserving a room online) ─────────────────
+const publicBookingSchema = z.object({
+  roomId: z.string().min(1),
+  guestName: z.string().min(1),
+  guestEmail: z.string().email().optional().or(z.literal('')),
+  guestPhone: z.string().optional(),
+  checkIn: z.string().min(1),
+  checkOut: z.string().min(1),
+});
+
+hotel.get('/:slug/book/availability', resolveTenant, async (c) => {
+  const checkIn = c.req.query('checkIn') || '';
+  const checkOut = c.req.query('checkOut') || '';
+  if (!checkIn || !checkOut || checkOut <= checkIn) return c.json([]);
+  const rooms = await svc.availableRooms(c.get('tenantId'), checkIn, checkOut);
+  // Never expose the service token or internal fields on a public endpoint.
+  return c.json(rooms.map((r) => ({ id: r.id, number: r.number, type: r.type, rate: r.rate })));
+});
+hotel.post('/:slug/book', resolveTenant, zValidator('json', publicBookingSchema), async (c) => {
+  const b = c.req.valid('json');
+  const r = await svc.createBooking(c.get('tenantId'), { ...b, guestEmail: b.guestEmail || undefined });
+  return 'error' in r ? c.json(r, 400) : c.json(r, 201);
+});
+
 // ── Room service (public — a checked-in guest ordering from their room) ──────
 const roomServiceSchema = z.object({
   items: z.array(z.object({

@@ -205,6 +205,12 @@ export function RoomsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Hotel className="w-6 h-6 text-[#8B4513]" /> {t('hotel.title')}</h2>
+        <div className="flex items-center gap-2">
+        <button onClick={() => slug && navigator.clipboard?.writeText(`${window.location.origin}/r/${slug}/book`)}
+          title={`${window.location.origin}/r/${slug ?? ''}/book`}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">
+          <BedDouble className="w-4 h-4" /> {t('book.title')}
+        </button>
         {view === 'rooms' && (
           <button onClick={() => setCreating({ number: '', type: '', floor: '', rate: '' })}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
@@ -217,6 +223,7 @@ export function RoomsPage() {
             <Plus className="w-4 h-4" /> {t('hotel.addBooking')}
           </button>
         )}
+        </div>
       </div>
 
       <div className="flex gap-1 border-b border-gray-200">

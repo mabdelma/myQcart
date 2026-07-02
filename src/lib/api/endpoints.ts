@@ -382,6 +382,14 @@ export const hotelApi = {
   settleFolio: (slug: string, bookingId: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${bookingId}/folio/settle`, {}),
 };
 
+// Public booking engine — guest-facing (no auth): reserve a room online.
+export const bookingApi = {
+  availability: (slug: string, checkIn: string, checkOut: string) =>
+    api.get<{ id: string; number: string; type?: string | null; rate: number }[]>(`/r/${slug}/book/availability?checkIn=${checkIn}&checkOut=${checkOut}`, { skipAuth: true }),
+  book: (slug: string, data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string }) =>
+    api.post<{ id: string }>(`/r/${slug}/book`, data, { skipAuth: true }),
+};
+
 // Room service — guest-facing (no auth): a checked-in guest orders to their room.
 export const roomServiceApi = {
   stay: (slug: string, roomId: string) =>

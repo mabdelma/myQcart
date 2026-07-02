@@ -39,6 +39,7 @@ const DemoPage = lazy(() => import('./features/marketing/DemoPage').then(m => ({
 const TableFlowLayout = lazy(() => import('./features/restaurant/TableFlowLayout').then(m => ({ default: m.TableFlowLayout })));
 const TableMenuPage = lazy(() => import('./features/restaurant/TableMenuPage').then(m => ({ default: m.TableMenuPage })));
 const RoomServicePage = lazy(() => import('./features/restaurant/RoomServicePage').then(m => ({ default: m.RoomServicePage })));
+const BookRoomPage = lazy(() => import('./features/restaurant/BookRoomPage').then(m => ({ default: m.BookRoomPage })));
 const TableMenuItemDetail = lazy(() => import('./features/restaurant/TableMenuItemDetail').then(m => ({ default: m.TableMenuItemDetail })));
 const CartPage = lazy(() => import('./features/cart/CartPage').then(m => ({ default: m.CartPage })));
 const OrdersPage = lazy(() => import('./features/orders/OrdersPage').then(m => ({ default: m.OrdersPage })));
@@ -151,6 +152,7 @@ function App() {
 
           {/* Public restaurant landing page */}
           <Route path="/r/:slug/room/:token" element={<RouteErrorBoundary name="room-service"><RoomServicePage /></RouteErrorBoundary>} />
+          <Route path="/r/:slug/book" element={<RouteErrorBoundary name="book-room"><BookRoomPage /></RouteErrorBoundary>} />
           <Route path="/r/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
           <Route path="/:slug" element={<RouteErrorBoundary name="restaurant"><RestaurantLanding /></RouteErrorBoundary>} />
 
