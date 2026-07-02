@@ -23,6 +23,10 @@ const statusSchema = z.object({
 
 hotel.get('/:slug/rooms', ...adminMgr, async (c) => c.json(await svc.listRooms(c.get('tenantId'))));
 hotel.get('/:slug/rooms/stats', ...adminMgr, async (c) => c.json(await svc.roomStats(c.get('tenantId'))));
+hotel.get('/:slug/hotel-report', ...adminMgr, async (c) => {
+  const r = await svc.hotelReport(c.get('tenantId'), c.req.query('from') || '', c.req.query('to') || '');
+  return 'error' in r ? c.json(r, 400) : c.json(r);
+});
 hotel.get('/:slug/rooms/available', ...adminMgr, async (c) =>
   c.json(await svc.availableRooms(c.get('tenantId'), c.req.query('checkIn') || '', c.req.query('checkOut') || '')));
 hotel.post('/:slug/rooms', ...adminMgr, zValidator('json', roomSchema), async (c) =>

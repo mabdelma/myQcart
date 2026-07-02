@@ -4,7 +4,7 @@ import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatPrice } from '../../lib/pricing';
-import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus, Folio } from '../../lib/api/types';
+import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus, Folio, HotelReport } from '../../lib/api/types';
 
 const STATUSES: RoomStatus[] = ['available', 'occupied', 'reserved', 'cleaning', 'maintenance'];
 
@@ -44,8 +44,14 @@ export function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [creating, setCreating] = useState<{ number: string; type: string; floor: string; rate: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [view, setView] = useState<'rooms' | 'bookings' | 'calendar'>('rooms');
+  const [view, setView] = useState<'rooms' | 'bookings' | 'calendar' | 'report'>('rooms');
   const [calRef, setCalRef] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
+  const [reportRange, setReportRange] = useState(() => {
+    const now = new Date(); const first = new Date(now.getFullYear(), now.getMonth(), 1); const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return { from: first.toISOString().slice(0, 10), to: next.toISOString().slice(0, 10) };
+  });
+  const [report, setReport] = useState<HotelReport | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
   const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
   const [bookingError, setBookingError] = useState('');
@@ -108,6 +114,13 @@ export function RoomsPage() {
       setBooking(null); await load();
     } catch (e) { setBookingError((e as { message?: string }).message || t('error.generic')); }
     finally { setSaving(false); }
+  }
+
+  async function runReport() {
+    if (!slug) return;
+    setReportLoading(true);
+    try { setReport(await hotelApi.report(slug, reportRange.from, reportRange.to)); }
+    catch { /* ignore */ } finally { setReportLoading(false); }
   }
 
   async function openFolio(id: string) {
@@ -227,10 +240,10 @@ export function RoomsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-gray-200">
-        {(['rooms', 'bookings', 'calendar'] as const).map((v) => (
+        {(['rooms', 'bookings', 'calendar', 'report'] as const).map((v) => (
           <button key={v} onClick={() => setView(v)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${view === v ? 'border-[#8B4513] text-[#8B4513]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-            {v === 'rooms' ? t('hotel.title') : v === 'bookings' ? t('hotel.bookings') : t('hotel.calendar')}
+            {v === 'rooms' ? t('hotel.title') : v === 'bookings' ? t('hotel.bookings') : v === 'calendar' ? t('hotel.calendar') : t('hotel.report')}
           </button>
         ))}
       </div>
@@ -386,6 +399,38 @@ export function RoomsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {view === 'report' && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-end gap-3 bg-white rounded-lg shadow p-4">
+            <div><label className="block text-xs text-gray-500 mb-1">{t('hotel.from')}</label>
+              <input type="date" value={reportRange.from} onChange={(e) => setReportRange({ ...reportRange, from: e.target.value })} className="rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
+            <div><label className="block text-xs text-gray-500 mb-1">{t('hotel.to')}</label>
+              <input type="date" value={reportRange.to} min={reportRange.from} onChange={(e) => setReportRange({ ...reportRange, to: e.target.value })} className="rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
+            <button onClick={runReport} disabled={reportLoading || reportRange.to <= reportRange.from}
+              className="px-4 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033] disabled:opacity-50">{reportLoading ? `${t('common.loading')}...` : t('hotel.run')}</button>
+          </div>
+          {report && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: t('hotel.occupancy'), value: `${report.occupancy}%` },
+                { label: 'ADR', value: money(report.adr) },
+                { label: 'RevPAR', value: money(report.revpar) },
+                { label: t('hotel.bookingRevenue'), value: money(report.roomRevenue) },
+                { label: t('hotel.bookings'), value: report.bookings },
+                { label: t('hotel.arrivals'), value: report.arrivals },
+                { label: t('hotel.departures'), value: report.departures },
+                { label: t('hotel.title'), value: report.rooms },
+              ].map((c) => (
+                <div key={c.label} className="bg-white rounded-lg shadow p-4">
+                  <p className="text-xs text-gray-500">{c.label}</p>
+                  <p className="text-2xl font-bold text-gray-900">{c.value}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>

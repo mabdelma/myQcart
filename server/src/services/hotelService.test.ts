@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createBooking, getFolio, availableRooms, settleFolio, folioPayLink } from './hotelService.js';
+import { createBooking, getFolio, availableRooms, settleFolio, folioPayLink, hotelReport } from './hotelService.js';
 import { db } from '../db/index.js';
 
 // Stub the cross-service calls hotelService makes so the tests stay unit-scoped.
@@ -97,6 +97,26 @@ describe('hotelService', () => {
       expect('error' in res).toBe(false);
       const setArgs = mockDb.set.mock.calls.at(-1)?.[0];
       expect(setArgs.folioPaidAt).toBeTruthy();
+    });
+
+    it('hotelReport computes occupancy, ADR and RevPAR', async () => {
+      mockDb.__setQueryQueue([
+        [{ id: 'r1' }, { id: 'r2' }], // 2 rooms
+        [
+          { checkIn: '2026-07-05', checkOut: '2026-07-07', total: 200, status: 'checked_out' }, // 2 nights, 200
+          { checkIn: '2026-07-10', checkOut: '2026-07-11', total: 150, status: 'booked' },       // 1 night, 150
+          { checkIn: '2026-07-12', checkOut: '2026-07-14', total: 999, status: 'cancelled' },     // ignored
+        ],
+      ]);
+      const r = await hotelReport('t1', '2026-07-01', '2026-07-31'); // 30 available days
+      expect('error' in r).toBe(false);
+      if (!('error' in r)) {
+        expect(r.bookings).toBe(2);           // cancelled excluded
+        expect(r.roomRevenue).toBe(350);
+        expect(r.occupancy).toBe(5);          // 3 sold nights / (2 rooms * 30 days) = 5%
+        expect(r.adr).toBeCloseTo(116.67, 1); // 350 / 3 sold nights
+        expect(r.revpar).toBeCloseTo(5.83, 1); // 350 / 60 available room-nights
+      }
     });
 
     it('folioPayLink refuses a zero-total folio', async () => {

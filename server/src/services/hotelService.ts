@@ -1,5 +1,5 @@
 import { db, schema } from '../db/index.js';
-import { eq, and, asc, desc, inArray, lt, gt } from 'drizzle-orm';
+import { eq, and, asc, desc, inArray, lt, gt, gte } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
 import { logger } from '../lib/logger.js';
@@ -356,6 +356,43 @@ export async function placeRoomServiceOrder(
   const n = items.reduce((s, i) => s + i.quantity, 0);
   await addFolioItem(tenantId, stay.bookingId, { description: `Room service (${n} item${n > 1 ? 's' : ''})`, amount: total });
   return { orderId: result.data.id, total };
+}
+
+/**
+ * Hotel performance report over [from, to): occupancy, ADR (avg daily rate),
+ * RevPAR (revenue per available room), room revenue, and arrivals/departures.
+ * Attributed by check-in date within the range (simple, staff-legible).
+ */
+export async function hotelReport(tenantId: string, from: string, to: string) {
+  if (!from || !to || to <= from) return { error: 'invalid date range' as const };
+  const roomRows = await db.select({ id: schema.rooms.id }).from(schema.rooms).where(eq(schema.rooms.tenantId, tenantId));
+  const rooms = roomRows.length;
+  const days = nightsBetween(from, to);
+  const rows = await db
+    .select({ checkIn: schema.roomBookings.checkIn, checkOut: schema.roomBookings.checkOut, total: schema.roomBookings.total, status: schema.roomBookings.status })
+    .from(schema.roomBookings)
+    .where(and(
+      eq(schema.roomBookings.tenantId, tenantId),
+      gte(schema.roomBookings.checkIn, from),
+      lt(schema.roomBookings.checkIn, to),
+    ));
+  let soldNights = 0, revenue = 0, bookings = 0, arrivals = 0, departures = 0;
+  for (const b of rows) {
+    if (b.status === 'cancelled') continue;
+    bookings++;
+    soldNights += nightsBetween(b.checkIn, b.checkOut);
+    revenue += Number(b.total || 0);
+    if (b.checkIn >= from && b.checkIn < to) arrivals++;
+    if (b.checkOut >= from && b.checkOut < to) departures++;
+  }
+  const availNights = rooms * days;
+  return {
+    from, to, rooms, days, bookings, arrivals, departures,
+    roomRevenue: +revenue.toFixed(2),
+    occupancy: availNights ? Math.round((soldNights / availNights) * 100) : 0,
+    adr: soldNights ? +(revenue / soldNights).toFixed(2) : 0,
+    revpar: availNights ? +(revenue / availNights).toFixed(2) : 0,
+  };
 }
 
 /** Occupancy summary for the front-desk header / dashboard. */

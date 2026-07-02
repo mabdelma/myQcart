@@ -524,6 +524,20 @@ export interface Room {
   updatedAt: string;
 }
 
+export interface HotelReport {
+  from: string;
+  to: string;
+  rooms: number;
+  days: number;
+  bookings: number;
+  arrivals: number;
+  departures: number;
+  roomRevenue: number;
+  occupancy: number;
+  adr: number;
+  revpar: number;
+}
+
 export interface RoomStats {
   total: number;
   occupancy: number;

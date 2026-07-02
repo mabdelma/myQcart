@@ -993,4 +993,10 @@ export const translations: Record<TranslationKey, string> = {
   'book.confirmedDesc': "Hemos reservado tu habitación y enviado una confirmación por correo. ¡Nos vemos!",
   'book.perNight': "/ noche",
   'book.bookAnother': "Reservar otra",
+  'hotel.report': "Informe",
+  'hotel.arrivals': "Llegadas",
+  'hotel.departures': "Salidas",
+  'hotel.from': "Desde",
+  'hotel.to': "Hasta",
+  'hotel.run': "Calcular",
 };

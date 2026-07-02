@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats, RoomBooking, Folio } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats, RoomBooking, Folio, HotelReport } from './types';
 
 // Auth
 export const authApi = {
@@ -356,6 +356,7 @@ export const marketingApi = {
 export const hotelApi = {
   list: (slug: string) => api.get<Room[]>(`/r/${slug}/rooms`),
   stats: (slug: string) => api.get<RoomStats>(`/r/${slug}/rooms/stats`),
+  report: (slug: string, from: string, to: string) => api.get<HotelReport>(`/r/${slug}/hotel-report?from=${from}&to=${to}`),
   available: (slug: string, checkIn: string, checkOut: string) =>
     api.get<Room[]>(`/r/${slug}/rooms/available?checkIn=${checkIn}&checkOut=${checkOut}`),
   create: (slug: string, data: { number: string; type?: string; floor?: string; rate?: number; notes?: string }) =>

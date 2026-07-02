@@ -982,4 +982,10 @@ export const translations: Record<TranslationKey, string> = {
   'book.confirmedDesc': "हमने आपका कमरा आरक्षित कर दिया है और ईमेल से पुष्टि भेज दी है। जल्द मिलते हैं!",
   'book.perNight': "/ रात",
   'book.bookAnother': "एक और बुक करें",
+  'hotel.report': "रिपोर्ट",
+  'hotel.arrivals': "आगमन",
+  'hotel.departures': "प्रस्थान",
+  'hotel.from': "से",
+  'hotel.to': "तक",
+  'hotel.run': "चलाएँ",
 };

@@ -982,4 +982,10 @@ export const translations: Record<TranslationKey, string> = {
   'book.confirmedDesc': "我们已为您预留房间并发送确认邮件。期待您的光临！",
   'book.perNight': "每晚",
   'book.bookAnother': "再订一间",
+  'hotel.report': "报表",
+  'hotel.arrivals': "入住",
+  'hotel.departures': "退房",
+  'hotel.from': "从",
+  'hotel.to': "至",
+  'hotel.run': "生成",
 };
