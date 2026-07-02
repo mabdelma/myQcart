@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User } from 'lucide-react';
+import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
@@ -43,7 +43,8 @@ export function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [creating, setCreating] = useState<{ number: string; type: string; floor: string; rate: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [view, setView] = useState<'rooms' | 'bookings'>('rooms');
+  const [view, setView] = useState<'rooms' | 'bookings' | 'calendar'>('rooms');
+  const [calRef, setCalRef] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
   const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
   const [bookingError, setBookingError] = useState('');
@@ -67,6 +68,16 @@ export function RoomsPage() {
   const bNights = booking && booking.checkIn && booking.checkOut && booking.checkOut > booking.checkIn
     ? Math.max(1, Math.round((new Date(booking.checkOut + 'T00:00:00Z').getTime() - new Date(booking.checkIn + 'T00:00:00Z').getTime()) / 86400000)) : 0;
   const bTotal = selRoom && bNights ? selRoom.rate * bNights : 0;
+
+  // Occupancy calendar (client-side from the loaded bookings)
+  const daysInMonth = new Date(calRef.y, calRef.m + 1, 0).getDate();
+  const calPad = (n: number) => String(n).padStart(2, '0');
+  const calDate = (day: number) => `${calRef.y}-${calPad(calRef.m + 1)}-${calPad(day)}`;
+  const activeBookings = bookings.filter((b) => b.status !== 'cancelled');
+  const bookingOn = (roomId: string, ds: string) => activeBookings.find((b) => b.roomId === roomId && b.checkIn <= ds && ds < b.checkOut);
+  const monthLabel = new Date(calRef.y, calRef.m, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  const shiftMonth = (delta: number) => setCalRef(({ y, m }) => { const d = new Date(y, m + delta, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
+  const CAL_FILL: Record<BookingStatus, string> = { booked: 'bg-amber-300', checked_in: 'bg-blue-400', checked_out: 'bg-gray-300', cancelled: '' };
 
   const statusLabel = (s: RoomStatus) => t(`hotel.status.${s}`);
   const bookingLabel = (s: BookingStatus) => t(`hotel.bookingStatus.${s}`);
@@ -151,12 +162,13 @@ export function RoomsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Hotel className="w-6 h-6 text-[#8B4513]" /> {t('hotel.title')}</h2>
-        {view === 'rooms' ? (
+        {view === 'rooms' && (
           <button onClick={() => setCreating({ number: '', type: '', floor: '', rate: '' })}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
             <Plus className="w-4 h-4" /> {t('hotel.addRoom')}
           </button>
-        ) : (
+        )}
+        {view !== 'rooms' && (
           <button onClick={() => { setBookingError(''); setBooking({ roomId: '', guestName: '', guestEmail: '', guestPhone: '', checkIn: '', checkOut: '' }); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
             <Plus className="w-4 h-4" /> {t('hotel.addBooking')}
@@ -165,10 +177,10 @@ export function RoomsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-gray-200">
-        {(['rooms', 'bookings'] as const).map((v) => (
+        {(['rooms', 'bookings', 'calendar'] as const).map((v) => (
           <button key={v} onClick={() => setView(v)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${view === v ? 'border-[#8B4513] text-[#8B4513]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-            {v === 'rooms' ? t('hotel.title') : t('hotel.bookings')}
+            {v === 'rooms' ? t('hotel.title') : v === 'bookings' ? t('hotel.bookings') : t('hotel.calendar')}
           </button>
         ))}
       </div>
@@ -276,6 +288,53 @@ export function RoomsPage() {
             </table>
           </div>
         )}
+        </div>
+      )}
+
+      {view === 'calendar' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md hover:bg-gray-100"><ChevronLeft className="w-4 h-4" /></button>
+              <span className="text-sm font-semibold text-gray-800 min-w-[9rem] text-center capitalize">{monthLabel}</span>
+              <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-300" /> {bookingLabel('booked')}</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-400" /> {bookingLabel('checked_in')}</span>
+            </div>
+          </div>
+          {rooms.length === 0 ? (
+            <p className="bg-white rounded-lg shadow p-6 text-center text-gray-500 text-sm">{t('hotel.noRooms')}</p>
+          ) : (
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
+              <table className="text-xs border-collapse">
+                <thead>
+                  <tr>
+                    <th className="sticky left-0 z-10 bg-gray-50 p-2 text-left font-medium text-gray-600 border-b border-gray-100">{t('hotel.room')}</th>
+                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
+                      <th key={day} className="w-7 p-1 text-center font-normal text-gray-400 border-b border-gray-100">{day}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rooms.map((room) => (
+                    <tr key={room.id}>
+                      <td className="sticky left-0 z-10 bg-white p-2 font-medium text-gray-700 border-b border-gray-100 whitespace-nowrap">{room.number}</td>
+                      {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+                        const b = bookingOn(room.id, calDate(day));
+                        return (
+                          <td key={day} className="border-b border-l border-gray-50 p-0.5" title={b ? `${b.guestName} (${b.checkIn} → ${b.checkOut})` : ''}>
+                            <div className={`h-6 w-6 rounded-sm ${b ? CAL_FILL[b.status] : 'bg-gray-50'}`} />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

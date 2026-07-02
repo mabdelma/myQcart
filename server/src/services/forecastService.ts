@@ -76,7 +76,34 @@ export async function getInsights(tenantId: string, tenantName: string, currency
     .limit(5);
   const topCustomers = topRows.map((c) => ({ name: c.name, totalSpent: Number(c.totalSpent || 0), totalVisits: c.totalVisits || 0 }));
 
-  const data = { forecast, forecast7Total, lowStock, reorderCost, atRisk, topCustomers };
+  // ── Hotel front desk (only meaningful when the tenant runs rooms) ──
+  const roomAgg = await db
+    .select({
+      total: sql<number>`count(*)`,
+      occupied: sql<number>`count(*) filter (where ${schema.rooms.status} = 'occupied')`,
+    })
+    .from(schema.rooms)
+    .where(eq(schema.rooms.tenantId, tenantId));
+  const roomsTotal = Number(roomAgg[0]?.total || 0);
+  let hotel: { rooms: number; occupancy: number; upcomingRevenue: number; upcomingBookings: number } | undefined;
+  if (roomsTotal > 0) {
+    const bkRows = await db
+      .select({ total: schema.roomBookings.total })
+      .from(schema.roomBookings)
+      .where(and(
+        eq(schema.roomBookings.tenantId, tenantId),
+        sql`${schema.roomBookings.status} in ('booked', 'checked_in')`,
+        sql`${schema.roomBookings.checkOut} >= to_char(CURRENT_DATE, 'YYYY-MM-DD')`,
+      ));
+    hotel = {
+      rooms: roomsTotal,
+      occupancy: Math.round((Number(roomAgg[0]?.occupied || 0) / roomsTotal) * 100),
+      upcomingRevenue: +bkRows.reduce((s, b) => s + Number(b.total || 0), 0).toFixed(2),
+      upcomingBookings: bkRows.length,
+    };
+  }
+
+  const data = { forecast, forecast7Total, lowStock, reorderCost, atRisk, topCustomers, ...(hotel ? { hotel } : {}) };
 
   // ── AI narrative (best-effort; degrades to empty if no key) ──
   let narrative = '';
@@ -89,9 +116,10 @@ export async function getInsights(tenantId: string, tenantName: string, currency
         max_tokens: 320,
         messages: [{
           role: 'user',
-          content: `You are the AI business analyst for the restaurant "${tenantName}" (currency ${currency}). `
+          content: `You are the AI business analyst for the hospitality business "${tenantName}" (currency ${currency}). `
             + `From this data, write 3-4 short, specific, actionable bullet points (start each with "•", no preamble, no headings). `
-            + `Call out the projected weekly revenue, the most urgent reorder, and how to win back at-risk customers.\n\n${JSON.stringify(data)}`,
+            + `Call out the projected weekly revenue, the most urgent reorder, and how to win back at-risk customers. `
+            + `${hotel ? 'Also comment on room occupancy and upcoming room revenue. ' : ''}\n\n${JSON.stringify(data)}`,
         }],
       });
       narrative = resp.choices[0]?.message?.content?.trim() || '';

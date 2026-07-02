@@ -920,4 +920,5 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.roomsAvailable': "{n} Zimmer verfügbar",
   'hotel.bookingRevenue': "Buchungsumsatz",
   'hotel.total': "Gesamt",
+  'hotel.calendar': "Kalender",
 };

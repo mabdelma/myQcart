@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatPrice } from '../../lib/pricing';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
-import { TrendingUp, Package, UserMinus, Crown, Sparkles } from 'lucide-react';
+import { TrendingUp, Package, UserMinus, Crown, Sparkles, Hotel } from 'lucide-react';
 import type { ForecastInsights as Insights } from '../../lib/api/types';
 
 export function ForecastInsights() {
@@ -38,6 +38,18 @@ export function ForecastInsights() {
         <div className="bg-gradient-to-br from-[#8B4513]/5 to-[#F5DEB3]/20 border border-[#8B4513]/20 rounded-lg p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B4513] mb-2"><Sparkles className="w-4 h-4" /> {t('analytics.aiSummary')}</h3>
           <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{data.narrative}</div>
+        </div>
+      )}
+
+      {/* Hotel front-desk (only when the tenant runs rooms) */}
+      {data.hotel && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="flex items-center gap-2 text-lg font-medium text-gray-900 mb-4"><Hotel className="w-5 h-5 text-[#8B4513]" /> {t('hotel.title')}</h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div><p className="text-2xl font-bold text-gray-900">{data.hotel.occupancy}%</p><p className="text-xs text-gray-500">{t('hotel.occupancy')}</p></div>
+            <div><p className="text-2xl font-bold text-gray-900">{money(data.hotel.upcomingRevenue)}</p><p className="text-xs text-gray-500">{t('hotel.bookingRevenue')}</p></div>
+            <div><p className="text-2xl font-bold text-gray-900">{data.hotel.upcomingBookings}</p><p className="text-xs text-gray-500">{t('hotel.bookings')}</p></div>
+          </div>
         </div>
       )}
 

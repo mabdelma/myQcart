@@ -615,5 +615,6 @@ export interface ForecastInsights {
   reorderCost: number;
   atRisk: { name: string; lastVisit: string | null; totalSpent: number; totalVisits: number }[];
   topCustomers: { name: string; totalSpent: number; totalVisits: number }[];
+  hotel?: { rooms: number; occupancy: number; upcomingRevenue: number; upcomingBookings: number };
   narrative: string;
 }
