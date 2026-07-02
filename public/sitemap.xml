@@ -11,6 +11,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://qlisted.com/hotels</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://qlisted.com/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

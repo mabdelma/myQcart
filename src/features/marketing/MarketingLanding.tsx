@@ -389,6 +389,16 @@ function PhoneMockup() {
           </div>
         </div>
       </div>
+
+      {/* floating front-desk card — restaurants AND hotels on one platform */}
+      <div className="absolute -right-6 bottom-6 z-10 hidden sm:block rounded-2xl bg-white p-3.5 shadow-xl ring-1 ring-gray-100 w-48">
+        <p className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500"><Hotel className="h-3.5 w-3.5 text-[#8B4513]" /> {t('hotel.title')}</p>
+        <div className="mt-2 grid grid-cols-3 gap-1.5 text-center">
+          <div><p className="text-base font-bold text-gray-900">82%</p><p className="text-[9px] text-gray-500">{t('hotel.occupancy')}</p></div>
+          <div><p className="text-base font-bold text-gray-900">6</p><p className="text-[9px] text-gray-500 truncate">{t('hotel.arrivalsToday')}</p></div>
+          <div><p className="text-base font-bold text-gray-900">4</p><p className="text-[9px] text-gray-500 truncate">{t('hotel.departuresToday')}</p></div>
+        </div>
+      </div>
     </div>
   );
 }

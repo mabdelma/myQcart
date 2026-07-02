@@ -10,6 +10,7 @@ export function MarketingHeader() {
 
   const navLinks = [
     { to: '/features', label: t('nav.features') },
+    { to: '/hotels', label: t('nav.hotels') },
     { to: '/pricing', label: t('nav.pricing') },
     { to: '/about', label: t('nav.about') },
     { to: '/contact', label: t('nav.contact') },
