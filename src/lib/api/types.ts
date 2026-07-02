@@ -516,6 +516,7 @@ export interface Room {
   type?: string | null;
   status: RoomStatus;
   floor?: string | null;
+  rate: number;
   guestName?: string | null;
   notes?: string | null;
   createdAt: string;
@@ -544,6 +545,8 @@ export interface RoomBooking {
   checkIn: string;
   checkOut: string;
   status: BookingStatus;
+  ratePerNight: number;
+  total: number;
   notes?: string | null;
 }
 

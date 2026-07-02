@@ -13,6 +13,7 @@ const roomSchema = z.object({
   type: z.string().optional(),
   floor: z.string().optional(),
   status: z.enum(['available', 'occupied', 'cleaning', 'maintenance', 'reserved']).optional(),
+  rate: z.number().nonnegative().optional(),
   notes: z.string().optional(),
 });
 const statusSchema = z.object({
@@ -22,6 +23,8 @@ const statusSchema = z.object({
 
 hotel.get('/:slug/rooms', ...adminMgr, async (c) => c.json(await svc.listRooms(c.get('tenantId'))));
 hotel.get('/:slug/rooms/stats', ...adminMgr, async (c) => c.json(await svc.roomStats(c.get('tenantId'))));
+hotel.get('/:slug/rooms/available', ...adminMgr, async (c) =>
+  c.json(await svc.availableRooms(c.get('tenantId'), c.req.query('checkIn') || '', c.req.query('checkOut') || '')));
 hotel.post('/:slug/rooms', ...adminMgr, zValidator('json', roomSchema), async (c) =>
   c.json(await svc.createRoom(c.get('tenantId'), c.req.valid('json')), 201));
 hotel.put('/:slug/rooms/:id', ...adminMgr, async (c) =>

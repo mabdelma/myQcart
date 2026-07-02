@@ -525,6 +525,7 @@ export const rooms = pgTable('rooms', {
   type: text('type'),
   status: text('status', { enum: ['available', 'occupied', 'cleaning', 'maintenance', 'reserved'] }).notNull().default('available'),
   floor: text('floor'),
+  rate: doublePrecision('rate').notNull().default(0), // price per night
   guestName: text('guest_name'),
   notes: text('notes'),
   createdAt: text('created_at').notNull().default(sql`now()`),
@@ -542,6 +543,8 @@ export const roomBookings = pgTable('room_bookings', {
   checkIn: text('check_in').notNull(), // YYYY-MM-DD
   checkOut: text('check_out').notNull(), // YYYY-MM-DD
   status: text('status', { enum: ['booked', 'checked_in', 'checked_out', 'cancelled'] }).notNull().default('booked'),
+  ratePerNight: doublePrecision('rate_per_night').notNull().default(0),
+  total: doublePrecision('total').notNull().default(0),
   notes: text('notes'),
   createdAt: text('created_at').notNull().default(sql`now()`),
   updatedAt: text('updated_at').notNull().default(sql`now()`),

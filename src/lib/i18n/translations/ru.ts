@@ -915,4 +915,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingStatus.cancelled': "Отменено",
   'hotel.arrivalsToday': "Заезды сегодня",
   'hotel.departuresToday': "Выезды сегодня",
+  'hotel.ratePerNight': "Цена / ночь",
+  'hotel.nights': "{n} ноч.",
+  'hotel.roomsAvailable': "Доступно номеров: {n}",
+  'hotel.bookingRevenue': "Доход от броней",
+  'hotel.total': "Итого",
 };

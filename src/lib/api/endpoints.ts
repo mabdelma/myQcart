@@ -356,9 +356,11 @@ export const marketingApi = {
 export const hotelApi = {
   list: (slug: string) => api.get<Room[]>(`/r/${slug}/rooms`),
   stats: (slug: string) => api.get<RoomStats>(`/r/${slug}/rooms/stats`),
-  create: (slug: string, data: { number: string; type?: string; floor?: string; notes?: string }) =>
+  available: (slug: string, checkIn: string, checkOut: string) =>
+    api.get<Room[]>(`/r/${slug}/rooms/available?checkIn=${checkIn}&checkOut=${checkOut}`),
+  create: (slug: string, data: { number: string; type?: string; floor?: string; rate?: number; notes?: string }) =>
     api.post<{ id: string }>(`/r/${slug}/rooms`, data),
-  update: (slug: string, id: string, data: Partial<{ number: string; type: string; floor: string; notes: string }>) =>
+  update: (slug: string, id: string, data: Partial<{ number: string; type: string; floor: string; rate: number; notes: string }>) =>
     api.put<{ success: boolean }>(`/r/${slug}/rooms/${id}`, data),
   setStatus: (slug: string, id: string, status: RoomStatus, guestName?: string) =>
     api.post<{ success: boolean }>(`/r/${slug}/rooms/${id}/status`, { status, guestName }),

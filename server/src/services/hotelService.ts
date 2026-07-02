@@ -21,7 +21,7 @@ export async function listRooms(tenantId: string) {
 
 export async function createRoom(
   tenantId: string,
-  data: { number: string; type?: string; floor?: string; status?: RoomStatus; notes?: string },
+  data: { number: string; type?: string; floor?: string; status?: RoomStatus; rate?: number; notes?: string },
 ) {
   const id = uuid();
   await db.insert(schema.rooms).values({ id, tenantId, ...data });
@@ -31,7 +31,7 @@ export async function createRoom(
 export async function updateRoom(
   tenantId: string,
   id: string,
-  data: Partial<{ number: string; type: string; floor: string; status: RoomStatus; guestName: string; notes: string }>,
+  data: Partial<{ number: string; type: string; floor: string; status: RoomStatus; rate: number; guestName: string; notes: string }>,
 ) {
   await db
     .update(schema.rooms)
@@ -70,6 +70,8 @@ export async function listBookings(tenantId: string) {
       checkIn: schema.roomBookings.checkIn,
       checkOut: schema.roomBookings.checkOut,
       status: schema.roomBookings.status,
+      ratePerNight: schema.roomBookings.ratePerNight,
+      total: schema.roomBookings.total,
       notes: schema.roomBookings.notes,
     })
     .from(schema.roomBookings)
@@ -78,12 +80,33 @@ export async function listBookings(tenantId: string) {
     .orderBy(desc(schema.roomBookings.checkIn));
 }
 
+/** Whole nights between two YYYY-MM-DD dates (>= 1). */
+function nightsBetween(checkIn: string, checkOut: string): number {
+  const ms = new Date(checkOut + 'T00:00:00Z').getTime() - new Date(checkIn + 'T00:00:00Z').getTime();
+  return Math.max(1, Math.round(ms / 86400000));
+}
+
+/** Rooms with no active (booked/checked_in) booking overlapping [checkIn, checkOut). */
+export async function availableRooms(tenantId: string, checkIn: string, checkOut: string) {
+  const all = await listRooms(tenantId);
+  if (!checkIn || !checkOut || checkOut <= checkIn) return all;
+  const clashing = await db.select({ roomId: schema.roomBookings.roomId }).from(schema.roomBookings)
+    .where(and(
+      eq(schema.roomBookings.tenantId, tenantId),
+      inArray(schema.roomBookings.status, ['booked', 'checked_in']),
+      lt(schema.roomBookings.checkIn, checkOut),
+      gt(schema.roomBookings.checkOut, checkIn),
+    ));
+  const taken = new Set(clashing.map((c) => c.roomId));
+  return all.filter((r) => !taken.has(r.id));
+}
+
 export async function createBooking(
   tenantId: string,
   data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string; notes?: string },
 ) {
   // Room must belong to this tenant.
-  const room = await db.select({ id: schema.rooms.id, number: schema.rooms.number }).from(schema.rooms)
+  const room = await db.select({ id: schema.rooms.id, number: schema.rooms.number, rate: schema.rooms.rate }).from(schema.rooms)
     .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId)));
   if (room.length === 0) return { error: 'room not found' as const };
   if (data.checkOut <= data.checkIn) return { error: 'check-out must be after check-in' as const };
@@ -100,8 +123,10 @@ export async function createBooking(
     ));
   if (clashes.length > 0) return { error: 'those dates overlap an existing booking for this room' as const };
 
+  const ratePerNight = room[0].rate || 0;
+  const total = ratePerNight * nightsBetween(data.checkIn, data.checkOut);
   const id = uuid();
-  await db.insert(schema.roomBookings).values({ id, tenantId, ...data });
+  await db.insert(schema.roomBookings).values({ id, tenantId, ...data, ratePerNight, total });
   // Mark the room reserved (unless already occupied) so the board reflects the hold.
   await db.update(schema.rooms).set({ status: 'reserved', guestName: data.guestName, updatedAt: new Date().toISOString() })
     .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId), eq(schema.rooms.status, 'available')));

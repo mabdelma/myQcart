@@ -6,6 +6,7 @@ import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { Clock, DollarSign, Users, AlertTriangle, Utensils, Link as LinkIcon, Copy, Check, ExternalLink } from 'lucide-react';
 import { StatsCard } from '../../components/admin/StatsCard';
 import { AnalyticsSkeleton } from '../../components/ui/Skeleton';
+import { FrontDeskWidget } from './FrontDeskWidget';
 import type { AnalyticsSummary } from '../../lib/api/types';
 
 export function AnalyticsDashboard() {
@@ -76,6 +77,8 @@ export function AnalyticsDashboard() {
           </a>
         </div>
       </div>
+
+      <FrontDeskWidget slug={slug} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <StatsCard

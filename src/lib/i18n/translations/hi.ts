@@ -915,4 +915,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingStatus.cancelled': "रद्द",
   'hotel.arrivalsToday': "आज आगमन",
   'hotel.departuresToday': "आज प्रस्थान",
+  'hotel.ratePerNight': "दर / रात",
+  'hotel.nights': "{n} रातें",
+  'hotel.roomsAvailable': "{n} कमरे उपलब्ध",
+  'hotel.bookingRevenue': "बुकिंग आय",
+  'hotel.total': "कुल",
 };

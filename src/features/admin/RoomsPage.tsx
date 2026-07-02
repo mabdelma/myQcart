@@ -3,6 +3,7 @@ import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User } from 'lucide-reac
 import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
+import { formatPrice } from '../../lib/pricing';
 import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus } from '../../lib/api/types';
 
 const STATUSES: RoomStatus[] = ['available', 'occupied', 'reserved', 'cleaning', 'maintenance'];
@@ -30,24 +31,42 @@ const DOT: Record<RoomStatus, string> = {
 };
 
 export function RoomsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state: { tenant } } = useAuth();
   const slug = tenant?.slug;
+  const money = (n: number) => formatPrice(n, locale);
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [stats, setStats] = useState<RoomStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<RoomStatus | 'all'>('all');
   const [editing, setEditing] = useState<Room | null>(null);
-  const [creating, setCreating] = useState<{ number: string; type: string; floor: string } | null>(null);
+  const [creating, setCreating] = useState<{ number: string; type: string; floor: string; rate: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [view, setView] = useState<'rooms' | 'bookings'>('rooms');
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
   const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
   const [bookingError, setBookingError] = useState('');
+  const [availRooms, setAvailRooms] = useState<Room[] | null>(null);
   const today = new Date().toISOString().slice(0, 10);
   const arrivals = bookings.filter((b) => b.status === 'booked' && b.checkIn === today);
   const departures = bookings.filter((b) => b.status === 'checked_in' && b.checkOut === today);
+  const bookedRevenue = bookings.filter((b) => b.status !== 'cancelled').reduce((sum, b) => sum + (b.total || 0), 0);
+
+  // When the booking's dates are set, offer only rooms free for that window.
+  const bChkIn = booking?.checkIn, bChkOut = booking?.checkOut;
+  useEffect(() => {
+    if (!slug || !bChkIn || !bChkOut || bChkOut <= bChkIn) { setAvailRooms(null); return; }
+    let cancelled = false;
+    hotelApi.available(slug, bChkIn, bChkOut).then((r) => { if (!cancelled) setAvailRooms(r); }).catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+  }, [slug, bChkIn, bChkOut]);
+
+  const roomOptions = availRooms ?? rooms;
+  const selRoom = booking ? rooms.find((r) => r.id === booking.roomId) : undefined;
+  const bNights = booking && booking.checkIn && booking.checkOut && booking.checkOut > booking.checkIn
+    ? Math.max(1, Math.round((new Date(booking.checkOut + 'T00:00:00Z').getTime() - new Date(booking.checkIn + 'T00:00:00Z').getTime()) / 86400000)) : 0;
+  const bTotal = selRoom && bNights ? selRoom.rate * bNights : 0;
 
   const statusLabel = (s: RoomStatus) => t(`hotel.status.${s}`);
   const bookingLabel = (s: BookingStatus) => t(`hotel.bookingStatus.${s}`);
@@ -99,7 +118,7 @@ export function RoomsPage() {
     if (!slug || !creating?.number.trim()) return;
     setSaving(true);
     try {
-      await hotelApi.create(slug, { number: creating.number, type: creating.type || undefined, floor: creating.floor || undefined });
+      await hotelApi.create(slug, { number: creating.number, type: creating.type || undefined, floor: creating.floor || undefined, rate: Number(creating.rate) || 0 });
       setCreating(null); await load();
     } catch { /* ignore */ } finally { setSaving(false); }
   }
@@ -108,7 +127,7 @@ export function RoomsPage() {
     if (!slug || !editing) return;
     setSaving(true);
     try {
-      await hotelApi.update(slug, editing.id, { number: editing.number, type: editing.type || undefined, floor: editing.floor || undefined, notes: editing.notes || undefined });
+      await hotelApi.update(slug, editing.id, { number: editing.number, type: editing.type || undefined, floor: editing.floor || undefined, rate: Number(editing.rate) || 0, notes: editing.notes || undefined });
       if (editing.status !== 'available') await hotelApi.setStatus(slug, editing.id, editing.status, editing.guestName || undefined);
       setEditing(null); await load();
     } catch { /* ignore */ } finally { setSaving(false); }
@@ -133,7 +152,7 @@ export function RoomsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Hotel className="w-6 h-6 text-[#8B4513]" /> {t('hotel.title')}</h2>
         {view === 'rooms' ? (
-          <button onClick={() => setCreating({ number: '', type: '', floor: '' })}
+          <button onClick={() => setCreating({ number: '', type: '', floor: '', rate: '' })}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#8B4513] text-white text-sm hover:bg-[#5C4033]">
             <Plus className="w-4 h-4" /> {t('hotel.addRoom')}
           </button>
@@ -186,7 +205,7 @@ export function RoomsPage() {
               <div className="flex items-start justify-between">
                 <button onClick={() => setEditing(room)} className="text-left">
                   <p className="font-bold text-lg flex items-center gap-1.5"><BedDouble className="w-4 h-4" /> {room.number}</p>
-                  <p className="text-xs opacity-80">{room.type || t('hotel.room')}{room.floor ? ` · ${t('hotel.floor')} ${room.floor}` : ''}</p>
+                  <p className="text-xs opacity-80">{room.type || t('hotel.room')}{room.floor ? ` · ${t('hotel.floor')} ${room.floor}` : ''}{room.rate ? ` · ${money(room.rate)}` : ''}</p>
                 </button>
               </div>
               {room.guestName && <p className="text-xs mt-1 font-medium truncate">{room.guestName}</p>}
@@ -201,8 +220,8 @@ export function RoomsPage() {
 
       {view === 'bookings' && (
         <div className="space-y-4">
-        {(arrivals.length > 0 || departures.length > 0) && (
-          <div className="grid grid-cols-2 gap-3">
+        {bookings.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="bg-white rounded-lg shadow p-4">
               <p className="text-xs text-gray-500 flex items-center gap-1"><LogIn className="w-3.5 h-3.5" /> {t('hotel.arrivalsToday')}</p>
               <p className="text-2xl font-bold text-gray-900">{arrivals.length}</p>
@@ -212,6 +231,10 @@ export function RoomsPage() {
               <p className="text-xs text-gray-500 flex items-center gap-1"><LogOut className="w-3.5 h-3.5" /> {t('hotel.departuresToday')}</p>
               <p className="text-2xl font-bold text-gray-900">{departures.length}</p>
               {departures.length > 0 && <p className="text-xs text-gray-500 mt-1 truncate">{departures.map((a) => a.guestName).join(', ')}</p>}
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <p className="text-xs text-gray-500">{t('hotel.bookingRevenue')}</p>
+              <p className="text-2xl font-bold text-gray-900">{money(bookedRevenue)}</p>
             </div>
           </div>
         )}
@@ -225,6 +248,7 @@ export function RoomsPage() {
                 <th className="text-left p-3">{t('hotel.room')}</th>
                 <th className="text-left p-3 hidden sm:table-cell">{t('hotel.checkInDate')}</th>
                 <th className="text-left p-3 hidden sm:table-cell">{t('hotel.checkOutDate')}</th>
+                <th className="text-right p-3 hidden md:table-cell">{t('hotel.total')}</th>
                 <th className="text-left p-3">{t('hotel.status.label')}</th>
                 <th className="p-3"></th>
               </tr></thead>
@@ -234,6 +258,7 @@ export function RoomsPage() {
                   <td className="p-3 text-gray-600">{b.roomNumber || '—'}</td>
                   <td className="p-3 text-gray-500 hidden sm:table-cell">{b.checkIn}</td>
                   <td className="p-3 text-gray-500 hidden sm:table-cell">{b.checkOut}</td>
+                  <td className="p-3 text-right font-medium text-gray-700 hidden md:table-cell">{b.total ? money(b.total) : '—'}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${BOOKING_STYLE[b.status]}`}>{bookingLabel(b.status)}</span></td>
                   <td className="p-3 text-right whitespace-nowrap">
                     {b.status === 'booked' && (
@@ -257,21 +282,28 @@ export function RoomsPage() {
       {booking && (
         <Modal title={t('hotel.addBooking')} onClose={() => { setBooking(null); setBookingError(''); }}>
           {bookingError && <div className="bg-red-50 border-l-4 border-red-400 p-3 text-sm text-red-700">{bookingError}</div>}
-          <Field label={t('hotel.room')}>
-            <select value={booking.roomId} onChange={(e) => setBooking({ ...booking, roomId: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]">
-              <option value="">{t('hotel.selectRoom')}</option>
-              {rooms.map((r) => <option key={r.id} value={r.id}>{r.number}{r.type ? ` · ${r.type}` : ''}</option>)}
-            </select>
-          </Field>
-          <Field label={t('hotel.guest')}><input autoFocus value={booking.guestName} onChange={(e) => setBooking({ ...booking, guestName: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t('common.email')}><input type="email" value={booking.guestEmail} onChange={(e) => setBooking({ ...booking, guestEmail: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
-            <Field label={t('common.phone')}><input value={booking.guestPhone} onChange={(e) => setBooking({ ...booking, guestPhone: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label={t('hotel.checkInDate')}><input type="date" value={booking.checkIn} onChange={(e) => setBooking({ ...booking, checkIn: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
             <Field label={t('hotel.checkOutDate')}><input type="date" value={booking.checkOut} min={booking.checkIn || undefined} onChange={(e) => setBooking({ ...booking, checkOut: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
           </div>
+          <Field label={t('hotel.room')}>
+            <select value={booking.roomId} onChange={(e) => setBooking({ ...booking, roomId: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]">
+              <option value="">{t('hotel.selectRoom')}</option>
+              {roomOptions.map((r) => <option key={r.id} value={r.id}>{r.number}{r.type ? ` · ${r.type}` : ''}{r.rate ? ` — ${money(r.rate)}` : ''}</option>)}
+            </select>
+            {availRooms && <p className="text-xs text-gray-500 mt-1">{t('hotel.roomsAvailable', { n: String(availRooms.length) })}</p>}
+          </Field>
+          <Field label={t('hotel.guest')}><input value={booking.guestName} onChange={(e) => setBooking({ ...booking, guestName: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('common.email')}><input type="email" value={booking.guestEmail} onChange={(e) => setBooking({ ...booking, guestEmail: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+            <Field label={t('common.phone')}><input value={booking.guestPhone} onChange={(e) => setBooking({ ...booking, guestPhone: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          </div>
+          {bTotal > 0 && (
+            <div className="flex items-center justify-between rounded-lg bg-amber-50 px-4 py-2.5 text-sm">
+              <span className="text-gray-600">{money(selRoom!.rate)} × {t('hotel.nights', { n: String(bNights) })}</span>
+              <span className="font-bold text-gray-900">{money(bTotal)}</span>
+            </div>
+          )}
           <div className="flex justify-end gap-2">
             <button onClick={() => setBooking(null)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
             <button onClick={saveBooking} disabled={saving || !booking.roomId || !booking.guestName.trim() || !booking.checkIn || !booking.checkOut} className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">{t('common.save')}</button>
@@ -282,9 +314,10 @@ export function RoomsPage() {
       {creating && (
         <Modal title={t('hotel.addRoom')} onClose={() => setCreating(null)}>
           <Field label={t('hotel.roomNumber')}><input autoFocus value={creating.number} onChange={(e) => setCreating({ ...creating, number: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Field label={t('hotel.roomType')}><input value={creating.type} onChange={(e) => setCreating({ ...creating, type: e.target.value })} placeholder={t('hotel.roomTypeHint')} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
             <Field label={t('hotel.floor')}><input value={creating.floor} onChange={(e) => setCreating({ ...creating, floor: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+            <Field label={t('hotel.ratePerNight')}><input type="number" min="0" step="0.01" value={creating.rate} onChange={(e) => setCreating({ ...creating, rate: e.target.value })} placeholder="0" className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
           </div>
           <div className="flex justify-end gap-2">
             <button onClick={() => setCreating(null)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
@@ -299,7 +332,10 @@ export function RoomsPage() {
             <Field label={t('hotel.roomNumber')}><input value={editing.number} onChange={(e) => setEditing({ ...editing, number: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
             <Field label={t('hotel.floor')}><input value={editing.floor || ''} onChange={(e) => setEditing({ ...editing, floor: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
           </div>
-          <Field label={t('hotel.roomType')}><input value={editing.type || ''} onChange={(e) => setEditing({ ...editing, type: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('hotel.roomType')}><input value={editing.type || ''} onChange={(e) => setEditing({ ...editing, type: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+            <Field label={t('hotel.ratePerNight')}><input type="number" min="0" step="0.01" value={editing.rate ?? 0} onChange={(e) => setEditing({ ...editing, rate: Number(e.target.value) })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
+          </div>
           <Field label={t('hotel.status.label')}>
             <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as RoomStatus })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]">
               {STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
