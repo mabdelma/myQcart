@@ -958,4 +958,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "施設をよりスマートに運営しませんか？",
   'hotels.ctaDesc': "無料で開始 — カード不要。数分で客室を設定。",
   'nav.hotels': "ホテル",
+  'nav.restaurants': "レストラン",
+  'restaurants.heroBadge': "レストラン向け",
+  'restaurants.heroTitle': "すべてのテーブルがセルフサービスの収益エンジン",
+  'restaurants.heroDesc': "ゲストはスマホでスキャン・注文・支払い — アプリ不要、待ち時間なし。キッチンとスタッフは常に同期し、ダッシュボードで各テーブルと売上を把握。",
+  'restaurants.featuresTitle': "忙しいサービスのために",
+  'restaurants.featuresDesc': "最初のスキャンから最後の支払いまで — ホールも厨房もすべて。",
+  'restaurants.ctaTitle': "レストランをデジタル化しませんか？",
+  'restaurants.ctaDesc': "無料で開始 — カード不要。メニューは数分で公開。",
 };

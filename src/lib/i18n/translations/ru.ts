@@ -958,4 +958,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "Готовы управлять объектом умнее?",
   'hotels.ctaDesc': "Начните бесплатно — без карты. Настройте номера за минуты.",
   'nav.hotels': "Отели",
+  'nav.restaurants': "Рестораны",
+  'restaurants.heroBadge': "Для ресторанов",
+  'restaurants.heroTitle': "Каждый стол — двигатель самообслуживания",
+  'restaurants.heroDesc': "Гости сканируют, заказывают и платят со смартфона — без приложения и ожидания. Кухня и персонал синхронны, а дашборд держит под контролем каждый стол и каждый рубль.",
+  'restaurants.featuresTitle': "Создано для загруженного зала",
+  'restaurants.featuresDesc': "От первого сканирования до оплаты — всё: зал и кухня.",
+  'restaurants.ctaTitle': "Готовы оцифровать ресторан?",
+  'restaurants.ctaDesc': "Начните бесплатно — без карты. Меню запустится за минуты.",
 };

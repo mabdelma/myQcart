@@ -29,6 +29,7 @@ const FeaturesPage = lazy(() => import('./features/marketing/FeaturesPage').then
 const AboutPage = lazy(() => import('./features/marketing/AboutPage').then(m => ({ default: m.AboutPage })));
 const NotFoundPage = lazy(() => import('./features/marketing/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const HotelsLanding = lazy(() => import('./features/marketing/HotelsLanding').then(m => ({ default: m.HotelsLanding })));
+const RestaurantsLanding = lazy(() => import('./features/marketing/RestaurantsLanding').then(m => ({ default: m.RestaurantsLanding })));
 const PrivacyPage = lazy(() => import('./features/marketing/legal/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./features/marketing/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 const CookiePolicyPage = lazy(() => import('./features/marketing/legal/CookiePolicyPage').then(m => ({ default: m.CookiePolicyPage })));
@@ -122,6 +123,7 @@ function App() {
           <Route path="/features" element={<RouteErrorBoundary name="features"><FeaturesPage /></RouteErrorBoundary>} />
           <Route path="/about" element={<RouteErrorBoundary name="about"><AboutPage /></RouteErrorBoundary>} />
           <Route path="/hotels" element={<RouteErrorBoundary name="hotels"><HotelsLanding /></RouteErrorBoundary>} />
+          <Route path="/restaurants" element={<RouteErrorBoundary name="restaurants"><RestaurantsLanding /></RouteErrorBoundary>} />
           <Route path="/privacy" element={<RouteErrorBoundary name="privacy"><PrivacyPage /></RouteErrorBoundary>} />
           <Route path="/terms" element={<RouteErrorBoundary name="terms"><TermsPage /></RouteErrorBoundary>} />
           <Route path="/cookies" element={<RouteErrorBoundary name="cookies"><CookiePolicyPage /></RouteErrorBoundary>} />

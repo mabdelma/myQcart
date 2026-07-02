@@ -958,4 +958,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "अपनी प्रॉपर्टी को और समझदारी से चलाने को तैयार?",
   'hotels.ctaDesc': "मुफ़्त शुरू करें — कोई कार्ड नहीं। मिनटों में कमरे सेट करें।",
   'nav.hotels': "होटल",
+  'nav.restaurants': "रेस्तरां",
+  'restaurants.heroBadge': "रेस्तरां के लिए",
+  'restaurants.heroTitle': "हर टेबल, एक सेल्फ़-सर्विस रेवेन्यू इंजन",
+  'restaurants.heroDesc': "मेहमान फ़ोन से स्कैन, ऑर्डर और भुगतान करते हैं — कोई ऐप नहीं, कोई इंतज़ार नहीं। किचन और स्टाफ़ तालमेल में रहते हैं, और डैशबोर्ड हर टेबल और हर पैसे पर नज़र रखता है।",
+  'restaurants.featuresTitle': "व्यस्त सेवा के लिए बनाया गया",
+  'restaurants.featuresDesc': "पहली स्कैन से आख़िरी भुगतान तक — सामने और रसोई, सब कुछ।",
+  'restaurants.ctaTitle': "अपने रेस्तरां को डिजिटल करने को तैयार?",
+  'restaurants.ctaDesc': "मुफ़्त शुरू करें — कोई कार्ड नहीं। आपका मेन्यू मिनटों में लाइव।",
 };

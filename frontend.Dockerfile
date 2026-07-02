@@ -7,6 +7,8 @@ COPY src/ ./src/
 # Vite's publicDir — static assets copied verbatim to the site root at build
 # time (robots.txt, sitemap.xml, icons, offline.html, push-handler.js).
 COPY public/ ./public/
+# Post-build helper that emits per-route HTML with page-specific Open-Graph meta.
+COPY scripts/ ./scripts/
 
 # Vite inlines VITE_* vars into the JS bundle AT BUILD TIME. The Stripe
 # publishable key must therefore be passed as a build arg here, or checkout
@@ -24,7 +26,7 @@ ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 ENV SENTRY_ORG=$SENTRY_ORG
 ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
-RUN npm run build
+RUN npm run build && node scripts/gen-og-pages.mjs
 
 FROM nginx:1.27-alpine AS runner
 COPY --from=builder /app/dist /usr/share/nginx/html
@@ -77,6 +79,19 @@ server {
     location ~* ^/(sw\.js|registerSW\.js|workbox-.*\.js|manifest\.webmanifest|index\.html|offline\.html)$ {
         add_header Cache-Control "no-cache, must-revalidate";
         try_files $uri =404;
+    }
+
+    # Vertical marketing pages get their own prerendered HTML (page-specific
+    # Open-Graph for social unfurls); they still boot the SPA for real visitors.
+    location = /hotels {
+        add_header Cache-Control "no-cache, must-revalidate";
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com; base-uri 'self'; form-action 'self'";
+        try_files /hotels.html /index.html;
+    }
+    location = /restaurants {
+        add_header Cache-Control "no-cache, must-revalidate";
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io; frame-src https://js.stripe.com; base-uri 'self'; form-action 'self'";
+        try_files /restaurants.html /index.html;
     }
 
     # CSP on the SPA HTML page — the API also sets it on /api/ as defence-in-depth.

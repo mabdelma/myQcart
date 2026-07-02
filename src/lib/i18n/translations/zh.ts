@@ -958,4 +958,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "准备好更智能地经营您的物业了吗？",
   'hotels.ctaDesc': "免费开始，无需信用卡。几分钟设置客房。",
   'nav.hotels': "酒店",
+  'nav.restaurants': "餐厅",
+  'restaurants.heroBadge': "面向餐厅",
+  'restaurants.heroTitle': "每张餐桌都是自助收入引擎",
+  'restaurants.heroDesc': "客人用手机扫码、点餐、付款——无需 App，无需等待。厨房与员工实时同步，仪表盘让你掌握每桌每一分收入。",
+  'restaurants.featuresTitle': "为繁忙服务打造",
+  'restaurants.featuresDesc': "从第一次扫码到最终付款——前厅后厨，一应俱全。",
+  'restaurants.ctaTitle': "准备好让餐厅数字化了吗？",
+  'restaurants.ctaDesc': "免费开始，无需信用卡。几分钟上线你的菜单。",
 };

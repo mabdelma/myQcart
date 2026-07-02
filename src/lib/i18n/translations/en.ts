@@ -1169,4 +1169,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "Ready to run your property smarter?",
   'hotels.ctaDesc': "Start free — no credit card. Set up your rooms in minutes.",
   'nav.hotels': "Hotels",
+  'nav.restaurants': "Restaurants",
+  'restaurants.heroBadge': "For restaurants",
+  'restaurants.heroTitle': "Every table, a self-service revenue engine",
+  'restaurants.heroDesc': "Guests scan, order, and pay from their phones — no app, no waiting. Your kitchen and staff stay in sync, and the dashboard keeps you on top of every table and every dollar.",
+  'restaurants.featuresTitle': "Built for busy service",
+  'restaurants.featuresDesc': "From the first scan to the final payment — everything front and back of house.",
+  'restaurants.ctaTitle': "Ready to digitize your restaurant?",
+  'restaurants.ctaDesc': "Start free — no credit card. Your menu's live in minutes.",
 };

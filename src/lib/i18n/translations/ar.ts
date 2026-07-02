@@ -969,4 +969,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "هل أنت مستعد لإدارة منشأتك بذكاء أكبر؟",
   'hotels.ctaDesc': "ابدأ مجاناً — دون بطاقة. أعد غرفك في دقائق.",
   'nav.hotels': "الفنادق",
+  'nav.restaurants': "المطاعم",
+  'restaurants.heroBadge': "للمطاعم",
+  'restaurants.heroTitle': "كل طاولة، محرّك إيرادات ذاتي الخدمة",
+  'restaurants.heroDesc': "يمسح الضيوف ويطلبون ويدفعون من هواتفهم — دون تطبيق ودون انتظار. مطبخك وفريقك متزامنان، ولوحة التحكم تبقيك مطّلعاً على كل طاولة وكل ريال.",
+  'restaurants.featuresTitle': "مصمم للخدمة المزدحمة",
+  'restaurants.featuresDesc': "من أول مسح إلى الدفع الأخير — كل شيء في الصالة والمطبخ.",
+  'restaurants.ctaTitle': "هل أنت مستعد لرقمنة مطعمك؟",
+  'restaurants.ctaDesc': "ابدأ مجاناً — دون بطاقة. قائمتك جاهزة في دقائق.",
 };

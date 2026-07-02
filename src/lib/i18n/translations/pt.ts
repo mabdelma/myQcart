@@ -958,4 +958,12 @@ export const translations: Record<TranslationKey, string> = {
   'hotels.ctaTitle': "Pronto para gerir a sua propriedade de forma mais inteligente?",
   'hotels.ctaDesc': "Comece grátis — sem cartão. Configure os seus quartos em minutos.",
   'nav.hotels': "Hotéis",
+  'nav.restaurants': "Restaurantes",
+  'restaurants.heroBadge': "Para restaurantes",
+  'restaurants.heroTitle': "Cada mesa, um motor de receita self-service",
+  'restaurants.heroDesc': "Os clientes leem, pedem e pagam pelo telemóvel — sem app, sem esperas. A cozinha e a equipa ficam sincronizadas, e o painel mantém-no a par de cada mesa e cada euro.",
+  'restaurants.featuresTitle': "Feito para o serviço movimentado",
+  'restaurants.featuresDesc': "Do primeiro scan ao pagamento final — tudo, salão e cozinha.",
+  'restaurants.ctaTitle': "Pronto para digitalizar o seu restaurante?",
+  'restaurants.ctaDesc': "Comece grátis — sem cartão. O seu menu fica no ar em minutos.",
 };
