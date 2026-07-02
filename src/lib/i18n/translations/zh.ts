@@ -921,4 +921,11 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingRevenue': "预订收入",
   'hotel.total': "合计",
   'hotel.calendar': "日历",
+  'hotel.folio': "账单",
+  'hotel.roomCharge': "房费",
+  'hotel.grandTotal': "总计",
+  'hotel.chargeDesc': "说明",
+  'hotel.chargeHint': "例如 餐厅、迷你吧",
+  'hotel.amount': "金额",
+  'hotel.addCharge': "添加",
 };

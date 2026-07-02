@@ -60,4 +60,18 @@ hotel.post('/:slug/bookings/:id/check-out', ...adminMgr, async (c) =>
 hotel.post('/:slug/bookings/:id/cancel', ...adminMgr, async (c) =>
   c.json(await svc.cancelBooking(c.get('tenantId'), c.req.param('id')!)));
 
+// ── Guest folio ─────────────────────────────────────────────────────────────
+const folioItemSchema = z.object({ description: z.string().min(1), amount: z.number().nonnegative() });
+
+hotel.get('/:slug/bookings/:id/folio', ...adminMgr, async (c) => {
+  const r = await svc.getFolio(c.get('tenantId'), c.req.param('id')!);
+  return 'error' in r ? c.json(r, 404) : c.json(r);
+});
+hotel.post('/:slug/bookings/:id/folio', ...adminMgr, zValidator('json', folioItemSchema), async (c) => {
+  const r = await svc.addFolioItem(c.get('tenantId'), c.req.param('id')!, c.req.valid('json'));
+  return 'error' in r ? c.json(r, 404) : c.json(r, 201);
+});
+hotel.delete('/:slug/folio/:id', ...adminMgr, async (c) =>
+  c.json(await svc.deleteFolioItem(c.get('tenantId'), c.req.param('id')!)));
+
 export default hotel;

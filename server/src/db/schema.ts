@@ -550,6 +550,16 @@ export const roomBookings = pgTable('room_bookings', {
   updatedAt: text('updated_at').notNull().default(sql`now()`),
 });
 
+// ── Hotel: guest folio (extra charges posted to a booking) ──────────────────
+export const folioItems = pgTable('folio_items', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull().references(() => tenants.id),
+  bookingId: text('booking_id').notNull().references(() => roomBookings.id),
+  description: text('description').notNull(),
+  amount: doublePrecision('amount').notNull().default(0),
+  createdAt: text('created_at').notNull().default(sql`now()`),
+});
+
 // ── Staff scheduling: shifts (weekly rota) ──────────────────────────────────
 export const shifts = pgTable('shifts', {
   id: text('id').primaryKey(),

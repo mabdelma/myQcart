@@ -198,6 +198,49 @@ export async function cancelBooking(tenantId: string, id: string) {
   return { success: true };
 }
 
+// ── Guest folio (room charge + posted extras → one bill) ────────────────────
+
+/** Full folio for a booking: room charge, posted line items, and the grand total. */
+export async function getFolio(tenantId: string, bookingId: string) {
+  const [b] = await db
+    .select({
+      id: schema.roomBookings.id,
+      guestName: schema.roomBookings.guestName,
+      roomNumber: schema.rooms.number,
+      checkIn: schema.roomBookings.checkIn,
+      checkOut: schema.roomBookings.checkOut,
+      status: schema.roomBookings.status,
+      roomCharge: schema.roomBookings.total,
+    })
+    .from(schema.roomBookings)
+    .leftJoin(schema.rooms, eq(schema.roomBookings.roomId, schema.rooms.id))
+    .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  if (!b) return { error: 'booking not found' as const };
+  const items = await db.select().from(schema.folioItems)
+    .where(and(eq(schema.folioItems.bookingId, bookingId), eq(schema.folioItems.tenantId, tenantId)))
+    .orderBy(asc(schema.folioItems.createdAt));
+  const roomCharge = Number(b.roomCharge || 0);
+  const extras = +items.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2);
+  return {
+    booking: { id: b.id, guestName: b.guestName, roomNumber: b.roomNumber, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status },
+    roomCharge, items, extras, grandTotal: +(roomCharge + extras).toFixed(2),
+  };
+}
+
+export async function addFolioItem(tenantId: string, bookingId: string, data: { description: string; amount: number }) {
+  const [b] = await db.select({ id: schema.roomBookings.id }).from(schema.roomBookings)
+    .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  if (!b) return { error: 'booking not found' as const };
+  const id = uuid();
+  await db.insert(schema.folioItems).values({ id, tenantId, bookingId, description: data.description, amount: data.amount });
+  return { id };
+}
+
+export async function deleteFolioItem(tenantId: string, id: string) {
+  await db.delete(schema.folioItems).where(and(eq(schema.folioItems.id, id), eq(schema.folioItems.tenantId, tenantId)));
+  return { success: true };
+}
+
 /** Occupancy summary for the front-desk header / dashboard. */
 export async function roomStats(tenantId: string) {
   const all = await db.select({ status: schema.rooms.status }).from(schema.rooms).where(eq(schema.rooms.tenantId, tenantId));

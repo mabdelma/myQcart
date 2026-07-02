@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight, Receipt, Trash2 } from 'lucide-react';
 import { hotelApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatPrice } from '../../lib/pricing';
-import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus } from '../../lib/api/types';
+import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus, Folio } from '../../lib/api/types';
 
 const STATUSES: RoomStatus[] = ['available', 'occupied', 'reserved', 'cleaning', 'maintenance'];
 
@@ -49,6 +49,9 @@ export function RoomsPage() {
   const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
   const [bookingError, setBookingError] = useState('');
   const [availRooms, setAvailRooms] = useState<Room[] | null>(null);
+  const [folioFor, setFolioFor] = useState<string | null>(null);
+  const [folioData, setFolioData] = useState<Folio | null>(null);
+  const [folioLine, setFolioLine] = useState({ description: '', amount: '' });
   const today = new Date().toISOString().slice(0, 10);
   const arrivals = bookings.filter((b) => b.status === 'booked' && b.checkIn === today);
   const departures = bookings.filter((b) => b.status === 'checked_in' && b.checkOut === today);
@@ -104,6 +107,25 @@ export function RoomsPage() {
       setBooking(null); await load();
     } catch (e) { setBookingError((e as { message?: string }).message || t('error.generic')); }
     finally { setSaving(false); }
+  }
+
+  async function openFolio(id: string) {
+    if (!slug) return;
+    setFolioFor(id); setFolioData(null); setFolioLine({ description: '', amount: '' });
+    try { setFolioData(await hotelApi.getFolio(slug, id)); } catch { /* ignore */ }
+  }
+  async function addFolioLine() {
+    if (!slug || !folioFor || !folioLine.description.trim()) return;
+    setSaving(true);
+    try {
+      await hotelApi.addFolioItem(slug, folioFor, { description: folioLine.description, amount: Number(folioLine.amount) || 0 });
+      setFolioLine({ description: '', amount: '' });
+      setFolioData(await hotelApi.getFolio(slug, folioFor));
+    } catch { /* ignore */ } finally { setSaving(false); }
+  }
+  async function deleteFolioLine(id: string) {
+    if (!slug || !folioFor) return;
+    try { await hotelApi.deleteFolioItem(slug, id); setFolioData(await hotelApi.getFolio(slug, folioFor)); } catch { /* ignore */ }
   }
 
   async function bookingAction(id: string, action: 'check-in' | 'check-out' | 'cancel') {
@@ -273,6 +295,9 @@ export function RoomsPage() {
                   <td className="p-3 text-right font-medium text-gray-700 hidden md:table-cell">{b.total ? money(b.total) : '—'}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${BOOKING_STYLE[b.status]}`}>{bookingLabel(b.status)}</span></td>
                   <td className="p-3 text-right whitespace-nowrap">
+                    {b.status !== 'cancelled' && (
+                      <button onClick={() => openFolio(b.id)} title={t('hotel.folio')} className="inline-flex items-center px-2 py-1 rounded text-xs text-gray-500 hover:bg-gray-100 mr-1"><Receipt className="w-3.5 h-3.5" /></button>
+                    )}
                     {b.status === 'booked' && (
                       <button onClick={() => bookingAction(b.id, 'check-in')} title={t('hotel.checkIn')} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1"><LogIn className="w-3.5 h-3.5" />{t('hotel.checkIn')}</button>
                     )}
@@ -367,6 +392,35 @@ export function RoomsPage() {
             <button onClick={() => setBooking(null)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
             <button onClick={saveBooking} disabled={saving || !booking.roomId || !booking.guestName.trim() || !booking.checkIn || !booking.checkOut} className="px-4 py-2 bg-[#8B4513] text-white rounded-md hover:bg-[#5C4033] disabled:opacity-50">{t('common.save')}</button>
           </div>
+        </Modal>
+      )}
+
+      {folioFor && (
+        <Modal title={t('hotel.folio')} onClose={() => { setFolioFor(null); setFolioData(null); }}>
+          {!folioData ? <p className="text-gray-500 text-sm">{t('common.loading')}...</p> : (
+            <>
+              <div>
+                <p className="font-semibold text-gray-900">{folioData.booking.guestName}</p>
+                <p className="text-xs text-gray-500">{t('hotel.room')} {folioData.booking.roomNumber || '—'} · {folioData.booking.checkIn} → {folioData.booking.checkOut}</p>
+              </div>
+              <div className="border-y border-gray-100 divide-y divide-gray-100">
+                <div className="flex justify-between py-2 text-sm"><span className="text-gray-600">{t('hotel.roomCharge')}</span><span className="font-medium">{money(folioData.roomCharge)}</span></div>
+                {folioData.items.map((it) => (
+                  <div key={it.id} className="flex justify-between items-center py-2 text-sm">
+                    <span className="text-gray-600">{it.description}</span>
+                    <span className="flex items-center gap-2"><span className="font-medium">{money(it.amount)}</span>
+                      <button onClick={() => deleteFolioLine(it.id)} className="text-gray-300 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button></span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between py-1 text-base font-bold text-gray-900"><span>{t('hotel.grandTotal')}</span><span>{money(folioData.grandTotal)}</span></div>
+              <div className="flex gap-2 items-end pt-3 border-t border-gray-100">
+                <div className="flex-1"><label className="block text-xs text-gray-500 mb-1">{t('hotel.chargeDesc')}</label><input value={folioLine.description} onChange={(e) => setFolioLine({ ...folioLine, description: e.target.value })} placeholder={t('hotel.chargeHint')} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
+                <div className="w-24"><label className="block text-xs text-gray-500 mb-1">{t('hotel.amount')}</label><input type="number" min="0" step="0.01" value={folioLine.amount} onChange={(e) => setFolioLine({ ...folioLine, amount: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
+                <button onClick={addFolioLine} disabled={saving || !folioLine.description.trim()} className="px-3 py-2 bg-[#8B4513] text-white rounded-md text-sm hover:bg-[#5C4033] disabled:opacity-50 whitespace-nowrap">{t('hotel.addCharge')}</button>
+              </div>
+            </>
+          )}
         </Modal>
       )}
 

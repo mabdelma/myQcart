@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats, RoomBooking } from './types';
+import type { Tenant, User, MenuCategory, MenuItem, TableData, Order, OrderWithItems, OrderItem, Payment, PaymentLinkResponse, AnalyticsSummary, RevenueDataPoint, FinancialAnalytics, PlatformAnalytics, TenantSummary, TenantWithStats, TenantUsage, HourlyTrafficPoint, PeakHour, CategoryPerformanceItem, TrendingItem, RecommendationItem, ModifierGroup, ModifierOption, TaxCategory, GiftCard, GiftCardRedemption, ConnectAccountStatus, PayoutInfo, TimeEntry, PnLReport, PlatformUser, Lead, TimePoint, AdminSubscription, AuditLog, Mailbox, MailAlias, StockItem, Supplier, PurchaseOrder, ReorderSuggestion, Shift, Customer, Room, RoomStatus, RoomStats, RoomBooking, Folio } from './types';
 
 // Auth
 export const authApi = {
@@ -372,6 +372,11 @@ export const hotelApi = {
   checkIn: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${id}/check-in`, {}),
   checkOut: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${id}/check-out`, {}),
   cancelBooking: (slug: string, id: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${id}/cancel`, {}),
+  // Guest folio
+  getFolio: (slug: string, bookingId: string) => api.get<Folio>(`/r/${slug}/bookings/${bookingId}/folio`),
+  addFolioItem: (slug: string, bookingId: string, data: { description: string; amount: number }) =>
+    api.post<{ id: string }>(`/r/${slug}/bookings/${bookingId}/folio`, data),
+  deleteFolioItem: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/folio/${id}`),
 };
 
 export const customerApi = {

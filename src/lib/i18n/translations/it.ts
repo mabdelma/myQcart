@@ -920,4 +920,11 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingRevenue': "Ricavi prenotazioni",
   'hotel.total': "Totale",
   'hotel.calendar': "Calendario",
+  'hotel.folio': "Conto",
+  'hotel.roomCharge': "Costo camera",
+  'hotel.grandTotal': "Totale complessivo",
+  'hotel.chargeDesc': "Descrizione",
+  'hotel.chargeHint': "es. Ristorante, minibar",
+  'hotel.amount': "Importo",
+  'hotel.addCharge': "Aggiungi",
 };

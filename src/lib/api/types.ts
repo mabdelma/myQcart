@@ -550,6 +550,21 @@ export interface RoomBooking {
   notes?: string | null;
 }
 
+export interface FolioItem {
+  id: string;
+  description: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface Folio {
+  booking: { id: string; guestName: string; roomNumber?: string | null; checkIn: string; checkOut: string; status: BookingStatus };
+  roomCharge: number;
+  items: FolioItem[];
+  extras: number;
+  grandTotal: number;
+}
+
 export interface Shift {
   id: string;
   userId: string;

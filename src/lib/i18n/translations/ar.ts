@@ -932,4 +932,11 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingRevenue': "إيرادات الحجوزات",
   'hotel.total': "الإجمالي",
   'hotel.calendar': "التقويم",
+  'hotel.folio': "كشف الحساب",
+  'hotel.roomCharge': "رسوم الغرفة",
+  'hotel.grandTotal': "الإجمالي الكلي",
+  'hotel.chargeDesc': "الوصف",
+  'hotel.chargeHint': "مثل مطعم، ميني بار",
+  'hotel.amount': "المبلغ",
+  'hotel.addCharge': "إضافة",
 };

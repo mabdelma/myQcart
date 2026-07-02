@@ -921,4 +921,11 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingRevenue': "बुकिंग आय",
   'hotel.total': "कुल",
   'hotel.calendar': "कैलेंडर",
+  'hotel.folio': "फोलियो",
+  'hotel.roomCharge': "कमरा शुल्क",
+  'hotel.grandTotal': "कुल योग",
+  'hotel.chargeDesc': "विवरण",
+  'hotel.chargeHint': "उदा. रेस्तरां, मिनीबार",
+  'hotel.amount': "राशि",
+  'hotel.addCharge': "जोड़ें",
 };

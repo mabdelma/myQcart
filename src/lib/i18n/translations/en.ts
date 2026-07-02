@@ -1132,4 +1132,11 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingRevenue': "Booking revenue",
   'hotel.total': "Total",
   'hotel.calendar': "Calendar",
+  'hotel.folio': "Folio",
+  'hotel.roomCharge': "Room charge",
+  'hotel.grandTotal': "Grand total",
+  'hotel.chargeDesc': "Description",
+  'hotel.chargeHint': "e.g. Restaurant, minibar",
+  'hotel.amount': "Amount",
+  'hotel.addCharge': "Add",
 };

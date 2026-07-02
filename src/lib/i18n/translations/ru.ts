@@ -921,4 +921,11 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.bookingRevenue': "Доход от броней",
   'hotel.total': "Итого",
   'hotel.calendar': "Календарь",
+  'hotel.folio': "Счёт",
+  'hotel.roomCharge': "Плата за номер",
+  'hotel.grandTotal': "Итого к оплате",
+  'hotel.chargeDesc': "Описание",
+  'hotel.chargeHint': "напр. Ресторан, мини-бар",
+  'hotel.amount': "Сумма",
+  'hotel.addCharge': "Добавить",
 };
