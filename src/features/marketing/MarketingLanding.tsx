@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import {
   QrCode, CreditCard, Clock, Users, ArrowRight, Shield, BarChart3,
   Check, Star, Zap, Utensils, ChevronDown, Sparkles, Bot, Send,
-  Boxes, TrendingUp, CalendarClock, Heart, Megaphone, Hotel,
+  Boxes, TrendingUp, CalendarClock, Heart, Megaphone, Hotel, ConciergeBell,
 } from 'lucide-react';
 import { MarketingHeader } from '../../components/layout/MarketingHeader';
 import { Footer } from '../../components/layout/Footer';
@@ -31,7 +31,14 @@ export function MarketingLanding() {
     { icon: Heart, title: t('marketing.featureCrm'), desc: t('marketing.featureCrmDesc') },
     { icon: Megaphone, title: t('marketing.featureMarketing'), desc: t('marketing.featureMarketingDesc') },
     { icon: Hotel, title: t('marketing.featureHotel'), desc: t('marketing.featureHotelDesc') },
+    { icon: ConciergeBell, title: t('marketing.featureRoomService'), desc: t('marketing.featureRoomServiceDesc') },
     { icon: Shield, title: t('marketing.featureMultiLocation'), desc: t('marketing.featureMultiLocationDesc') },
+  ];
+
+  // Compact strip of the remaining capabilities (reuses existing localized labels).
+  const alsoIncluded = [
+    t('reservations.title'), t('waitlist.title'), t('nav.loyalty'), t('giftCards.title'),
+    t('nav.promotions'), t('hotel.folio'), t('hotel.calendar'), t('hotel.occupancy'),
   ];
 
   const steps = [
@@ -132,6 +139,18 @@ export function MarketingLanding() {
                 <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Everything-else capabilities strip */}
+          <div className="mt-12 text-center">
+            <p className="text-sm font-semibold uppercase tracking-wider text-[#8B4513] mb-4">{t('marketing.alsoTitle')}</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {alsoIncluded.map((label) => (
+                <span key={label} className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3.5 py-1.5 text-sm text-gray-700">
+                  <Check className="h-3.5 w-3.5 text-green-600" /> {label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
