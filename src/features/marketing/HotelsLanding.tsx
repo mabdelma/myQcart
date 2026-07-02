@@ -12,11 +12,11 @@ export function HotelsLanding() {
 
   const features = [
     { icon: BedDouble, title: t('marketing.featureHotel'), desc: t('marketing.featureHotelDesc') },
-    { icon: CalendarDays, title: t('hotel.bookings'), desc: t('hotels.resvDesc') },
+    { icon: CalendarDays, title: t('reservations.title'), desc: t('hotels.resvDesc') },
     { icon: LogIn, title: t('hotels.checkTitle'), desc: t('hotels.checkDesc') },
     { icon: ConciergeBell, title: t('marketing.featureRoomService'), desc: t('marketing.featureRoomServiceDesc') },
     { icon: Receipt, title: t('hotel.folio'), desc: t('hotels.folioDesc') },
-    { icon: TrendingUp, title: t('marketing.featureForecasting'), desc: t('marketing.featureForecastingDesc') },
+    { icon: TrendingUp, title: t('marketing.featureForecasting'), desc: t('hotels.forecastDesc') },
   ];
 
   const steps = [
@@ -128,7 +128,7 @@ function HotelMockup() {
   const { t } = useI18n();
   const items = [
     { name: t('marketing.phoneItemBurger'), price: '18.00' },
-    { name: t('roomService.title'), price: '9.50' },
+    { name: t('marketing.phoneItemPizza'), price: '16.00' },
   ];
   return (
     <div className="relative">
@@ -167,7 +167,7 @@ function HotelMockup() {
           <div className="px-4 pb-5">
             <div className="flex items-center justify-between rounded-xl bg-[#8B4513] px-4 py-3 text-white shadow-lg">
               <span className="text-sm font-medium">{t('roomService.addToRoom')}</span>
-              <span className="text-sm font-bold">27.50</span>
+              <span className="text-sm font-bold">34.00</span>
             </div>
           </div>
         </div>

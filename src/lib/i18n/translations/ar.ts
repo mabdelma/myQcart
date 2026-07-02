@@ -977,4 +977,5 @@ export const translations: Record<TranslationKey, string> = {
   'restaurants.featuresDesc': "من أول مسح إلى الدفع الأخير — كل شيء في الصالة والمطبخ.",
   'restaurants.ctaTitle': "هل أنت مستعد لرقمنة مطعمك؟",
   'restaurants.ctaDesc': "ابدأ مجاناً — دون بطاقة. قائمتك جاهزة في دقائق.",
+  'hotels.forecastDesc': "اطّلع على الإشغال وإيرادات الغرف المتوقعة، واكتشف الليالي الضعيفة مبكراً، ودع الذكاء الاصطناعي ينبّهك إلى ما يحتاج انتباهاً.",
 };

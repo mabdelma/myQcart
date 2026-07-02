@@ -977,4 +977,5 @@ export const translations: Record<TranslationKey, string> = {
   'restaurants.featuresDesc': "Du premier scan au paiement final — tout, en salle comme en cuisine.",
   'restaurants.ctaTitle': "Prêt à digitaliser votre restaurant ?",
   'restaurants.ctaDesc': "Commencez gratuitement, sans carte. Votre menu est en ligne en quelques minutes.",
+  'hotels.forecastDesc': "Visualisez l’occupation et les revenus des chambres à venir, repérez les nuits creuses à l’avance et laissez l’IA signaler ce qui mérite attention.",
 };

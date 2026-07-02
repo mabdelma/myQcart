@@ -966,4 +966,5 @@ export const translations: Record<TranslationKey, string> = {
   'restaurants.featuresDesc': "从第一次扫码到最终付款——前厅后厨，一应俱全。",
   'restaurants.ctaTitle': "准备好让餐厅数字化了吗？",
   'restaurants.ctaDesc': "免费开始，无需信用卡。几分钟上线你的菜单。",
+  'hotels.forecastDesc': "预览未来入住率与客房收入，提前发现淡夜，并让 AI 提示需要关注的事项。",
 };

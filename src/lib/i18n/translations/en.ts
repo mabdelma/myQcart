@@ -1177,4 +1177,5 @@ export const translations: Record<TranslationKey, string> = {
   'restaurants.featuresDesc': "From the first scan to the final payment — everything front and back of house.",
   'restaurants.ctaTitle': "Ready to digitize your restaurant?",
   'restaurants.ctaDesc': "Start free — no credit card. Your menu's live in minutes.",
+  'hotels.forecastDesc': "See upcoming occupancy and room revenue, spot slow nights early, and let the AI flag what needs attention.",
 };
