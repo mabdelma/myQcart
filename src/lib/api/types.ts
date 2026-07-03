@@ -518,6 +518,7 @@ export interface Room {
   floor?: string | null;
   rate: number;
   serviceToken?: string | null;
+  housekeeperId?: string | null;
   guestName?: string | null;
   notes?: string | null;
   createdAt: string;
@@ -578,6 +579,8 @@ export interface Folio {
   items: FolioItem[];
   extras: number;
   grandTotal: number;
+  deposit: number;
+  balance: number;
   paidAt?: string | null;
 }
 

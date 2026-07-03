@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, X, BedDouble, Hotel, LogIn, LogOut, Ban, User, ChevronLeft, ChevronRight, Receipt, Trash2, RefreshCw, Check, CreditCard } from 'lucide-react';
-import { hotelApi } from '../../lib/api';
+import { hotelApi, userApi } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatPrice } from '../../lib/pricing';
-import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus, Folio, HotelReport } from '../../lib/api/types';
+import type { Room, RoomStatus, RoomStats, RoomBooking, BookingStatus, Folio, HotelReport, User } from '../../lib/api/types';
 
 const STATUSES: RoomStatus[] = ['available', 'occupied', 'reserved', 'cleaning', 'maintenance'];
 
@@ -52,6 +52,10 @@ export function RoomsPage() {
   });
   const [report, setReport] = useState<HotelReport | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
+  const [staff, setStaff] = useState<User[]>([]);
+  const staffName = (id?: string | null) => staff.find((u) => u.id === id)?.name;
+
+  useEffect(() => { if (slug) userApi.list(slug).then(setStaff).catch(() => { /* ignore */ }); }, [slug]);
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
   const [booking, setBooking] = useState<{ roomId: string; guestName: string; guestEmail: string; guestPhone: string; checkIn: string; checkOut: string } | null>(null);
   const [bookingError, setBookingError] = useState('');
@@ -151,6 +155,11 @@ export function RoomsPage() {
     try { await hotelApi.settleFolio(slug, folioFor); setFolioData(await hotelApi.getFolio(slug, folioFor)); }
     catch { /* ignore */ } finally { setSaving(false); }
   }
+  async function takeDeposit() {
+    if (!slug || !folioFor) return;
+    try { const { url } = await hotelApi.takeDeposit(slug, folioFor); window.open(url, '_blank', 'noopener'); setFolioData(await hotelApi.getFolio(slug, folioFor)); }
+    catch { /* ignore */ }
+  }
 
   async function bookingAction(id: string, action: 'check-in' | 'check-out' | 'cancel') {
     if (!slug) return;
@@ -184,7 +193,7 @@ export function RoomsPage() {
     if (!slug || !editing) return;
     setSaving(true);
     try {
-      await hotelApi.update(slug, editing.id, { number: editing.number, type: editing.type || undefined, floor: editing.floor || undefined, rate: Number(editing.rate) || 0, notes: editing.notes || undefined });
+      await hotelApi.update(slug, editing.id, { number: editing.number, type: editing.type || undefined, floor: editing.floor || undefined, rate: Number(editing.rate) || 0, housekeeperId: editing.housekeeperId || null, notes: editing.notes || undefined });
       if (editing.status !== 'available') await hotelApi.setStatus(slug, editing.id, editing.status, editing.guestName || undefined);
       setEditing(null); await load();
     } catch { /* ignore */ } finally { setSaving(false); }
@@ -284,6 +293,7 @@ export function RoomsPage() {
                 </button>
               </div>
               {room.guestName && <p className="text-xs mt-1 font-medium truncate">{room.guestName}</p>}
+              {room.status === 'cleaning' && staffName(room.housekeeperId) && <p className="text-xs mt-1 opacity-80 truncate">🧹 {staffName(room.housekeeperId)}</p>}
               <select value={room.status} onChange={(e) => setStatus(room, e.target.value as RoomStatus)}
                 className="mt-3 w-full text-xs rounded-md border-0 bg-white/70 py-1.5 font-medium focus:ring-1 focus:ring-[#8B4513]">
                 {STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
@@ -486,15 +496,20 @@ export function RoomsPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between py-1 text-base font-bold text-gray-900"><span>{t('hotel.grandTotal')}</span><span>{money(folioData.grandTotal)}</span></div>
+              <div className="flex justify-between py-1 text-sm text-gray-700"><span>{t('hotel.grandTotal')}</span><span className="font-medium">{money(folioData.grandTotal)}</span></div>
+              {folioData.deposit > 0 && (
+                <div className="flex justify-between py-1 text-sm text-green-700"><span>{t('hotel.deposit')}</span><span>− {money(folioData.deposit)}</span></div>
+              )}
+              <div className="flex justify-between py-1 text-base font-bold text-gray-900 border-t border-gray-100"><span>{t('hotel.balance')}</span><span>{money(folioData.balance)}</span></div>
               {folioData.paidAt ? (
                 <div className="flex items-center justify-center gap-1.5 rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700"><Check className="w-4 h-4" /> {t('hotel.paid')}</div>
-              ) : folioData.grandTotal > 0 ? (
-                <div className="flex gap-2">
-                  <button onClick={openPayLink} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"><CreditCard className="w-4 h-4" /> {t('hotel.paymentLink')}</button>
-                  <button onClick={markSettled} disabled={saving} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#8B4513] text-white text-sm hover:bg-[#5C4033] disabled:opacity-50"><Check className="w-4 h-4" /> {t('hotel.markPaid')}</button>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {folioData.deposit <= 0 && <button onClick={takeDeposit} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap">{t('hotel.deposit')}</button>}
+                  {folioData.balance > 0 && <button onClick={openPayLink} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap"><CreditCard className="w-4 h-4" /> {t('hotel.paymentLink')}</button>}
+                  <button onClick={markSettled} disabled={saving} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#8B4513] text-white text-sm hover:bg-[#5C4033] disabled:opacity-50 whitespace-nowrap"><Check className="w-4 h-4" /> {t('hotel.markPaid')}</button>
                 </div>
-              ) : null}
+              )}
               <div className="flex gap-2 items-end pt-3 border-t border-gray-100">
                 <div className="flex-1"><label className="block text-xs text-gray-500 mb-1">{t('hotel.chargeDesc')}</label><input value={folioLine.description} onChange={(e) => setFolioLine({ ...folioLine, description: e.target.value })} placeholder={t('hotel.chargeHint')} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
                 <div className="w-24"><label className="block text-xs text-gray-500 mb-1">{t('hotel.amount')}</label><input type="number" min="0" step="0.01" value={folioLine.amount} onChange={(e) => setFolioLine({ ...folioLine, amount: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></div>
@@ -538,6 +553,12 @@ export function RoomsPage() {
           {(editing.status === 'occupied' || editing.status === 'reserved') && (
             <Field label={t('hotel.guest')}><input value={editing.guestName || ''} onChange={(e) => setEditing({ ...editing, guestName: e.target.value })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
           )}
+          <Field label={t('hotel.housekeeper')}>
+            <select value={editing.housekeeperId || ''} onChange={(e) => setEditing({ ...editing, housekeeperId: e.target.value || null })} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]">
+              <option value="">{t('hotel.unassigned')}</option>
+              {staff.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </Field>
           <Field label={t('common.notes')}><textarea value={editing.notes || ''} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} rows={2} className="block w-full rounded-md border-gray-300 text-sm focus:ring-[#8B4513] focus:border-[#8B4513]" /></Field>
           <div className="rounded-lg bg-gray-50 p-2.5">
             <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Receipt className="w-3.5 h-3.5" /> {t('roomService.title')}</p>

@@ -5,6 +5,7 @@ import { sendEmail, brandedEmailHtml } from '../lib/mail.js';
 import { logger } from '../lib/logger.js';
 import { createOrder } from './orderService.js';
 import { createPaymentLink } from './paymentService.js';
+import { sendSms } from '../lib/sms.js';
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -44,7 +45,7 @@ export async function regenerateServiceToken(tenantId: string, id: string) {
 export async function updateRoom(
   tenantId: string,
   id: string,
-  data: Partial<{ number: string; type: string; floor: string; status: RoomStatus; rate: number; guestName: string; notes: string }>,
+  data: Partial<{ number: string; type: string; floor: string; status: RoomStatus; rate: number; housekeeperId: string | null; guestName: string; notes: string }>,
 ) {
   await db
     .update(schema.rooms)
@@ -145,7 +146,19 @@ export async function createBooking(
     .where(and(eq(schema.rooms.id, data.roomId), eq(schema.rooms.tenantId, tenantId), eq(schema.rooms.status, 'available')));
 
   if (data.guestEmail) void sendBookingConfirmation(tenantId, data.guestEmail, data.guestName, room[0].number, data.checkIn, data.checkOut);
+  if (data.guestPhone) void sendBookingSms(tenantId, data.guestPhone, room[0].number, data.checkIn, data.checkOut);
   return { id };
+}
+
+/** Fire-and-forget SMS confirmation (degrades to a log if Twilio isn't configured). */
+async function sendBookingSms(tenantId: string, to: string, roomNumber: string, checkIn: string, checkOut: string) {
+  try {
+    const [tenant] = await db.select({ name: schema.tenants.name }).from(schema.tenants).where(eq(schema.tenants.id, tenantId));
+    const name = tenant?.name || 'Qlisted';
+    await sendSms(to, `${name}: booking confirmed — Room ${roomNumber}, ${checkIn} to ${checkOut}.`);
+  } catch (e) {
+    logger.warn({ err: e }, 'booking SMS failed');
+  }
 }
 
 /** Fire-and-forget guest confirmation email; failures are logged, never block the booking. */
@@ -267,6 +280,8 @@ export async function getFolio(tenantId: string, bookingId: string) {
       checkOut: schema.roomBookings.checkOut,
       status: schema.roomBookings.status,
       roomCharge: schema.roomBookings.total,
+      deposit: schema.roomBookings.depositAmount,
+      ratePerNight: schema.roomBookings.ratePerNight,
       paidAt: schema.roomBookings.folioPaidAt,
     })
     .from(schema.roomBookings)
@@ -278,20 +293,37 @@ export async function getFolio(tenantId: string, bookingId: string) {
     .orderBy(asc(schema.folioItems.createdAt));
   const roomCharge = Number(b.roomCharge || 0);
   const extras = +items.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2);
+  const deposit = Number(b.deposit || 0);
+  const grandTotal = +(roomCharge + extras).toFixed(2);
   return {
     booking: { id: b.id, guestName: b.guestName, roomNumber: b.roomNumber, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status },
-    roomCharge, items, extras, grandTotal: +(roomCharge + extras).toFixed(2), paidAt: b.paidAt,
+    roomCharge, items, extras, grandTotal, deposit,
+    balance: +Math.max(0, grandTotal - deposit).toFixed(2),
+    paidAt: b.paidAt,
   };
 }
 
-/** Generate a Stripe payment link for a booking's current folio grand total. */
+/** Generate a Stripe payment link for a booking's outstanding folio balance. */
 export async function folioPayLink(tenantId: string, bookingId: string) {
   const folio = await getFolio(tenantId, bookingId);
   if ('error' in folio) return folio;
-  if (folio.grandTotal <= 0) return { error: 'nothing to charge' as const };
+  if (folio.balance <= 0) return { error: 'nothing to charge' as const };
   const label = `Folio — ${folio.booking.guestName}${folio.booking.roomNumber ? `, Room ${folio.booking.roomNumber}` : ''}`;
-  const link = await createPaymentLink(tenantId, undefined, folio.grandTotal, label);
-  return { url: link.url, amount: folio.grandTotal };
+  const link = await createPaymentLink(tenantId, undefined, folio.balance, label);
+  return { url: link.url, amount: folio.balance };
+}
+
+/** Take a deposit: default one night's rate. Records it and returns a Stripe pay link. */
+export async function takeDeposit(tenantId: string, bookingId: string, amount?: number) {
+  const [b] = await db.select({ id: schema.roomBookings.id, guestName: schema.roomBookings.guestName, ratePerNight: schema.roomBookings.ratePerNight })
+    .from(schema.roomBookings).where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  if (!b) return { error: 'booking not found' as const };
+  const value = amount && amount > 0 ? +amount.toFixed(2) : Number(b.ratePerNight || 0);
+  if (value <= 0) return { error: 'no deposit amount' as const };
+  await db.update(schema.roomBookings).set({ depositAmount: value })
+    .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  const link = await createPaymentLink(tenantId, undefined, value, `Deposit — ${b.guestName}`);
+  return { url: link.url, amount: value };
 }
 
 /** Mark a booking's folio as settled (cash, or after a card payment). */

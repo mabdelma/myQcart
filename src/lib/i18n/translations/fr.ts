@@ -999,4 +999,8 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.from': "Du",
   'hotel.to': "Au",
   'hotel.run': "Calculer",
+  'hotel.deposit': "Acompte",
+  'hotel.balance': "Solde dû",
+  'hotel.housekeeper': "Femme de chambre",
+  'hotel.unassigned': "Non assigné",
 };

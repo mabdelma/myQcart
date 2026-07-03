@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createBooking, getFolio, availableRooms, settleFolio, folioPayLink, hotelReport } from './hotelService.js';
+import { createBooking, getFolio, availableRooms, settleFolio, folioPayLink, hotelReport, takeDeposit } from './hotelService.js';
 import { db } from '../db/index.js';
 
 // Stub the cross-service calls hotelService makes so the tests stay unit-scoped.
@@ -116,6 +116,29 @@ describe('hotelService', () => {
         expect(r.occupancy).toBe(5);          // 3 sold nights / (2 rooms * 30 days) = 5%
         expect(r.adr).toBeCloseTo(116.67, 1); // 350 / 3 sold nights
         expect(r.revpar).toBeCloseTo(5.83, 1); // 350 / 60 available room-nights
+      }
+    });
+
+    it('takeDeposit defaults to one night and records the amount', async () => {
+      mockDb.__setQueryQueue([
+        [{ id: 'b1', guestName: 'Alex', ratePerNight: 120 }], // booking lookup
+        [],                                                    // deposit update
+      ]);
+      const r = await takeDeposit('t1', 'b1');
+      expect('error' in r).toBe(false);
+      if (!('error' in r)) expect(r.amount).toBe(120);
+      expect(mockDb.set.mock.calls.at(-1)?.[0].depositAmount).toBe(120);
+    });
+
+    it('getFolio subtracts a deposit into the balance', async () => {
+      mockDb.__setQueryQueue([
+        [{ id: 'b1', guestName: 'Alex', roomNumber: '101', checkIn: '2026-07-10', checkOut: '2026-07-12', status: 'checked_in', roomCharge: 200, deposit: 80, paidAt: null }],
+        [],
+      ]);
+      const folio = await getFolio('t1', 'b1');
+      if (!('error' in folio)) {
+        expect(folio.deposit).toBe(80);
+        expect(folio.balance).toBe(120);
       }
     });
 

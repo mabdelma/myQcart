@@ -361,7 +361,7 @@ export const hotelApi = {
     api.get<Room[]>(`/r/${slug}/rooms/available?checkIn=${checkIn}&checkOut=${checkOut}`),
   create: (slug: string, data: { number: string; type?: string; floor?: string; rate?: number; notes?: string }) =>
     api.post<{ id: string }>(`/r/${slug}/rooms`, data),
-  update: (slug: string, id: string, data: Partial<{ number: string; type: string; floor: string; rate: number; notes: string }>) =>
+  update: (slug: string, id: string, data: Partial<{ number: string; type: string; floor: string; rate: number; housekeeperId: string | null; notes: string }>) =>
     api.put<{ success: boolean }>(`/r/${slug}/rooms/${id}`, data),
   setStatus: (slug: string, id: string, status: RoomStatus, guestName?: string) =>
     api.post<{ success: boolean }>(`/r/${slug}/rooms/${id}/status`, { status, guestName }),
@@ -381,6 +381,7 @@ export const hotelApi = {
   deleteFolioItem: (slug: string, id: string) => api.delete<{ success: boolean }>(`/r/${slug}/folio/${id}`),
   folioPayLink: (slug: string, bookingId: string) => api.post<{ url: string; amount: number }>(`/r/${slug}/bookings/${bookingId}/folio/pay-link`, {}),
   settleFolio: (slug: string, bookingId: string) => api.post<{ success: boolean }>(`/r/${slug}/bookings/${bookingId}/folio/settle`, {}),
+  takeDeposit: (slug: string, bookingId: string) => api.post<{ url: string; amount: number }>(`/r/${slug}/bookings/${bookingId}/folio/deposit`, {}),
 };
 
 // Public booking engine — guest-facing (no auth): reserve a room online.

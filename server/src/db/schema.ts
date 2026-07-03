@@ -527,6 +527,7 @@ export const rooms = pgTable('rooms', {
   floor: text('floor'),
   rate: doublePrecision('rate').notNull().default(0), // price per night
   serviceToken: text('service_token'), // unguessable token for the in-room service QR link
+  housekeeperId: text('housekeeper_id'), // staff user assigned to clean the room
   guestName: text('guest_name'),
   notes: text('notes'),
   createdAt: text('created_at').notNull().default(sql`now()`),
@@ -546,6 +547,7 @@ export const roomBookings = pgTable('room_bookings', {
   status: text('status', { enum: ['booked', 'checked_in', 'checked_out', 'cancelled'] }).notNull().default('booked'),
   ratePerNight: doublePrecision('rate_per_night').notNull().default(0),
   total: doublePrecision('total').notNull().default(0),
+  depositAmount: doublePrecision('deposit_amount').notNull().default(0), // pre-paid deposit
   folioPaidAt: text('folio_paid_at'), // set when the guest's folio is settled
   notes: text('notes'),
   createdAt: text('created_at').notNull().default(sql`now()`),

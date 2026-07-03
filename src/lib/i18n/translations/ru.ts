@@ -988,4 +988,8 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.from': "С",
   'hotel.to': "По",
   'hotel.run': "Рассчитать",
+  'hotel.deposit': "Депозит",
+  'hotel.balance': "К оплате",
+  'hotel.housekeeper': "Горничная",
+  'hotel.unassigned': "Не назначено",
 };

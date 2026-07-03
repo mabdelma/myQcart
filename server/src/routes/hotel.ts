@@ -87,6 +87,11 @@ hotel.post('/:slug/bookings/:id/folio/settle', ...adminMgr, async (c) => {
   const r = await svc.settleFolio(c.get('tenantId'), c.req.param('id')!);
   return 'error' in r ? c.json(r, 404) : c.json(r);
 });
+hotel.post('/:slug/bookings/:id/folio/deposit', ...adminMgr, async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const r = await svc.takeDeposit(c.get('tenantId'), c.req.param('id')!, typeof body.amount === 'number' ? body.amount : undefined);
+  return 'error' in r ? c.json(r, 400) : c.json(r, 201);
+});
 
 // ── Public booking engine (a guest reserving a room online) ─────────────────
 const publicBookingSchema = z.object({

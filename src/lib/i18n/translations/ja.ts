@@ -988,4 +988,8 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.from': "開始",
   'hotel.to': "終了",
   'hotel.run': "実行",
+  'hotel.deposit': "前金",
+  'hotel.balance': "未払い残高",
+  'hotel.housekeeper': "清掃担当",
+  'hotel.unassigned': "未割当",
 };
