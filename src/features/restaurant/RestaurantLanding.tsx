@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router';
-import { UtensilsCrossed, ArrowLeft, CalendarDays, Clock, X } from 'lucide-react';
+import { useParams, Link } from 'react-router';
+import { UtensilsCrossed, ArrowLeft, CalendarDays, Clock, X, BedDouble } from 'lucide-react';
 import { tenantApi, menuApi, reservationApi, waitlistApi } from '../../lib/api';
 import { useI18n } from '../../contexts/I18nContext';
 import { BrandingProvider } from '../../contexts/BrandingProvider';
@@ -62,6 +62,8 @@ export function RestaurantLanding() {
     );
   }
 
+  const venue = tenant.venueType || 'restaurant';
+
   return (
     <BrandingProvider primaryColor={tenant.primaryColor} accentColor={tenant.accentColor} logoUrl={tenant.logoUrl} faviconUrl={tenant.faviconUrl}>
     <div className="min-h-screen bg-gray-50">
@@ -72,16 +74,26 @@ export function RestaurantLanding() {
       {tenant.coverImage && <img src={tenant.coverImage} alt="" className="w-full h-48 object-cover mt-4 rounded-lg" />}
       </div>
 
-      {/* Quick actions */}
+      {/* Quick actions — adapt to the venue type */}
       <div className="max-w-lg mx-auto p-4 flex gap-3">
-        <button onClick={() => setShowReservation(true)}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-brand text-white rounded-lg hover:opacity-90 transition-opacity">
-          <CalendarDays className="w-5 h-5" /> Book a Table
-        </button>
-        <button onClick={() => setShowWaitlist(true)}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-brand text-brand rounded-lg hover:bg-brand hover:text-white transition-colors">
-          <Clock className="w-5 h-5" /> Join Waitlist
-        </button>
+        {venue !== 'restaurant' && (
+          <Link to={`/r/${slug}/book`}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-brand text-white rounded-lg hover:opacity-90 transition-opacity">
+            <BedDouble className="w-5 h-5" /> {t('book.title')}
+          </Link>
+        )}
+        {venue !== 'hotel' && (
+          <>
+            <button onClick={() => setShowReservation(true)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-opacity ${venue === 'both' ? 'border-2 border-brand text-brand hover:bg-brand hover:text-white' : 'bg-brand text-white hover:opacity-90'}`}>
+              <CalendarDays className="w-5 h-5" /> Book a Table
+            </button>
+            <button onClick={() => setShowWaitlist(true)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-brand text-brand rounded-lg hover:bg-brand hover:text-white transition-colors">
+              <Clock className="w-5 h-5" /> Join Waitlist
+            </button>
+          </>
+        )}
       </div>
 
       {/* Waitlist modal */}
@@ -234,7 +246,8 @@ export function RestaurantLanding() {
         </div>
       )}
 
-      {/* Menu preview */}
+      {/* Menu preview — hidden for hotel-only venues */}
+      {venue !== 'hotel' && (
       <div className="max-w-lg mx-auto p-4 space-y-4">
         <h2 className="text-xl font-bold text-gray-900">{t('nav.menu')}</h2>
         {mainCats.map((cat) => (
@@ -251,6 +264,7 @@ export function RestaurantLanding() {
           </div>
         ))}
       </div>
+      )}
     </div>
     </BrandingProvider>
   );
