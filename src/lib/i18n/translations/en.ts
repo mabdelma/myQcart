@@ -1208,4 +1208,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "Both",
   'settings.businessType': "Business type",
   'settings.businessTypeHint': "Controls which features appear in your dashboard.",
+  'nav.bookingPage': "Booking page",
 };

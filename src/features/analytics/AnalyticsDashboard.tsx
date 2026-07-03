@@ -55,14 +55,16 @@ export function AnalyticsDashboard() {
   if (error) return <ErrorMessage message={error} />;
   if (!summary) return null;
 
+  const venue = tenant?.venueType || 'restaurant';
+
   return (
     <div className="space-y-6">
-      {/* Public restaurant page — URL + quick actions */}
+      {/* Public page — URL + quick actions */}
       <div className="bg-gradient-to-r from-[#8B4513] to-[#5C4033] rounded-lg shadow p-4 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-2 text-white min-w-0">
           <LinkIcon className="w-5 h-5 shrink-0" />
           <div className="min-w-0">
-            <p className="text-xs text-white/70">{t('nav.restaurantUrl')}</p>
+            <p className="text-xs text-white/70">{venue === 'hotel' ? t('nav.bookingPage') : t('nav.restaurantUrl')}</p>
             <p className="font-medium truncate">{publicUrl}</p>
           </div>
         </div>
@@ -80,6 +82,7 @@ export function AnalyticsDashboard() {
 
       <FrontDeskWidget slug={slug} />
 
+      {venue !== 'hotel' && (<>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <StatsCard
           title={t('marketing.statTodaySales')}
@@ -142,6 +145,7 @@ export function AnalyticsDashboard() {
           </div>
         </div>
       </div>
+      </>)}
     </div>
   );
 }

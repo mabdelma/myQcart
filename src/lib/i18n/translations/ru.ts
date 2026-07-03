@@ -997,4 +997,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "Оба",
   'settings.businessType': "Тип бизнеса",
   'settings.businessTypeHint': "Определяет, какие функции отображаются в панели.",
+  'nav.bookingPage': "Страница бронирования",
 };

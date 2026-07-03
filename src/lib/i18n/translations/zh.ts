@@ -997,4 +997,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "两者",
   'settings.businessType': "业务类型",
   'settings.businessTypeHint': "控制仪表盘中显示哪些功能。",
+  'nav.bookingPage': "预订页面",
 };

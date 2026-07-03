@@ -1008,4 +1008,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "كلاهما",
   'settings.businessType': "نوع النشاط",
   'settings.businessTypeHint': "يتحكم في الميزات التي تظهر في لوحتك.",
+  'nav.bookingPage': "صفحة الحجز",
 };

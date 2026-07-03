@@ -997,4 +997,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "दोनों",
   'settings.businessType': "व्यवसाय प्रकार",
   'settings.businessTypeHint': "यह नियंत्रित करता है कि आपके डैशबोर्ड में कौन-सी सुविधाएँ दिखें।",
+  'nav.bookingPage': "बुकिंग पेज",
 };

@@ -1008,4 +1008,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "Ambos",
   'settings.businessType': "Tipo de negocio",
   'settings.businessTypeHint': "Controla qué funciones aparecen en tu panel.",
+  'nav.bookingPage': "Página de reservas",
 };

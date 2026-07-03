@@ -996,4 +996,5 @@ export const translations: Record<TranslationKey, string> = {
   'venue.both': "Entrambi",
   'settings.businessType': "Tipo di attività",
   'settings.businessTypeHint': "Determina quali funzioni compaiono nella dashboard.",
+  'nav.bookingPage': "Pagina prenotazioni",
 };
