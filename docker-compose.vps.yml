@@ -66,6 +66,10 @@ services:
       OPENAI_REALTIME_MODEL: "${OPENAI_REALTIME_MODEL:-}"
       NOTIFICATIONS_URL: "${NOTIFICATIONS_URL:-}"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      # Twilio SMS (booking confirmations). Leave blank to disable — sendSms logs instead.
+      TWILIO_ACCOUNT_SID: "${TWILIO_ACCOUNT_SID:-}"
+      TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN:-}"
+      TWILIO_PHONE_NUMBER: "${TWILIO_PHONE_NUMBER:-}"
       NODE_ENV: production
       VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
       VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
