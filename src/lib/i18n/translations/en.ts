@@ -1203,4 +1203,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "Balance due",
   'hotel.housekeeper': "Housekeeper",
   'hotel.unassigned': "Unassigned",
+  'venue.restaurant': "Restaurant",
+  'venue.hotel': "Hotel",
+  'venue.both': "Both",
+  'settings.businessType': "Business type",
+  'settings.businessTypeHint': "Controls which features appear in your dashboard.",
 };

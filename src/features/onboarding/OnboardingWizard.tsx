@@ -11,7 +11,7 @@ export function OnboardingWizard() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [tenantInfo, setTenantInfo] = useState({ name: '', slug: '', email: '', phone: '' });
+  const [tenantInfo, setTenantInfo] = useState<{ name: string; slug: string; email: string; phone: string; venueType: 'restaurant' | 'hotel' | 'both' }>({ name: '', slug: '', email: '', phone: '', venueType: 'restaurant' });
   const [adminInfo, setAdminInfo] = useState({ name: '', password: '' });
   const [agreed, setAgreed] = useState(false);
   const [result, setResult] = useState<{ tenantSlug: string; adminEmail: string } | null>(null);
@@ -21,7 +21,11 @@ export function OnboardingWizard() {
     setError('');
     try {
       const res = await tenantApi.create({
-        ...tenantInfo,
+        name: tenantInfo.name,
+        slug: tenantInfo.slug,
+        email: tenantInfo.email,
+        phone: tenantInfo.phone,
+        venueType: tenantInfo.venueType,
         adminName: adminInfo.name,
         adminPassword: adminInfo.password,
       });
@@ -46,9 +50,9 @@ export function OnboardingWizard() {
 
         {step === 'tenant' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">Restaurant Details</h2>
+            <h2 className="text-lg font-medium text-gray-900">Business Details</h2>
             <div>
-              <label htmlFor="restaurant-name" className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
+              <label htmlFor="restaurant-name" className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
               <input id="restaurant-name" type="text" value={tenantInfo.name}
                 onChange={(e) => setTenantInfo({ ...tenantInfo, name: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
@@ -75,6 +79,17 @@ export function OnboardingWizard() {
                 onChange={(e) => setTenantInfo({ ...tenantInfo, phone: e.target.value })}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-[#8B4513] focus:border-[#8B4513]"
                 placeholder="+1 234 567 8900" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">What do you run?</label>
+              <div className="grid grid-cols-3 gap-2">
+                {([['restaurant', '🍽️', 'Restaurant'], ['hotel', '🏨', 'Hotel'], ['both', '✨', 'Both']] as const).map(([v, icon, label]) => (
+                  <button key={v} type="button" onClick={() => setTenantInfo({ ...tenantInfo, venueType: v })}
+                    className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-sm transition-colors ${tenantInfo.venueType === v ? 'border-[#8B4513] bg-[#8B4513]/5 text-[#8B4513] font-medium' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                    <span className="text-xl">{icon}</span>{label}
+                  </button>
+                ))}
+              </div>
             </div>
             <button onClick={() => setStep('admin')} disabled={!tenantInfo.name || !tenantInfo.slug || !tenantInfo.email}
               className="w-full bg-[#8B4513] text-white py-2 rounded-md hover:bg-[#5C4033] disabled:opacity-50">

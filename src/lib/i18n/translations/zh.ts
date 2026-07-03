@@ -992,4 +992,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "应付余额",
   'hotel.housekeeper': "客房服务员",
   'hotel.unassigned': "未分配",
+  'venue.restaurant': "餐厅",
+  'venue.hotel': "酒店",
+  'venue.both': "两者",
+  'settings.businessType': "业务类型",
+  'settings.businessTypeHint': "控制仪表盘中显示哪些功能。",
 };

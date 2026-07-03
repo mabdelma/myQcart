@@ -1003,4 +1003,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "Saldo pendiente",
   'hotel.housekeeper': "Personal de limpieza",
   'hotel.unassigned': "Sin asignar",
+  'venue.restaurant': "Restaurante",
+  'venue.hotel': "Hotel",
+  'venue.both': "Ambos",
+  'settings.businessType': "Tipo de negocio",
+  'settings.businessTypeHint': "Controla qué funciones aparecen en tu panel.",
 };

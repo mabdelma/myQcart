@@ -11,6 +11,7 @@ const createTenantSchema = z.object({
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with dashes'),
   email: z.string().email(),
   phone: z.string().optional(),
+  venueType: z.enum(['restaurant', 'hotel', 'both']).optional(),
   adminName: z.string().min(1).max(100),
   adminPassword: z.string().min(6).max(100),
 });

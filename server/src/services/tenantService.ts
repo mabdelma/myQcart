@@ -9,6 +9,7 @@ export interface CreateTenantInput {
   slug: string;
   email: string;
   phone?: string;
+  venueType?: 'restaurant' | 'hotel' | 'both';
   adminName: string;
   adminPassword: string;
 }
@@ -34,6 +35,7 @@ export async function createTenant(input: CreateTenantInput) {
     slug: input.slug,
     email: input.email,
     phone: input.phone,
+    venueType: input.venueType || 'restaurant',
   });
 
   await db.insert(schema.users).values({
@@ -77,13 +79,14 @@ export async function getTenantBySlug(slug: string) {
       primaryColor: tenant.primaryColor,
       currency: tenant.currency,
       googleReviewUrl: tenant.googleReviewUrl,
+      venueType: tenant.venueType,
     },
     status: 200 as const,
   };
 }
 
 export async function updateTenantSettings(tenantId: string, body: Record<string, unknown>) {
-  const allowed = ['name', 'phone', 'address', 'currency', 'timezone', 'logoUrl', 'coverImage', 'primaryColor', 'accentColor', 'taxRate', 'serviceCharge', 'stripeAccountId', 'googleReviewUrl'];
+  const allowed = ['name', 'phone', 'address', 'currency', 'timezone', 'logoUrl', 'coverImage', 'primaryColor', 'accentColor', 'taxRate', 'serviceCharge', 'stripeAccountId', 'googleReviewUrl', 'venueType'];
 
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {

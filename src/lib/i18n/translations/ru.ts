@@ -992,4 +992,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "К оплате",
   'hotel.housekeeper': "Горничная",
   'hotel.unassigned': "Не назначено",
+  'venue.restaurant': "Ресторан",
+  'venue.hotel': "Отель",
+  'venue.both': "Оба",
+  'settings.businessType': "Тип бизнеса",
+  'settings.businessTypeHint': "Определяет, какие функции отображаются в панели.",
 };

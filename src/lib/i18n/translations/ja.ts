@@ -992,4 +992,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "未払い残高",
   'hotel.housekeeper': "清掃担当",
   'hotel.unassigned': "未割当",
+  'venue.restaurant': "レストラン",
+  'venue.hotel': "ホテル",
+  'venue.both': "両方",
+  'settings.businessType': "業種",
+  'settings.businessTypeHint': "ダッシュボードに表示する機能を制御します。",
 };

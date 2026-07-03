@@ -992,4 +992,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "बकाया राशि",
   'hotel.housekeeper': "हाउसकीपर",
   'hotel.unassigned': "अनिर्दिष्ट",
+  'venue.restaurant': "रेस्तरां",
+  'venue.hotel': "होटल",
+  'venue.both': "दोनों",
+  'settings.businessType': "व्यवसाय प्रकार",
+  'settings.businessTypeHint': "यह नियंत्रित करता है कि आपके डैशबोर्ड में कौन-सी सुविधाएँ दिखें।",
 };

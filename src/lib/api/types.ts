@@ -1,8 +1,11 @@
+export type VenueType = 'restaurant' | 'hotel' | 'both';
+
 export interface Tenant {
   id: string;
   name: string;
   slug: string;
   email: string;
+  venueType?: VenueType;
   phone?: string;
   address?: string;
   currency: string;

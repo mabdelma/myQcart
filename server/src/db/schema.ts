@@ -13,6 +13,8 @@ export const tenants = pgTable('tenants', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   email: text('email').notNull(),
+  // What this operator runs — drives which features/nav they see.
+  venueType: text('venue_type', { enum: ['restaurant', 'hotel', 'both'] }).notNull().default('restaurant'),
   phone: text('phone'),
   address: text('address'),
   currency: text('currency').notNull().default('USD'),

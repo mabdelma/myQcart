@@ -540,6 +540,7 @@ export async function getCurrentUser(c: Context) {
             timezone: tenant.timezone,
             logoUrl: tenant.logoUrl,
             primaryColor: tenant.primaryColor,
+            venueType: tenant.venueType,
           }
         : null,
     },

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { CreditCard, Check, AlertTriangle } from 'lucide-react';
+import { CreditCard, Check, AlertTriangle, Store } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { tenantApi } from '../../lib/api';
+import type { VenueType } from '../../lib/api/types';
 
 export function SettingsPage() {
   const { t } = useI18n();
@@ -11,6 +12,15 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState(tenant?.stripeAccountId || '');
+  const [venueType, setVenueType] = useState<VenueType>(tenant?.venueType || 'restaurant');
+  const [savingVenue, setSavingVenue] = useState(false);
+
+  async function saveVenueType(v: VenueType) {
+    if (!slug || v === venueType) return;
+    setVenueType(v); setSavingVenue(true);
+    try { await tenantApi.updateSettings(slug, { venueType: v }); window.location.reload(); }
+    catch { setSavingVenue(false); }
+  }
 
   const hasStripeKey = !!import.meta.env.VITE_STRIPE_KEY || false;
   const stripeConfigured = hasStripeKey || !!stripeAccountId;
@@ -29,6 +39,22 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">{t('common.settings')}</h2>
+
+      <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div className="flex items-center gap-3 mb-1">
+          <Store className="w-6 h-6 text-[#8B4513]" />
+          <h3 className="text-lg font-medium">{t('settings.businessType')}</h3>
+        </div>
+        <p className="text-sm text-gray-500">{t('settings.businessTypeHint')}</p>
+        <div className="grid grid-cols-3 gap-2 max-w-md">
+          {([['restaurant', '🍽️', t('venue.restaurant')], ['hotel', '🏨', t('venue.hotel')], ['both', '✨', t('venue.both')]] as const).map(([v, icon, label]) => (
+            <button key={v} type="button" disabled={savingVenue} onClick={() => saveVenueType(v)}
+              className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-sm transition-colors disabled:opacity-60 ${venueType === v ? 'border-[#8B4513] bg-[#8B4513]/5 text-[#8B4513] font-medium' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+              <span className="text-xl">{icon}</span>{label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="bg-white rounded-lg shadow p-6 space-y-4">
         <div className="flex items-center gap-3 mb-4">

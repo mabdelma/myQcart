@@ -1003,4 +1003,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "الرصيد المستحق",
   'hotel.housekeeper': "عاملة النظافة",
   'hotel.unassigned': "غير معيَّن",
+  'venue.restaurant': "مطعم",
+  'venue.hotel': "فندق",
+  'venue.both': "كلاهما",
+  'settings.businessType': "نوع النشاط",
+  'settings.businessTypeHint': "يتحكم في الميزات التي تظهر في لوحتك.",
 };

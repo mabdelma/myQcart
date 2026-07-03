@@ -992,4 +992,9 @@ export const translations: Record<TranslationKey, string> = {
   'hotel.balance': "Saldo devedor",
   'hotel.housekeeper': "Camareira",
   'hotel.unassigned': "Não atribuído",
+  'venue.restaurant': "Restaurante",
+  'venue.hotel': "Hotel",
+  'venue.both': "Ambos",
+  'settings.businessType': "Tipo de negócio",
+  'settings.businessTypeHint': "Controla quais funcionalidades aparecem no seu painel.",
 };

@@ -75,7 +75,7 @@ export const reportApi = {
 // Tenants
 export const tenantApi = {
   get: (slug: string) => api.get<Tenant>(`/tenants/${slug}`, { skipAuth: true }),
-  create: (data: { name: string; slug: string; email: string; phone?: string; adminName: string; adminPassword: string }) =>
+  create: (data: { name: string; slug: string; email: string; phone?: string; venueType?: 'restaurant' | 'hotel' | 'both'; adminName: string; adminPassword: string }) =>
     api.post<{ tenant: Tenant; admin: User }>('/tenants', data, { skipAuth: true }),
   updateSettings: (slug: string, data: Partial<Tenant>) =>
     api.put<{ success: boolean }>(`/tenants/${slug}/settings`, data),

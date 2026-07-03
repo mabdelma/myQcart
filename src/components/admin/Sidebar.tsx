@@ -1,6 +1,11 @@
 import React from 'react';
 import { LayoutGrid, Users, ChefHat, Table, ClipboardList, UserCheck, Settings, ToggleLeft, CreditCard, Palette, Tag, Star, CalendarDays, Clock, Percent, Grid3X3, Gift, Timer, FileBarChart, Sparkles, X, Boxes, CalendarClock, UserCircle, Hotel } from 'lucide-react';
 import { useI18n, type TranslationKey } from '../../contexts/I18nContext';
+import { useAuth } from '../../contexts/AuthContext';
+
+// Nav items specific to one venue type; everything else is shared.
+const RESTAURANT_ONLY = new Set(['orders', 'tables', 'layout', 'menu', 'modifiers', 'reservations', 'waitlist']);
+const HOTEL_ONLY = new Set(['rooms']);
 
 interface SidebarProps {
   activeTab: string;
@@ -80,6 +85,13 @@ const tabKeyMap: Record<string, string> = {
 
 export function Sidebar({ activeTab, onTabChange, mobileOpen = false, onClose }: SidebarProps) {
   const { t } = useI18n();
+  const { state: { tenant } } = useAuth();
+  const venue = tenant?.venueType || 'restaurant';
+  const showItem = (id: string) =>
+    venue === 'both' ? true : venue === 'hotel' ? !RESTAURANT_ONLY.has(id) : !HOTEL_ONLY.has(id);
+  const visibleGroups = groups
+    .map((g) => ({ label: g.label, items: g.items.filter((it) => showItem(it.id)) }))
+    .filter((g) => g.items.length > 0);
   const [collapsed, setCollapsed] = React.useState(true);
   // Collapse is a DESKTOP-only behaviour (hover to expand). On mobile the sidebar
   // is a full-width off-canvas drawer with labels always visible.
@@ -100,7 +112,7 @@ export function Sidebar({ activeTab, onTabChange, mobileOpen = false, onClose }:
       </div>
 
       <nav className="space-y-4 overflow-y-auto">
-        {groups.map((groupNav) => (
+        {visibleGroups.map((groupNav) => (
           <div key={groupNav.label} className="space-y-1">
             <p className={`px-4 text-[10px] font-semibold uppercase tracking-wider text-[#C9A26B] ${collapsed ? 'lg:opacity-0 lg:h-0 lg:group-hover:opacity-100 lg:group-hover:h-auto' : ''}`}>
               {groupNav.label}
