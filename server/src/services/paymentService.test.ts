@@ -26,8 +26,10 @@ vi.mock('stripe', () => {
   return { default: MockStripe, MockStripe };
 });
 
-import { createPaymentIntent, recordCashPayment, createPaymentLink } from './paymentService.js';
+import { createPaymentIntent, recordCashPayment, createPaymentLink, reconcilePaymentLink } from './paymentService.js';
 import { db } from '../db/index.js';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockDb = db as any;
 
 describe('paymentService', () => {
   beforeEach(() => {
@@ -107,6 +109,34 @@ describe('paymentService', () => {
 
       expect(result.token).toBeTruthy();
       expect(result.url).toBe(`/pay/${result.token}`);
+    });
+  });
+
+  describe('reconcilePaymentLink', () => {
+    it('settles the folio when a folio link is paid', async () => {
+      mockDb.__setQueryQueue([
+        [{ id: 'pl1', tenantId: 't1', stripeLinkId: 'pl_x', status: 'active', bookingId: 'b1', kind: 'folio', amount: 120 }],
+        [], // paymentLinks update
+        [], // roomBookings update
+      ]);
+      await reconcilePaymentLink('pl_x');
+      // last db.set call is the booking update
+      expect(mockDb.set.mock.calls.at(-1)?.[0].folioPaidAt).toBeTruthy();
+    });
+
+    it('records the deposit when a deposit link is paid', async () => {
+      mockDb.__setQueryQueue([
+        [{ id: 'pl2', tenantId: 't1', stripeLinkId: 'pl_y', status: 'active', bookingId: 'b1', kind: 'deposit', amount: 80 }],
+        [], [],
+      ]);
+      await reconcilePaymentLink('pl_y');
+      expect(mockDb.set.mock.calls.at(-1)?.[0].depositAmount).toBe(80);
+    });
+
+    it('is idempotent — does nothing for an already-paid link', async () => {
+      mockDb.__setQueryQueue([[{ id: 'pl3', stripeLinkId: 'pl_z', status: 'paid' }]]);
+      await reconcilePaymentLink('pl_z');
+      expect(mockDb.update).not.toHaveBeenCalled();
     });
   });
 });

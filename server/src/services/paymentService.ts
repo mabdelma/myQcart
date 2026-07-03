@@ -327,7 +327,7 @@ export async function handleStripeWebhook(body: string, signature: string) {
  * and, for hotel folio/deposit links, reconcile the booking automatically —
  * folio → settled, deposit → amount recorded. Idempotent on the link's status.
  */
-async function reconcilePaymentLink(stripeLinkId: string) {
+export async function reconcilePaymentLink(stripeLinkId: string) {
   const [link] = await db.select().from(schema.paymentLinks)
     .where(eq(schema.paymentLinks.stripeLinkId, stripeLinkId)).limit(1);
   if (!link || link.status === 'paid') return; // unknown or already handled
