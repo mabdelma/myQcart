@@ -229,7 +229,7 @@ export async function listPayments(tenantId: string, params: PaginationParams = 
   return buildPagination(data, Number(count), { page, limit });
 }
 
-export async function createPaymentLink(tenantId: string, orderId?: string, amount?: number, description?: string) {
+export async function createPaymentLink(tenantId: string, orderId?: string, amount?: number, description?: string, meta?: { bookingId?: string; kind?: 'folio' | 'deposit' }) {
   const linkId = uuid();
   const token = crypto.randomBytes(24).toString('hex');
 
@@ -246,6 +246,7 @@ export async function createPaymentLink(tenantId: string, orderId?: string, amou
         })).id,
         quantity: 1,
       }] as Stripe.PaymentLinkCreateParams.LineItem[],
+      metadata: { tenantId, ...(meta?.bookingId ? { bookingId: meta.bookingId, kind: meta.kind || '' } : {}) },
     });
     stripeLinkId = link.id;
   }
@@ -254,6 +255,8 @@ export async function createPaymentLink(tenantId: string, orderId?: string, amou
     id: linkId,
     tenantId,
     orderId,
+    bookingId: meta?.bookingId,
+    kind: meta?.kind,
     amount: amount || 0,
     description: description || 'Restaurant Payment',
     token,
@@ -305,10 +308,40 @@ export async function handleStripeWebhook(body: string, signature: string) {
       }
     }
 
+    // Payment links (hotel folio/deposit + generic) settle via checkout sessions.
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const linkId = typeof session.payment_link === 'string' ? session.payment_link : session.payment_link?.id;
+      if (linkId) await reconcilePaymentLink(linkId);
+    }
+
     return { data: { received: true }, status: 200 as const };
   } catch (err) {
     logger.error({ err }, 'Stripe webhook verification failed');
     return { error: 'Webhook error', status: 400 as const };
+  }
+}
+
+/**
+ * A payment link was paid (via its Stripe checkout session). Mark the link paid
+ * and, for hotel folio/deposit links, reconcile the booking automatically —
+ * folio → settled, deposit → amount recorded. Idempotent on the link's status.
+ */
+async function reconcilePaymentLink(stripeLinkId: string) {
+  const [link] = await db.select().from(schema.paymentLinks)
+    .where(eq(schema.paymentLinks.stripeLinkId, stripeLinkId)).limit(1);
+  if (!link || link.status === 'paid') return; // unknown or already handled
+  const now = new Date().toISOString();
+  await db.update(schema.paymentLinks).set({ status: 'paid', paidAt: now }).where(eq(schema.paymentLinks.id, link.id));
+
+  if (link.bookingId && link.kind === 'folio') {
+    await db.update(schema.roomBookings).set({ folioPaidAt: now })
+      .where(and(eq(schema.roomBookings.id, link.bookingId), eq(schema.roomBookings.tenantId, link.tenantId)));
+    logger.info({ bookingId: link.bookingId }, 'Folio settled via payment link');
+  } else if (link.bookingId && link.kind === 'deposit') {
+    await db.update(schema.roomBookings).set({ depositAmount: link.amount })
+      .where(and(eq(schema.roomBookings.id, link.bookingId), eq(schema.roomBookings.tenantId, link.tenantId)));
+    logger.info({ bookingId: link.bookingId, amount: link.amount }, 'Deposit recorded via payment link');
   }
 }
 

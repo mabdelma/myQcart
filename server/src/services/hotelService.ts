@@ -309,7 +309,7 @@ export async function folioPayLink(tenantId: string, bookingId: string) {
   if ('error' in folio) return folio;
   if (folio.balance <= 0) return { error: 'nothing to charge' as const };
   const label = `Folio — ${folio.booking.guestName}${folio.booking.roomNumber ? `, Room ${folio.booking.roomNumber}` : ''}`;
-  const link = await createPaymentLink(tenantId, undefined, folio.balance, label);
+  const link = await createPaymentLink(tenantId, undefined, folio.balance, label, { bookingId, kind: 'folio' });
   return { url: link.url, amount: folio.balance };
 }
 
@@ -322,7 +322,7 @@ export async function takeDeposit(tenantId: string, bookingId: string, amount?: 
   if (value <= 0) return { error: 'no deposit amount' as const };
   await db.update(schema.roomBookings).set({ depositAmount: value })
     .where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
-  const link = await createPaymentLink(tenantId, undefined, value, `Deposit — ${b.guestName}`);
+  const link = await createPaymentLink(tenantId, undefined, value, `Deposit — ${b.guestName}`, { bookingId, kind: 'deposit' });
   return { url: link.url, amount: value };
 }
 

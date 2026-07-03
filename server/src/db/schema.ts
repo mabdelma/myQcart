@@ -369,6 +369,8 @@ export const paymentLinks = pgTable('payment_links', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').notNull().references(() => tenants.id),
   orderId: text('order_id').references(() => orders.id),
+  bookingId: text('booking_id'), // hotel folio/deposit links reconcile against this
+  kind: text('kind'), // 'folio' | 'deposit' (null for order/generic links)
   amount: doublePrecision('amount').notNull(),
   description: text('description'),
   status: text('status', { enum: ['active', 'paid', 'expired', 'cancelled'] }).notNull().default('active'),
