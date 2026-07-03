@@ -998,4 +998,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "व्यवसाय प्रकार",
   'settings.businessTypeHint': "यह नियंत्रित करता है कि आपके डैशबोर्ड में कौन-सी सुविधाएँ दिखें।",
   'nav.bookingPage': "बुकिंग पेज",
+  'book.secure': "अपना कमरा सुरक्षित करें",
+  'book.securePrompt': "अभी जमा राशि देकर अपनी बुकिंग सुनिश्चित करें, या चेक-इन पर भुगतान करें।",
+  'book.payNow': "जमा राशि दें",
+  'book.payLater': "चेक-इन पर भुगतान",
 };

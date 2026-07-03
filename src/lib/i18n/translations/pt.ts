@@ -998,4 +998,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "Tipo de negócio",
   'settings.businessTypeHint': "Controla quais funcionalidades aparecem no seu painel.",
   'nav.bookingPage': "Página de reservas",
+  'book.secure': "Garanta o seu quarto",
+  'book.securePrompt': "Pague um depósito agora para garantir a sua reserva, ou pague no check-in.",
+  'book.payNow': "Pagar depósito",
+  'book.payLater': "Pagar no check-in",
 };

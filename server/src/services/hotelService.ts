@@ -313,6 +313,21 @@ export async function folioPayLink(tenantId: string, bookingId: string) {
   return { url: link.url, amount: folio.balance };
 }
 
+/**
+ * Guest-facing deposit link for a fresh booking (one night's rate). Unlike the
+ * staff takeDeposit, this does NOT record the amount up front — the webhook sets
+ * depositAmount only once the guest actually pays. Returns null if no rate.
+ */
+export async function publicDepositLink(tenantId: string, bookingId: string) {
+  const [b] = await db.select({ id: schema.roomBookings.id, guestName: schema.roomBookings.guestName, ratePerNight: schema.roomBookings.ratePerNight })
+    .from(schema.roomBookings).where(and(eq(schema.roomBookings.id, bookingId), eq(schema.roomBookings.tenantId, tenantId)));
+  if (!b) return null;
+  const amount = Number(b.ratePerNight || 0);
+  if (amount <= 0) return null;
+  const link = await createPaymentLink(tenantId, undefined, amount, `Deposit — ${b.guestName}`, { bookingId, kind: 'deposit' });
+  return { url: link.url, amount };
+}
+
 /** Take a deposit: default one night's rate. Records it and returns a Stripe pay link. */
 export async function takeDeposit(tenantId: string, bookingId: string, amount?: number) {
   const [b] = await db.select({ id: schema.roomBookings.id, guestName: schema.roomBookings.guestName, ratePerNight: schema.roomBookings.ratePerNight })

@@ -1009,4 +1009,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "Type d'établissement",
   'settings.businessTypeHint': "Détermine les fonctionnalités affichées dans votre tableau de bord.",
   'nav.bookingPage': "Page de réservation",
+  'book.secure': "Garantissez votre chambre",
+  'book.securePrompt': "Payez un acompte maintenant pour garantir votre réservation, ou réglez à l'arrivée.",
+  'book.payNow': "Payer l’acompte",
+  'book.payLater': "Payer à l'arrivée",
 };

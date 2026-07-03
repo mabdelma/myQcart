@@ -113,8 +113,12 @@ hotel.get('/:slug/book/availability', resolveTenant, async (c) => {
 });
 hotel.post('/:slug/book', resolveTenant, zValidator('json', publicBookingSchema), async (c) => {
   const b = c.req.valid('json');
-  const r = await svc.createBooking(c.get('tenantId'), { ...b, guestEmail: b.guestEmail || undefined });
-  return 'error' in r ? c.json(r, 400) : c.json(r, 201);
+  const tenantId = c.get('tenantId');
+  const r = await svc.createBooking(tenantId, { ...b, guestEmail: b.guestEmail || undefined });
+  if ('error' in r) return c.json(r, 400);
+  // Offer an optional deposit link to secure the room online.
+  const deposit = await svc.publicDepositLink(tenantId, r.id).catch(() => null);
+  return c.json({ ...r, deposit }, 201);
 });
 
 // ── Room service (public — a checked-in guest ordering from their room) ──────

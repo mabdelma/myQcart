@@ -389,7 +389,7 @@ export const bookingApi = {
   availability: (slug: string, checkIn: string, checkOut: string) =>
     api.get<{ id: string; number: string; type?: string | null; rate: number }[]>(`/r/${slug}/book/availability?checkIn=${checkIn}&checkOut=${checkOut}`, { skipAuth: true }),
   book: (slug: string, data: { roomId: string; guestName: string; guestEmail?: string; guestPhone?: string; checkIn: string; checkOut: string }) =>
-    api.post<{ id: string }>(`/r/${slug}/book`, data, { skipAuth: true }),
+    api.post<{ id: string; deposit?: { url: string; amount: number } | null }>(`/r/${slug}/book`, data, { skipAuth: true }),
 };
 
 // Room service — guest-facing (no auth): a checked-in guest orders to their room.

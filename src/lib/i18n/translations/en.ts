@@ -1209,4 +1209,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "Business type",
   'settings.businessTypeHint': "Controls which features appear in your dashboard.",
   'nav.bookingPage': "Booking page",
+  'book.secure': "Secure your room",
+  'book.securePrompt': "Pay a deposit now to guarantee your booking — or settle at check-in.",
+  'book.payNow': "Pay deposit",
+  'book.payLater': "Pay at check-in",
 };

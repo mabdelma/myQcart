@@ -998,4 +998,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "業種",
   'settings.businessTypeHint': "ダッシュボードに表示する機能を制御します。",
   'nav.bookingPage': "予約ページ",
+  'book.secure': "お部屋を確保",
+  'book.securePrompt': "今すぐ前金をお支払いいただくと予約が確定します。チェックイン時のお支払いも可能です。",
+  'book.payNow': "前金を支払う",
+  'book.payLater': "チェックイン時に支払う",
 };

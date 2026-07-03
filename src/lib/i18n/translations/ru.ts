@@ -998,4 +998,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "Тип бизнеса",
   'settings.businessTypeHint': "Определяет, какие функции отображаются в панели.",
   'nav.bookingPage': "Страница бронирования",
+  'book.secure': "Гарантируйте номер",
+  'book.securePrompt': "Внесите депозит сейчас, чтобы гарантировать бронь, или оплатите при заселении.",
+  'book.payNow': "Внести депозит",
+  'book.payLater': "Оплатить при заселении",
 };

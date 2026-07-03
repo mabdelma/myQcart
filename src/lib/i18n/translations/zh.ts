@@ -998,4 +998,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "业务类型",
   'settings.businessTypeHint': "控制仪表盘中显示哪些功能。",
   'nav.bookingPage': "预订页面",
+  'book.secure': "确保您的房间",
+  'book.securePrompt': "立即支付押金以确保预订，或在入住时结算。",
+  'book.payNow': "支付押金",
+  'book.payLater': "入住时支付",
 };

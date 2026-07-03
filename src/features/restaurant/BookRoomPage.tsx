@@ -18,6 +18,7 @@ export function BookRoomPage() {
   const [guest, setGuest] = useState({ name: '', email: '', phone: '' });
   const [booking, setBooking] = useState(false);
   const [done, setDone] = useState(false);
+  const [deposit, setDeposit] = useState<{ url: string; amount: number } | null>(null);
 
   const nights = checkIn && checkOut && checkOut > checkIn
     ? Math.max(1, Math.round((new Date(checkOut + 'T00:00:00Z').getTime() - new Date(checkIn + 'T00:00:00Z').getTime()) / 86400000)) : 0;
@@ -34,9 +35,27 @@ export function BookRoomPage() {
     if (!slug || !selected || !guest.name.trim() || !checkIn || !checkOut) return;
     setBooking(true);
     try {
-      await bookingApi.book(slug, { roomId: selected.id, guestName: guest.name, guestEmail: guest.email || undefined, guestPhone: guest.phone || undefined, checkIn, checkOut });
-      setDone(true);
+      const res = await bookingApi.book(slug, { roomId: selected.id, guestName: guest.name, guestEmail: guest.email || undefined, guestPhone: guest.phone || undefined, checkIn, checkOut });
+      if (res.deposit) setDeposit(res.deposit); else setDone(true);
     } catch { /* ignore */ } finally { setBooking(false); }
+  }
+
+  if (deposit && !done) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-amber-50 p-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 bg-[#8B4513]/10 rounded-full flex items-center justify-center mx-auto mb-4"><BedDouble className="w-8 h-8 text-[#8B4513]" /></div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">{t('book.secure')}</h1>
+          <p className="text-gray-600 mb-2">{t('book.securePrompt')}</p>
+          <p className="text-2xl font-bold text-gray-900 mb-6">{price(deposit.amount)}</p>
+          <div className="flex flex-col gap-2">
+            <a href={deposit.url} target="_blank" rel="noopener noreferrer" onClick={() => setDone(true)}
+              className="px-5 py-2.5 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033]">{t('book.payNow')}</a>
+            <button onClick={() => setDone(true)} className="px-5 py-2.5 text-gray-600 hover:text-gray-800 text-sm">{t('book.payLater')}</button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (done) {
@@ -46,7 +65,7 @@ export function BookRoomPage() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><Check className="w-8 h-8 text-green-600" /></div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">{t('book.confirmed')}</h1>
           <p className="text-gray-600 mb-6">{t('book.confirmedDesc')}</p>
-          <button onClick={() => { setDone(false); setRooms(null); setSelected(null); setGuest({ name: '', email: '', phone: '' }); }}
+          <button onClick={() => { setDone(false); setDeposit(null); setRooms(null); setSelected(null); setGuest({ name: '', email: '', phone: '' }); }}
             className="px-5 py-2.5 bg-[#8B4513] text-white rounded-lg hover:bg-[#5C4033]">{t('book.bookAnother')}</button>
         </div>
       </div>

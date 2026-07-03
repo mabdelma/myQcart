@@ -1009,4 +1009,8 @@ export const translations: Record<TranslationKey, string> = {
   'settings.businessType': "نوع النشاط",
   'settings.businessTypeHint': "يتحكم في الميزات التي تظهر في لوحتك.",
   'nav.bookingPage': "صفحة الحجز",
+  'book.secure': "احجز غرفتك بضمان",
+  'book.securePrompt': "ادفع عربوناً الآن لتأكيد حجزك، أو ادفع عند الوصول.",
+  'book.payNow': "دفع العربون",
+  'book.payLater': "الدفع عند الوصول",
 };
