@@ -1,4 +1,5 @@
 export type VenueType = 'restaurant' | 'hotel' | 'both';
+export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled';
 
 export interface Tenant {
   id: string;
@@ -6,6 +7,7 @@ export interface Tenant {
   slug: string;
   email: string;
   venueType?: VenueType;
+  subscription?: { status: SubscriptionStatus; currentPeriodEnd?: string | null };
   phone?: string;
   address?: string;
   currency: string;

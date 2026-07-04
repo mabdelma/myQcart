@@ -1002,4 +1002,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "立即支付押金以确保预订，或在入住时结算。",
   'book.payNow': "支付押金",
   'book.payLater': "入住时支付",
+  'billing.trialMsg': "您正在使用免费试用 — 升级以保持一切正常运行。",
+  'billing.pastDueMsg': "您上次的付款失败。请更新账单信息以免服务中断。",
+  'billing.upgrade': "升级",
+  'billing.manage': "管理账单",
 };

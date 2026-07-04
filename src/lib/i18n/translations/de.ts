@@ -1002,4 +1002,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "Zahlen Sie jetzt eine Anzahlung, um Ihre Buchung zu sichern — oder beim Check-in.",
   'book.payNow': "Anzahlung zahlen",
   'book.payLater': "Beim Check-in zahlen",
+  'billing.trialMsg': "Sie nutzen die kostenlose Testphase — upgraden Sie, damit alles weiterläuft.",
+  'billing.pastDueMsg': "Ihre letzte Zahlung ist fehlgeschlagen. Aktualisieren Sie Ihre Zahlungsdaten, um Unterbrechungen zu vermeiden.",
+  'billing.upgrade': "Upgraden",
+  'billing.manage': "Abrechnung verwalten",
 };

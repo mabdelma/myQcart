@@ -1001,4 +1001,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "Paga un acconto ora per garantire la prenotazione, oppure salda al check-in.",
   'book.payNow': "Paga acconto",
   'book.payLater': "Paga al check-in",
+  'billing.trialMsg': "Sei nella prova gratuita — esegui l'upgrade per mantenere tutto attivo.",
+  'billing.pastDueMsg': "L'ultimo pagamento non è andato a buon fine. Aggiorna la fatturazione per evitare interruzioni.",
+  'billing.upgrade': "Upgrade",
+  'billing.manage': "Gestisci fatturazione",
 };

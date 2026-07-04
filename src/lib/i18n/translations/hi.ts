@@ -1002,4 +1002,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "अभी जमा राशि देकर अपनी बुकिंग सुनिश्चित करें, या चेक-इन पर भुगतान करें।",
   'book.payNow': "जमा राशि दें",
   'book.payLater': "चेक-इन पर भुगतान",
+  'billing.trialMsg': "आप निःशुल्क ट्रायल पर हैं — सब कुछ चालू रखने के लिए अपग्रेड करें।",
+  'billing.pastDueMsg': "आपका पिछला भुगतान विफल रहा। रुकावट से बचने के लिए अपनी बिलिंग अपडेट करें।",
+  'billing.upgrade': "अपग्रेड",
+  'billing.manage': "बिलिंग प्रबंधित करें",
 };

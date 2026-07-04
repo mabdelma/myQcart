@@ -1002,4 +1002,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "Pague um depósito agora para garantir a sua reserva, ou pague no check-in.",
   'book.payNow': "Pagar depósito",
   'book.payLater': "Pagar no check-in",
+  'billing.trialMsg': "Está no período de teste gratuito — faça upgrade para manter tudo a funcionar.",
+  'billing.pastDueMsg': "O seu último pagamento falhou. Atualize a faturação para evitar interrupções.",
+  'billing.upgrade': "Fazer upgrade",
+  'billing.manage': "Gerir faturação",
 };

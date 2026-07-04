@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { SubscriptionBanner } from './SubscriptionBanner';
 import { StaffPerformance } from './staff/StaffPerformance';
 import { Analytics } from './Analytics';
 import { AdminProfile } from './AdminProfile';
@@ -81,6 +82,7 @@ export function AdminPortal() {
 
         <div className="flex-1 min-w-0">
           <Header onMenuClick={() => setMobileNav(true)} />
+          <SubscriptionBanner />
 
           <main className="p-4 sm:p-8">
             <Routes>

@@ -1013,4 +1013,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "ادفع عربوناً الآن لتأكيد حجزك، أو ادفع عند الوصول.",
   'book.payNow': "دفع العربون",
   'book.payLater': "الدفع عند الوصول",
+  'billing.trialMsg': "أنت في الفترة التجريبية المجانية — قم بالترقية للحفاظ على استمرار كل شيء.",
+  'billing.pastDueMsg': "فشلت آخر عملية دفع. حدّث بيانات الفوترة لتجنّب الانقطاع.",
+  'billing.upgrade': "ترقية",
+  'billing.manage': "إدارة الفوترة",
 };

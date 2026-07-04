@@ -1213,4 +1213,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "Pay a deposit now to guarantee your booking — or settle at check-in.",
   'book.payNow': "Pay deposit",
   'book.payLater': "Pay at check-in",
+  'billing.trialMsg': "You're on the free trial — upgrade to keep everything running.",
+  'billing.pastDueMsg': "Your last payment failed. Update your billing to avoid interruption.",
+  'billing.upgrade': "Upgrade",
+  'billing.manage': "Manage billing",
 };

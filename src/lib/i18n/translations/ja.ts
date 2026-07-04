@@ -1002,4 +1002,8 @@ export const translations: Record<TranslationKey, string> = {
   'book.securePrompt': "今すぐ前金をお支払いいただくと予約が確定します。チェックイン時のお支払いも可能です。",
   'book.payNow': "前金を支払う",
   'book.payLater': "チェックイン時に支払う",
+  'billing.trialMsg': "無料トライアル中です — すべてを使い続けるにはアップグレードを。",
+  'billing.pastDueMsg': "前回のお支払いに失敗しました。中断を避けるため請求情報を更新してください。",
+  'billing.upgrade': "アップグレード",
+  'billing.manage': "請求管理",
 };

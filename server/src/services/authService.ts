@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { db, schema } from '../db/index.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { createToken, verifyToken, getTokenFromRequest } from '../lib/auth.js';
@@ -518,6 +518,16 @@ export async function getCurrentUser(c: Context) {
         .limit(1)
     : [undefined];
 
+  // Lightweight subscription status for the admin billing banner.
+  const [sub] = payload.tenantId
+    ? await db
+        .select({ status: schema.tenantSubscriptions.status, currentPeriodEnd: schema.tenantSubscriptions.currentPeriodEnd, trialEndsAt: schema.tenantSubscriptions.trialEndsAt })
+        .from(schema.tenantSubscriptions)
+        .where(eq(schema.tenantSubscriptions.tenantId, payload.tenantId))
+        .orderBy(desc(schema.tenantSubscriptions.createdAt))
+        .limit(1)
+    : [undefined];
+
   return {
     data: {
       user: {
@@ -541,6 +551,7 @@ export async function getCurrentUser(c: Context) {
             logoUrl: tenant.logoUrl,
             primaryColor: tenant.primaryColor,
             venueType: tenant.venueType,
+            subscription: { status: sub?.status || 'trial', currentPeriodEnd: sub?.currentPeriodEnd || sub?.trialEndsAt || null },
           }
         : null,
     },
