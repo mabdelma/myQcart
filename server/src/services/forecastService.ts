@@ -105,12 +105,14 @@ export async function getInsights(tenantId: string, tenantName: string, currency
 
   const data = { forecast, forecast7Total, lowStock, reorderCost, atRisk, topCustomers, ...(hotel ? { hotel } : {}) };
 
-  // ── AI narrative (best-effort; degrades to empty if no key) ──
+  // ── AI narrative (best-effort; degrades to empty if no provider) ──
+  // Uses OpenAI, or any local OpenAI-compatible server via OPENAI_BASE_URL.
   let narrative = '';
   const key = process.env.OPENAI_API_KEY;
-  if (key) {
+  const baseURL = process.env.OPENAI_BASE_URL;
+  if (key || baseURL) {
     try {
-      const client = new OpenAI({ apiKey: key });
+      const client = new OpenAI({ apiKey: key || 'local', ...(baseURL ? { baseURL } : {}) });
       const resp = await client.chat.completions.create({
         model: MODEL,
         max_tokens: 320,

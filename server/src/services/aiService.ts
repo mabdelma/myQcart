@@ -7,16 +7,21 @@ import { getLowStockItems } from './inventoryService.js';
 import { suggestReorder, createPurchaseOrder } from './procurementService.js';
 import { logger } from '../lib/logger.js';
 
-// OpenAI (same provider as the Escoutly app). Override the model with OPENAI_MODEL.
+// LLM provider. Defaults to OpenAI, but set OPENAI_BASE_URL to point at any local,
+// self-hosted, OpenAI-compatible server (Ollama http://host:11434/v1, llama.cpp,
+// vLLM, LM Studio) and OPENAI_MODEL to a local model (e.g. llama3.1) — no API key
+// needed for a local endpoint, and no data leaves your infrastructure.
 const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+const BASE_URL = process.env.OPENAI_BASE_URL;
 
 function getClient(): OpenAI | null {
   const key = process.env.OPENAI_API_KEY;
+  if (BASE_URL) return new OpenAI({ apiKey: key || 'local', baseURL: BASE_URL });
   return key ? new OpenAI({ apiKey: key }) : null;
 }
 
 export function aiEnabled(): boolean {
-  return !!process.env.OPENAI_API_KEY;
+  return !!(process.env.OPENAI_API_KEY || BASE_URL);
 }
 
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
@@ -126,7 +131,7 @@ async function runAdminTool(tenantId: string, tenantName: string, currency: stri
 
 export async function adminCopilot(tenantId: string, tenantName: string, currency: string, history: ChatTurn[]) {
   const client = getClient();
-  if (!client) return { error: 'AI assistant not configured (set OPENAI_API_KEY)', status: 501 as const };
+  if (!client) return { error: 'AI assistant not configured (set OPENAI_API_KEY, or OPENAI_BASE_URL for a local model)', status: 501 as const };
 
   const system = `You are Qlisted Copilot — the AI operations assistant built into the Qlisted restaurant platform, helping the owner/manager of "${tenantName}" run their restaurant. Currency: ${currency}.\n`
     + `• Always call the provided tools to fetch REAL data (sales, orders, menu, tables, staff, reservations, loyalty) before answering with figures — never invent numbers, names, or dates.\n`
