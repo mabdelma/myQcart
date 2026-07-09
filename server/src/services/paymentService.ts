@@ -16,6 +16,15 @@ function getStripe(): Stripe | null {
   return new Stripe(key, { apiVersion: '2025-02-24.acacia' });
 }
 
+/**
+ * Stripe request options that scope a call to a tenant's connected account
+ * (Connect direct charge) when they've linked one — so their guests' money lands
+ * in their account. Undefined = the platform's own Stripe account.
+ */
+function stripeAccountOpts(accountId?: string | null): { stripeAccount: string } | undefined {
+  return accountId ? { stripeAccount: accountId } : undefined;
+}
+
 async function updateOrderPaymentStatus(tenantId: string, orderId: string) {
   const [order] = await db
     .select()
@@ -74,8 +83,11 @@ export async function createPaymentIntent(tenantId: string, orderId: string, tip
   // Charge in the tenant's own currency and let Stripe surface every eligible
   // local method (Bizum for EUR/Spain, cards, wallets, …) via the Payment
   // Element — no per-method code. Bizum must be enabled on the Stripe account.
-  const [tenant] = await db.select({ currency: schema.tenants.currency }).from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
+  const [tenant] = await db.select({ currency: schema.tenants.currency, stripeAccountId: schema.tenants.stripeAccountId }).from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
   const currency = (tenant?.currency || 'usd').toLowerCase();
+  // When the tenant has connected their own Stripe, charge directly on their
+  // account so the money lands there — otherwise it goes to the platform account.
+  const acctOpts = stripeAccountOpts(tenant?.stripeAccountId);
 
   if (stripe) {
     const paymentIntent = await stripe.paymentIntents.create({
@@ -83,7 +95,7 @@ export async function createPaymentIntent(tenantId: string, orderId: string, tip
       currency,
       automatic_payment_methods: { enabled: true },
       metadata: { orderId, tenantId },
-    });
+    }, acctOpts);
 
     const paymentId = uuid();
     await db.insert(schema.payments).values({
@@ -237,17 +249,19 @@ export async function createPaymentLink(tenantId: string, orderId?: string, amou
   let stripeLinkId: string | undefined;
 
   if (stripe && amount) {
+    // Route the link (and its price) to the tenant's connected account when set.
+    const [tenant] = await db.select({ stripeAccountId: schema.tenants.stripeAccountId })
+      .from(schema.tenants).where(eq(schema.tenants.id, tenantId)).limit(1);
+    const acctOpts = stripeAccountOpts(tenant?.stripeAccountId);
+    const price = await stripe.prices.create({
+      currency: 'usd',
+      product_data: { name: description || 'Restaurant Payment' },
+      unit_amount: Math.round(amount * 100),
+    }, acctOpts);
     const link = await stripe.paymentLinks.create({
-      line_items: [{
-        price: (await stripe.prices.create({
-          currency: 'usd',
-          product_data: { name: description || 'Restaurant Payment' },
-          unit_amount: Math.round(amount * 100),
-        })).id,
-        quantity: 1,
-      }] as Stripe.PaymentLinkCreateParams.LineItem[],
+      line_items: [{ price: price.id, quantity: 1 }] as Stripe.PaymentLinkCreateParams.LineItem[],
       metadata: { tenantId, ...(meta?.bookingId ? { bookingId: meta.bookingId, kind: meta.kind || '' } : {}) },
-    });
+    }, acctOpts);
     stripeLinkId = link.id;
   }
 
