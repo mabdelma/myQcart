@@ -20,6 +20,8 @@ name: qcart-prod
 services:
   postgres:
     restart: always
+    # Caps so a spike in one app can't OOM the shared multi-app host.
+    mem_limit: 1g
     environment:
       POSTGRES_USER: "${POSTGRES_USER:-qcart}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}"
@@ -32,6 +34,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
+    mem_limit: 256m
     networks: [default]
 
   migrate:
@@ -49,6 +52,7 @@ services:
       redis:
         condition: service_started
     restart: always
+    mem_limit: 1g
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-qcart}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-qcart}"
       JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET in .env.prod}"
@@ -99,6 +103,7 @@ services:
     # generic "frontend" alias collides with qarrito's upstream and 502s it.
     container_name: qcart-frontend
     restart: always
+    mem_limit: 256m
     ports: !reset []
     networks: [default, edge]
 

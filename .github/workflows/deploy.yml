@@ -65,7 +65,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /opt/qcart
+            cd /var/www/qcart
             git pull origin main
             sed -i "s|image:.*api:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}/api:${{ github.sha }}|" docker-compose.vps.yml
             sed -i "s|image:.*frontend:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}/frontend:${{ github.sha }}|" docker-compose.vps.yml
