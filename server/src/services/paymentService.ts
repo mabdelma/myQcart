@@ -18,10 +18,12 @@ function getStripe(): Stripe | null {
 
 /**
  * Stripe request options that scope a call to a tenant's connected account
- * (Connect direct charge) when they've linked one — so their guests' money lands
- * in their account. Undefined = the platform's own Stripe account.
+ * (Connect direct charge). Per-tenant routing is OPT-IN via STRIPE_CONNECT_ENABLED
+ * — by default (and here) everyone settles to the platform's shared Stripe
+ * account, ignoring any tenant stripeAccountId. Flip the flag to route per tenant.
  */
 function stripeAccountOpts(accountId?: string | null): { stripeAccount: string } | undefined {
+  if (process.env.STRIPE_CONNECT_ENABLED !== 'true') return undefined;
   return accountId ? { stripeAccount: accountId } : undefined;
 }
 

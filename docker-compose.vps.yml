@@ -57,6 +57,9 @@ services:
       REDIS_URL: "redis://redis:6379"
       STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
       STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
+      # Off (default) = all guest payments settle to this shared Stripe account.
+      # Set to "true" to route each linked tenant's payments to their own account.
+      STRIPE_CONNECT_ENABLED: "${STRIPE_CONNECT_ENABLED:-}"
       STRIPE_PRICE_STARTER: "${STRIPE_PRICE_STARTER:-}"
       STRIPE_PRICE_GROWTH: "${STRIPE_PRICE_GROWTH:-}"
       STRIPE_PRICE_ENTERPRISE: "${STRIPE_PRICE_ENTERPRISE:-}"
